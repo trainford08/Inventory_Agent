@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Migration Hub
 
-## Getting Started
+An AI-first migration surface that moves Microsoft developers from Azure DevOps to GitHub.
 
-First, run the development server:
+Built as a high-fidelity interactive prototype for an interview demo. Architected so the prototype becomes the v1 of the real product — nothing gets thrown away.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## The thesis
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The data model is the spine. Every screen, API endpoint, component, and piece of business logic is an expression of the schema. Schema changes → TypeScript regenerates → every consumer gets compile errors → we fix them → we ship.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+TypeScript · Next.js 16 (App Router, src/ directory) · React 19 · Tailwind CSS 4 · Prisma + Postgres (Neon) · Zod · tRPC · Auth.js · Vitest · Playwright · Vercel
 
-## Learn More
+## Local setup
 
-To learn more about Next.js, take a look at the following resources:
+    npm install
+    # Edit .env with your DATABASE_URL
+    npx prisma migrate dev
+    npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Daily commands
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    npm run dev             # http://localhost:3000
+    npm run typecheck       # Verify TypeScript
+    npm run lint            # Run ESLint
+    npm run test            # Unit + component tests (Vitest)
+    npm run test:e2e        # Playwright end-to-end
+    npm run test:visual     # Playwright visual regression
+    npm run db:studio       # Browse DB in GUI
+    npm run db:reset        # Drop, migrate, reseed
+    npm run db:seed         # Repopulate seeded cohort data
+    npm run schema:check    # Schema-health checklist
 
-## Deploy on Vercel
+Before opening a PR: npm run typecheck && npm run lint && npm run test
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Repo structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    migration-hub/
+    ├── CLAUDE.md                  Project memory for Claude Code
+    ├── README.md                  This file
+    ├── docs/
+    │   ├── DONE.md                Prototype done definition
+    │   ├── testing.md             Testing strategy
+    │   ├── schema-health.md       10-smell checklist
+    │   ├── schema-debt.md         Debt log
+    │   └── stories/               M1.md through M8.md
+    ├── prisma/
+    │   ├── schema.prisma          The data model (source of truth)
+    │   ├── seed.ts                Fabricated cohort data
+    │   └── migrations/            Migration history
+    ├── src/
+    │   ├── app/                   Next.js App Router
+    │   ├── components/            Reusable React components
+    │   ├── lib/                   Utility functions
+    │   ├── server/                tRPC routers, server-only code
+    │   └── generated/prisma/      Auto-generated Prisma Client
+    └── tests/
+        ├── e2e/                   Playwright end-to-end flows
+        ├── fixtures/              Shared test fixtures per cohort
+        └── __snapshots__/         Visual regression baselines
+
+## Story status
+
+| #   | Story                         | Size | Status      |
+| --- | ----------------------------- | ---- | ----------- |
+| M1  | Champion reviews team profile | L    | Not started |
+| M2  | Program PM dashboard          | M    | Not started |
+| M3  | Agent runs discovery          | M    | Not started |
+| M4  | Ada chat assistant            | L    | Not started |
+| M5  | Cut-over runbook              | M    | Not started |
+| M6  | Cohorts & waves               | M    | Not started |
+| M7  | Post-migration validation     | S    | Not started |
+| M8  | Risks across fleet            | S    | Not started |
+
+## License
+
+Private — internal interview prototype.

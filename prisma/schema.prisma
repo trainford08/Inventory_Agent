@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -----------------------------------------------------------------------
+// Core identity
+// -----------------------------------------------------------------------
+
+model Org {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  adoOrgSlug String   @unique
+  teams      Team[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Team {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  orgId String
+  org   Org    @relation(fields: [orgId], references: [id])
+
+  codebase       Codebase?
+  workflows      Workflow[]
+  jtbds          JtbdEntry[]
+  customizations Customization[]
+  risks          Risk[]
+  ownership      Ownership?
+
+  champion   TeamMember?  @relation("Champion", fields: [championId], references: [id])
+  championId String?      @unique
+  members    TeamMember[] @relation("Members")
+
+  cohort         Cohort         @default(UNASSIGNED)
+  wave           Int?
+  migrationState MigrationState @default(NOT_STARTED)
+
+  latestFindings   AgentRun? @relation(fields: [latestFindingsId], references: [id])
+  latestFindingsId String?   @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Cohort {
+  UNASSIGNED
+  ALPHA
+  BRAVO
+  CHARLIE
+  DELTA
+  ECHO
+  FOXTROT
+}
+
+enum MigrationState {
+  NOT_STARTED
+  DISCOVERING
+  REVIEWING
+  READY
+  IN_PROGRESS
+  COMPLETED
+  ROLLED_BACK
+}
+
+// -----------------------------------------------------------------------
+// People
+// -----------------------------------------------------------------------
+
+model TeamMember {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+  role  String
+
+  team   Team?   @relation("Members", fields: [teamId], references: [id])
+  teamId String?
+
+  championOf Team? @relation("Champion")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -----------------------------------------------------------------------
+// Team profile sections
+// -----------------------------------------------------------------------
+
+model Codebase {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String @unique
+
+  repos       Repo[]
+  primaryLang String?
+  usesLfs     Boolean @default(false)
+  totalSizeGb Float?
+}
+
+model Repo {
+  id         String   @id @default(cuid())
+  codebase   Codebase @relation(fields: [codebaseId], references: [id])
+  codebaseId String
+
+  name          String
+  defaultBranch String
+  isArchived    Boolean   @default(false)
+  sizeGb        Float?
+  hasSubmodules Boolean   @default(false)
+  primaryOwner  String?
+  lastCommitAt  DateTime?
+}
+
+model Workflow {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  name        String
+  type        WorkflowType
+  isClassic   Boolean      @default(false)
+  customTasks String[]
+}
+
+enum WorkflowType {
+  BUILD
+  RELEASE
+  TEST
+  DEPLOY
+  OTHER
+}
+
+model JtbdEntry {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  jtbdCode  String
+  title     String
+  performed Boolean @default(true)
+  frequency String?
+  notes     String?
+}
+
+model Customization {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  category          String
+  description       String
+  migrationApproach String?
+  status            CustomizationStatus @default(UNKNOWN)
+}
+
+enum CustomizationStatus {
+  UNKNOWN
+  AGENT_HANDLED
+  NEEDS_HUMAN
+  RESOLVED
+}
+
+model Risk {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  title      String
+  detail     String
+  confidence Confidence @default(MEDIUM)
+  mitigation String?
+  status     RiskStatus @default(OPEN)
+  category   String
+}
+
+enum Confidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATED
+  ACCEPTED
+  CLOSED
+}
+
+model Ownership {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String @unique
+
+  primaryOwnerEmail String?
+  onCallGroup       String?
+  escalationContact String?
+}
+
+// -----------------------------------------------------------------------
+// Agent runs
+// -----------------------------------------------------------------------
+
+model AgentRun {
+  id          String    @id @default(cuid())
+  agentName   String
+  startedAt   DateTime
+  completedAt DateTime?
+  durationMs  Int?
+  triggeredBy String
+  scopeTeamId String
+
+  findings Finding[]
+
+  autoPopulatedCount Int @default(0)
+  needsInputCount    Int @default(0)
+  anomalyCount       Int @default(0)
+
+  runOf Team? @relation
+}
+
+model Finding {
+  id         String   @id @default(cuid())
+  agentRun   AgentRun @relation(fields: [agentRunId], references: [id])
+  agentRunId String
+
+  category   String
+  fieldPath  String
+  fieldLabel String
+  value      String?
+  source     FindingSource
+  confidence Confidence    @default(HIGH)
+  triedNote  String?
+  status     FindingStatus @default(PENDING)
+}
+
+enum FindingSource {
+  ADO_API
+  INFERRED
+  NEEDS_INPUT
+}
+
+enum FindingStatus {
+  PENDING
+  ACCEPTED
+  CORRECTED
+  OVERRIDDEN
+}
