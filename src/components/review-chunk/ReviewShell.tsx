@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AdaPanel } from "@/components/ada/AdaPanel";
 import type { ReviewChunk } from "@/server/review-chunk";
 import type { ReviewSectionDef } from "@/lib/review-sections";
 
@@ -11,6 +12,12 @@ type ShellProps = {
    *  Pass null for sections that don't have content yet — the rail shows a
    *  placeholder and the main renders whatever children supply. */
   chunk: ReviewChunk | null;
+  /** When set, Ada panel renders as a 3rd column, scoped to this field. */
+  ada?: {
+    fieldLabel: string;
+    fieldSubject?: string | null;
+    fieldValue?: string | null;
+  } | null;
 };
 
 export function ReviewShell({
@@ -18,14 +25,21 @@ export function ReviewShell({
   teamSlug,
   chunk,
   children,
+  ada,
 }: ShellProps) {
   return (
     // Sits inside AppShell's main column. Page-scoped secondary nav on the
-    // left, review content on the right. AppShell provides the primary
-    // (app-level) sidebar + topbar outside of this.
-    <div className="grid min-h-full grid-cols-[260px_1fr] bg-bg">
+    // left, review content in the middle, Ada assistant on the right.
+    // Ada's column is always visible; its content is empty until the user
+    // clicks "Not sure" on a field.
+    <div className="grid min-h-full grid-cols-[260px_1fr_380px] bg-bg">
       <ReviewRail section={section} teamSlug={teamSlug} chunk={chunk} />
       <div className="min-w-0 overflow-x-hidden">{children}</div>
+      <AdaPanel
+        fieldLabel={ada?.fieldLabel ?? null}
+        fieldSubject={ada?.fieldSubject ?? null}
+        fieldValue={ada?.fieldValue ?? null}
+      />
     </div>
   );
 }

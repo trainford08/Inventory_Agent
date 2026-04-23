@@ -11,10 +11,10 @@ export default async function TeamReviewSectionPage({
   searchParams,
 }: {
   params: Promise<{ slug: string; section: string }>;
-  searchParams: Promise<{ sub?: string; repo?: string }>;
+  searchParams: Promise<{ sub?: string; repo?: string; ada?: string }>;
 }) {
   const { slug, section: sectionSlug } = await params;
-  const { sub, repo } = await searchParams;
+  const { sub, repo, ada: adaFieldId } = await searchParams;
   const section = SECTION_BY_SLUG.get(sectionSlug as ReviewSectionSlug);
   if (!section) notFound();
 
@@ -25,8 +25,29 @@ export default async function TeamReviewSectionPage({
     const nowMs = Date.now();
     const chunk = await getCodeReposChunk(slug, nowMs, sub, repo);
     if (!chunk) notFound();
+
+    // Find the field Ada should scope to. Walk all subsections so the panel
+    // can be opened from any subject's card.
+    const adaMatch = adaFieldId
+      ? chunk.subsections
+          .flatMap((s) => s.fields.map((f) => ({ field: f, subsection: s })))
+          .find((x) => x.field.id === adaFieldId)
+      : null;
+    const adaProps = adaMatch
+      ? {
+          fieldLabel: adaMatch.field.question ?? adaMatch.field.label,
+          fieldSubject: adaMatch.subsection.currentSubjectName ?? null,
+          fieldValue: adaMatch.field.value,
+        }
+      : null;
+
     return (
-      <ReviewShell section={section} teamSlug={slug} chunk={chunk}>
+      <ReviewShell
+        section={section}
+        teamSlug={slug}
+        chunk={chunk}
+        ada={adaProps}
+      >
         <ChunkMain chunk={chunk} section={section} teamSlug={slug} />
       </ReviewShell>
     );

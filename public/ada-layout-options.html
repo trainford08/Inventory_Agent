@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Ada layout options — Migration Hub</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-subtle: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91,95,207,0.08);
+    --primary-active: #f0efff;
+    --primary-mid: rgba(91,95,207,0.15);
+    --accent: #0891b2;
+    --accent-soft: rgba(8,145,178,0.08);
+    --accent-mid: rgba(8,145,178,0.18);
+    --accent-ink: #0e7490;
+    --success: #16a34a;
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--ink);
+    padding: 40px 32px 80px;
+    line-height: 1.5;
+  }
+  h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+    margin-bottom: 6px;
+  }
+  .lede { color: var(--ink-soft); font-size: 14.5px; max-width: 720px; margin-bottom: 36px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 44px;
+    max-width: 1320px;
+  }
+  .opt-block {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  .opt-head { position: sticky; top: 40px; }
+  .opt-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .opt-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .opt-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.55; margin-bottom: 14px; }
+  .opt-pros, .opt-cons { font-size: 12.5px; line-height: 1.6; }
+  .opt-pros li, .opt-cons li { margin-bottom: 4px; }
+  .opt-pros strong { color: var(--success); }
+  .opt-cons strong { color: #b91c1c; }
+
+  /* ==== Frame (mimics the VSCode-view of the app) ==== */
+  .frame {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    height: 520px;
+    position: relative;
+  }
+  .global-sb {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 180px;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border);
+    padding: 14px 10px;
+  }
+  .global-sb-logo {
+    display: flex; align-items: center; gap: 8px;
+    padding: 4px 8px 14px;
+  }
+  .global-sb-logo-icon {
+    width: 22px; height: 22px; border-radius: 5px;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: white; font-weight: 700; font-size: 10.5px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .global-sb-logo-name { font-size: 11.5px; font-weight: 600; letter-spacing: -0.005em; }
+
+  .gsb-label {
+    font-family: var(--mono); font-size: 8.5px; font-weight: 600;
+    color: var(--ink-faint); letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 0 8px; margin: 10px 0 4px;
+  }
+  .gsb-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px; border-radius: 5px;
+    font-size: 11px; color: var(--ink-soft);
+    margin-bottom: 1px;
+  }
+  .gsb-item.active { background: var(--primary-active); color: var(--primary); font-weight: 600; }
+  .gsb-item .dot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; }
+  .gsb-item.sub { padding-left: 20px; font-size: 10.5px; }
+
+  /* Review subsection nav (the 260px column in ReviewShell) */
+  .rev-sb {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 180px;
+    width: 200px;
+    background: var(--bg-subtle);
+    border-right: 1px solid var(--border);
+    padding: 14px 10px;
+  }
+  .rev-sb-title {
+    font-size: 12px; font-weight: 600; letter-spacing: -0.005em;
+    margin-bottom: 3px;
+  }
+  .rev-sb-sub {
+    font-family: var(--mono); font-size: 9.5px; color: var(--ink-muted);
+    margin-bottom: 14px;
+  }
+  .rev-sb-item {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 7px; border-radius: 5px;
+    font-size: 10.5px; color: var(--ink-muted);
+    margin-bottom: 2px;
+  }
+  .rev-sb-item.active { background: var(--primary-active); color: var(--primary); font-weight: 600; }
+  .rev-sb-item.done { color: var(--success); }
+
+  /* Main review column */
+  .main-col {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 380px;
+    padding: 20px 22px;
+    overflow: hidden;
+  }
+  .main-title {
+    font-size: 15px; font-weight: 700;
+    letter-spacing: -0.015em; margin-bottom: 3px;
+  }
+  .main-sub {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-muted);
+    margin-bottom: 16px;
+  }
+  .m-item {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 12px;
+    margin-bottom: 7px;
+    font-size: 11.5px;
+  }
+  .m-item.active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+  .m-item.reviewed { background: var(--bg-subtle); font-size: 11px; color: var(--ink-muted); }
+  .m-item .q { font-weight: 600; color: var(--ink); margin-bottom: 5px; font-size: 12px; }
+  .m-item .v {
+    display: inline-block; padding: 3px 7px; background: var(--bg-subtle);
+    border: 1px solid var(--border-subtle); border-radius: 4px;
+    font-family: var(--mono); font-size: 10px; margin-bottom: 6px;
+  }
+  .m-btns { display: flex; gap: 5px; }
+  .m-btn {
+    padding: 4px 8px; border-radius: 4px;
+    border: 1px solid var(--primary-mid);
+    background: var(--bg-elevated); color: var(--primary);
+    font-size: 10px; font-weight: 600;
+  }
+  .m-btn.ada {
+    background: var(--accent); border-color: var(--accent); color: white;
+  }
+
+  /* Ada panel */
+  .ada-panel {
+    background: var(--bg-elevated);
+    border-left: 1px solid var(--border);
+    padding: 14px 14px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .ada-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .ada-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #0891b2);
+    color: white; font-weight: 700; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .ada-avatar::after {
+    content: ""; position: absolute; bottom: -1px; right: -1px;
+    width: 7px; height: 7px; background: var(--success);
+    border: 1.5px solid var(--bg-elevated); border-radius: 50%;
+  }
+  .ada-name { font-size: 12px; font-weight: 600; }
+  .ada-tag { font-size: 9.5px; color: var(--ink-muted); }
+  .ada-ctx {
+    padding: 7px 9px;
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-mid);
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 10px;
+  }
+  .ada-ctx-lbl { font-family: var(--mono); color: var(--accent-ink); font-size: 8.5px; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1px; }
+  .ada-ctx-val { font-weight: 600; }
+  .ada-transcript { flex: 1; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+  .ada-turn { font-size: 10.5px; line-height: 1.45; max-width: 88%; padding: 7px 10px; border-radius: 10px; }
+  .ada-turn.bot { background: var(--bg-subtle); align-self: flex-start; border-bottom-left-radius: 3px; }
+  .ada-turn.user { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
+  .ada-mic {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: center;
+  }
+  .ada-mic-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #0891b2);
+    box-shadow: 0 2px 10px rgba(99,102,241,0.35);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 16px;
+  }
+
+  /* ==== Option A: 3-column (pushes layout) ==== */
+  .opt-a .global-sb { width: 160px; }
+  .opt-a .rev-sb { left: 160px; width: 160px; }
+  .opt-a .main-col { left: 320px; right: 280px; }
+  .opt-a .ada-panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 280px;
+  }
+
+  /* ==== Option B: slide-over (overlay) ==== */
+  .opt-b .global-sb { width: 180px; }
+  .opt-b .rev-sb { left: 180px; width: 200px; }
+  .opt-b .main-col { left: 380px; right: 0; }
+  .opt-b .ada-panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 300px;
+    box-shadow: -12px 0 28px rgba(0,0,0,0.08);
+    border-left: 1px solid var(--border);
+  }
+  .opt-b .ada-panel::before {
+    content: "";
+    position: absolute;
+    left: -12px; top: 0; bottom: 0; width: 12px;
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.04));
+    pointer-events: none;
+  }
+  /* Show that the main content underneath is unchanged width */
+  .opt-b .main-col::after {
+    content: "main content width unchanged";
+    position: absolute;
+    top: 50%; right: 304px;
+    transform: translateY(-50%) rotate(-90deg) translateY(-50%);
+    transform-origin: right center;
+    font-family: var(--mono); font-size: 9px; color: var(--ink-faint);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    opacity: 0.5;
+    white-space: nowrap;
+  }
+
+  .narration {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #fdfaf3;
+    border-left: 3px solid #d4a574;
+    border-radius: 0 6px 6px 0;
+    font-size: 12.5px; color: #4a4135;
+  }
+  .narration strong { color: #1f1c14; }
+</style>
+</head>
+<body>
+  <h1>Ada layout — Option A vs B</h1>
+  <p class="lede">Same review session (<code style="font-family: var(--mono); background: var(--bg-muted); padding: 1px 5px; border-radius: 3px;">/teams/alpha/review/code-and-repos?ada=uses_lfs</code>), two ways of fitting Ada into the existing dual-nav review layout.</p>
+
+  <div class="grid">
+
+    <!-- ========== OPTION A ========== -->
+    <div class="opt-block opt-a">
+      <div class="opt-head">
+        <div class="opt-label">Option A</div>
+        <div class="opt-title">3-column: Ada takes space</div>
+        <div class="opt-desc">Ada renders as a third column inside the review layout. Main review column shrinks by ~300px when Ada is open, reflows when closed.</div>
+        <ul class="opt-pros">
+          <li><strong>+</strong> Content never overlaps — everything stays visible at once.</li>
+          <li><strong>+</strong> Ada feels like part of the review, not a modal.</li>
+        </ul>
+        <ul class="opt-cons">
+          <li><strong>−</strong> Main review column gets tight — item cards reflow.</li>
+          <li><strong>−</strong> Fields the user just reviewed jump visually when Ada opens.</li>
+          <li><strong>−</strong> On smaller screens this breaks down fast.</li>
+        </ul>
+        <div class="narration">
+          <strong>Feel:</strong> Ada is a peer column. Works best if Ada is expected to be open most of the time.
+        </div>
+      </div>
+
+      <div class="frame">
+        <aside class="global-sb">
+          <div class="global-sb-logo">
+            <div class="global-sb-logo-icon">M</div>
+            <div class="global-sb-logo-name">Migration</div>
+          </div>
+          <div class="gsb-label">Program</div>
+          <div class="gsb-item">Dashboard</div>
+          <div class="gsb-item">All teams</div>
+          <div class="gsb-label">This team</div>
+          <div class="gsb-item">Overview</div>
+          <div class="gsb-item active">Complete <span style="margin-left:auto;font-family:var(--mono);font-size:9px;">21/48</span></div>
+          <div class="gsb-item sub"><span class="dot" style="background:var(--primary);"></span>Code & repos</div>
+        </aside>
+
+        <aside class="rev-sb">
+          <div class="rev-sb-title">Code & repos</div>
+          <div class="rev-sb-sub">4 of 12 reviewed</div>
+          <div class="rev-sb-item done">✓ Organization</div>
+          <div class="rev-sb-item done">✓ Projects</div>
+          <div class="rev-sb-item active">● Repositories</div>
+          <div class="rev-sb-item">○ Pipelines</div>
+        </aside>
+
+        <main class="main-col">
+          <div class="main-title">Repositories</div>
+          <div class="main-sub">4 of 12 · 8 remaining</div>
+          <div class="m-item reviewed">✓ Repository name — coreai-backend-main</div>
+          <div class="m-item reviewed">✓ Primary owner — @maria-c</div>
+          <div class="m-item active">
+            <div class="q">Uses Git LFS?</div>
+            <div class="v">true</div>
+            <div class="m-btns">
+              <span class="m-btn">Accept</span>
+              <span class="m-btn ada">Ada is helping</span>
+            </div>
+          </div>
+          <div class="m-item">
+            <div class="q">Contains large binaries?</div>
+            <div class="v">true · 38% .onnx, .dll</div>
+          </div>
+        </main>
+
+        <aside class="ada-panel">
+          <div class="ada-head">
+            <div class="ada-avatar">A</div>
+            <div>
+              <div class="ada-name">Ada</div>
+              <div class="ada-tag">Review assistant</div>
+            </div>
+          </div>
+          <div class="ada-ctx">
+            <div class="ada-ctx-lbl">Helping with</div>
+            <div class="ada-ctx-val">Uses Git LFS?</div>
+          </div>
+          <div class="ada-transcript">
+            <div class="ada-turn bot">Do you want me to explain what Git LFS is, or look at your repo?</div>
+            <div class="ada-turn user">Explain it</div>
+            <div class="ada-turn bot">LFS = Large File Storage. Tracks big binaries outside Git history. I found .gitattributes with LFS filters for .onnx…</div>
+          </div>
+          <div class="ada-mic">
+            <div class="ada-mic-btn">🎤</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ========== OPTION B ========== -->
+    <div class="opt-block opt-b">
+      <div class="opt-head">
+        <div class="opt-label">Option B · recommended</div>
+        <div class="opt-title">Slide-over: Ada floats on top</div>
+        <div class="opt-desc">Ada is a fixed 300px panel anchored to the right edge that overlays the main column. Main layout is unchanged whether Ada is open or closed.</div>
+        <ul class="opt-pros">
+          <li><strong>+</strong> Opening/closing Ada never reflows the review.</li>
+          <li><strong>+</strong> Ada can cover the field it's discussing — direct spatial link.</li>
+          <li><strong>+</strong> Simpler to ship; doesn't touch ReviewShell internals.</li>
+        </ul>
+        <ul class="opt-cons">
+          <li><strong>−</strong> Covers a slice of the review content while open.</li>
+          <li><strong>−</strong> Feels more "modal" — closer to a chat drawer than a peer.</li>
+        </ul>
+        <div class="narration">
+          <strong>Feel:</strong> Ada is a helper you summon for a specific question, then dismiss. Matches the design's language ("helping with…").
+        </div>
+      </div>
+
+      <div class="frame">
+        <aside class="global-sb">
+          <div class="global-sb-logo">
+            <div class="global-sb-logo-icon">M</div>
+            <div class="global-sb-logo-name">Migration</div>
+          </div>
+          <div class="gsb-label">Program</div>
+          <div class="gsb-item">Dashboard</div>
+          <div class="gsb-item">All teams</div>
+          <div class="gsb-label">This team</div>
+          <div class="gsb-item">Overview</div>
+          <div class="gsb-item active">Complete <span style="margin-left:auto;font-family:var(--mono);font-size:9px;">21/48</span></div>
+          <div class="gsb-item sub"><span class="dot" style="background:var(--primary);"></span>Code & repos</div>
+        </aside>
+
+        <aside class="rev-sb">
+          <div class="rev-sb-title">Code & repos</div>
+          <div class="rev-sb-sub">4 of 12 reviewed</div>
+          <div class="rev-sb-item done">✓ Organization</div>
+          <div class="rev-sb-item done">✓ Projects</div>
+          <div class="rev-sb-item active">● Repositories</div>
+          <div class="rev-sb-item">○ Pipelines</div>
+          <div class="rev-sb-item">○ Classic releases</div>
+        </aside>
+
+        <main class="main-col">
+          <div class="main-title">Repositories</div>
+          <div class="main-sub">4 of 12 · 8 remaining</div>
+          <div class="m-item reviewed">✓ Repository name — coreai-backend-main</div>
+          <div class="m-item reviewed">✓ Primary owner — @maria-c</div>
+          <div class="m-item reviewed">✓ Default branch — main</div>
+          <div class="m-item reviewed">✓ Visibility — private</div>
+          <div class="m-item active">
+            <div class="q">Uses Git LFS?</div>
+            <div class="v">true</div>
+            <div class="m-btns">
+              <span class="m-btn">Accept</span>
+              <span class="m-btn">Edit</span>
+              <span class="m-btn ada">Ada is helping</span>
+              <span class="m-btn">Flag</span>
+            </div>
+          </div>
+          <div class="m-item">
+            <div class="q">Contains large binaries?</div>
+            <div class="v">true · 38% .onnx, .dll, .so</div>
+          </div>
+        </main>
+
+        <aside class="ada-panel">
+          <div class="ada-head">
+            <div class="ada-avatar">A</div>
+            <div>
+              <div class="ada-name">Ada</div>
+              <div class="ada-tag">Review assistant</div>
+            </div>
+          </div>
+          <div class="ada-ctx">
+            <div class="ada-ctx-lbl">Helping with</div>
+            <div class="ada-ctx-val">Uses Git LFS?</div>
+          </div>
+          <div class="ada-transcript">
+            <div class="ada-turn bot">Do you want me to explain Git LFS first, or look at your repo?</div>
+            <div class="ada-turn user">I've heard of it but don't know what it means</div>
+            <div class="ada-turn bot">LFS = Large File Storage. Tracks big binaries outside normal Git history. I looked at your repo — .gitattributes has LFS filters for .onnx, 2.3 GB tracked.</div>
+          </div>
+          <div class="ada-mic">
+            <div class="ada-mic-btn">🎤</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

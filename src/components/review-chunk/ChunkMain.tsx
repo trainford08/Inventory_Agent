@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   acceptFinding,
   editFinding,
@@ -490,9 +491,9 @@ function ReviewedRow({ field }: { field: ReviewField }) {
 // ─── Pending card (question + info + 4 buttons) ────────────────────────────
 function PendingCard({ field }: { field: ReviewField }) {
   const [pending, startTransition] = useTransition();
-  const [selected, setSelected] = useState<
-    "accept" | "edit" | "notsure" | "flag" | null
-  >(null);
+  const [selected, setSelected] = useState<"accept" | "edit" | "flag" | null>(
+    null,
+  );
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(field.value ?? "");
 
@@ -588,11 +589,7 @@ function PendingCard({ field }: { field: ReviewField }) {
             selected={selected === "edit" || editing}
             onClick={() => setEditing((v) => !v)}
           />
-          <SegBtn
-            label="Not sure"
-            selected={selected === "notsure"}
-            onClick={() => setSelected("notsure")}
-          />
+          <AdaSegBtn fieldId={field.id} />
           <SegBtn
             label="Flag"
             icon={<FlagIcon />}
@@ -631,6 +628,45 @@ function SegBtn({
       {icon}
       {label}
     </button>
+  );
+}
+
+function AdaSegBtn({ fieldId }: { fieldId: string }) {
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const currentAda = params.get("ada");
+  const isOpen = currentAda === fieldId;
+
+  const next = new URLSearchParams(params.toString());
+  if (isOpen) next.delete("ada");
+  else next.set("ada", fieldId);
+  const qs = next.toString();
+  const href = qs ? `${pathname}?${qs}` : pathname;
+
+  const base =
+    "inline-flex items-center gap-1.5 rounded-lg border-[1.5px] px-[18px] py-[9px] text-[13px] font-semibold tracking-[-0.003em] transition";
+  const openClasses =
+    "bg-accent text-white border-accent shadow-[0_1px_3px_rgba(8,145,178,0.3)]";
+  const closedClasses =
+    "bg-bg-elevated text-primary border-primary-mid hover:bg-primary-soft hover:border-primary";
+  return (
+    <Link
+      href={href}
+      className={`${base} ${isOpen ? openClasses : closedClasses}`}
+    >
+      <svg
+        className="h-[13px] w-[13px]"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+      {isOpen ? "Ada is helping" : "Not sure"}
+    </Link>
   );
 }
 
