@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { TeamHero } from "@/components/team/TeamHero";
 import type { TeamProfile } from "@/server/teams";
 
@@ -17,12 +16,9 @@ export function TeamProfileHeader({
 }) {
   return (
     <>
-      <Link
-        href="/teams"
-        className="mb-4 inline-flex items-center gap-1 text-[12px] text-ink-muted hover:text-ink"
-      >
+      <span className="mb-4 inline-flex cursor-default items-center gap-1 text-[12px] text-ink-faint">
         ← All teams
-      </Link>
+      </span>
 
       <TeamHero team={team} nowMs={nowMs} />
     </>

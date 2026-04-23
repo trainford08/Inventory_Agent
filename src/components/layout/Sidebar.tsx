@@ -221,7 +221,7 @@ export function Sidebar({
 function Brand() {
   return (
     <Link
-      href="/teams"
+      href="/dashboard"
       className="flex items-center gap-[10px] px-[10px] pb-[22px] pt-[4px]"
     >
       <div className="flex h-[32px] w-[32px] items-center justify-center rounded-md bg-gradient-to-br from-primary to-purple text-[13px] font-bold text-white shadow-[0_1px_2px_rgba(91,95,207,0.25)]">
@@ -320,13 +320,20 @@ function SubNavItem({
 }) {
   const isDone = total > 0 && reviewed >= total;
   const isEmpty = total === 0 || reviewed === 0;
+  const fillPct = total > 0 ? Math.round((reviewed / total) * 100) : 0;
   const dotClass = active
-    ? "bg-primary"
+    ? "bg-primary shadow-[0_0_0_3px_rgba(91,95,207,0.18)]"
     : isDone
       ? "bg-success"
       : isEmpty
         ? "bg-bg-muted"
-        : "bg-primary";
+        : "";
+  const dotStyle =
+    !active && !isDone && !isEmpty
+      ? {
+          background: `conic-gradient(var(--color-primary) ${fillPct}%, var(--color-bg-muted) ${fillPct}%)`,
+        }
+      : undefined;
   const trailing =
     total === 0 ? null : isDone ? "done" : `${reviewed}/${total}`;
   const trailingClass = active
@@ -346,7 +353,8 @@ function SubNavItem({
   const content = (
     <>
       <span
-        className={`h-[5px] w-[5px] flex-shrink-0 rounded-full ${dotClass}`}
+        className={`h-[7px] w-[7px] flex-shrink-0 rounded-full ${dotClass}`}
+        style={dotStyle}
       />
       <span className="flex-1 truncate">{label}</span>
       {trailing !== null ? (

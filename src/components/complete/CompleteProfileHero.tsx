@@ -17,7 +17,7 @@ export function CompleteProfileHero({
         Team profile · <span className="text-primary">{teamName}</span>
       </div>
       <h1 className="mb-3 text-[30px] font-bold leading-[1.15] tracking-[-0.025em] text-ink">
-        Complete your team profile
+        Complete your team&rsquo;s migration profile
       </h1>
       <p className="mb-5 max-w-[720px] text-[14.5px] leading-[1.55] text-ink-soft">
         The agents have done the first pass across your team&apos;s ADO

@@ -55,13 +55,10 @@ export function DashboardDirectory({
         <span className="font-mono text-[11px] font-medium text-ink-muted">
           {teams.length} {teams.length === 1 ? "team" : "teams"}
         </span>
-        <Link
-          href="/teams"
-          className="ml-auto inline-flex items-center gap-1 text-[12.5px] font-semibold text-primary"
-        >
+        <span className="ml-auto inline-flex cursor-default items-center gap-1 text-[12.5px] font-semibold text-ink-faint">
           View full directory
           <ChevronRight />
-        </Link>
+        </span>
       </div>
 
       {/* Filter chips + search */}

@@ -180,6 +180,52 @@ async function seedCohort(cfg: CohortShape) {
 // Wipe existing data (idempotent re-run)
 // ---------------------------------------------------------------------------
 
+// For the demo default team, mark all Scope and Access findings as
+// human-reviewed (so they show "done") and mark ~40% of Customizations
+// findings as human-reviewed (so that section shows partial progress).
+async function applyDemoReviewState(teamSlug: string) {
+  const team = await prisma.team.findUnique({
+    where: { slug: teamSlug },
+    select: { id: true, latestFindingsId: true },
+  });
+  if (!team || !team.latestFindingsId) return;
+
+  const scopePrefixes = ["ownership.", "members.", "jtbds.", "adoProjects."];
+  const accessPrefixes = [
+    "serviceConnections.",
+    "secrets.",
+    "variableGroups.",
+    "target.fedramp",
+  ];
+  const customizationPrefixes = [
+    "customizations.",
+    "extensions.",
+    "serviceHooks.",
+    "templates.",
+  ];
+
+  const markHuman = async (prefixes: string[], fraction: number) => {
+    const findings = await prisma.finding.findMany({
+      where: { agentRunId: team.latestFindingsId ?? undefined },
+      select: { id: true, fieldPath: true },
+    });
+    const matching = findings.filter((f) =>
+      prefixes.some((p) => f.fieldPath.startsWith(p)),
+    );
+    const take = Math.ceil(matching.length * fraction);
+    const ids = matching.slice(0, take).map((f) => f.id);
+    if (ids.length === 0) return;
+    await prisma.finding.updateMany({
+      where: { id: { in: ids } },
+      data: { status: "ACCEPTED", lastActor: "HUMAN" },
+    });
+  };
+
+  await markHuman(scopePrefixes, 1); // 100% done
+  await markHuman(accessPrefixes, 1); // 100% done
+  await markHuman(customizationPrefixes, 0.4); // partial ~40%
+}
+
 async function wipe() {
   await prisma.evidence.deleteMany();
   await prisma.finding.deleteMany();
@@ -220,6 +266,11 @@ async function main() {
   results.push(await seedCohort(deltaConfig(contoso.id)));
   results.push(await seedCohort(echoConfig(contoso.id)));
   results.push(await seedCohort(foxtrotConfig(contoso.id)));
+
+  // Demo fixup: for the first team (alphabetical), mark some sections as
+  // human-reviewed so the sidebar sub-nav shows realistic "done" / partial
+  // progress at the landing page. Without this every section reads 0/N.
+  await applyDemoReviewState(results[0].slug);
 
   console.log("\nSeeded teams:");
   console.log("  slug      auto   input   anom   total");
