@@ -38,6 +38,11 @@ export type ReviewField = {
   /** Question-framed label shown above the value pill (e.g. "Uses Git LFS?").
    *  Falls back to `label` when not set. */
   question: string | null;
+  /** Editor input type — drives which control renders when the user clicks
+   *  Edit. Falls back to "text" if omitted. */
+  editKind?: "text" | "boolean" | "enum" | "multiselect";
+  /** Options for enum / multiselect editors. Ignored for other kinds. */
+  editOptions?: string[];
   state: ReviewFieldState;
   reviewedAgoLabel: string | null;
 };

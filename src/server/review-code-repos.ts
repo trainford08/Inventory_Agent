@@ -47,6 +47,8 @@ type ItemInput = {
   whyItMatters: string;
   synthId: string;
   label: string;
+  editKind?: "text" | "boolean" | "enum" | "multiselect";
+  editOptions?: string[];
 };
 
 /**
@@ -70,6 +72,7 @@ export async function getCodeReposChunk(
       name: true,
       slug: true,
       org: { select: { name: true, adoOrgSlug: true } },
+      members: { select: { name: true, email: true } },
       adoProjects: {
         select: {
           id: true,
@@ -167,6 +170,8 @@ export async function getCodeReposChunk(
       description: i.description,
       whyItMatters: i.whyItMatters,
       question: i.question,
+      editKind: i.editKind,
+      editOptions: i.editOptions,
       state,
       reviewedAgoLabel:
         finding &&
@@ -191,6 +196,7 @@ export async function getCodeReposChunk(
       whyItMatters:
         "If the org is wrong, every repository, pipeline, and permission downstream is wrong. Catch it before the team spends time reviewing the rest.",
       label: "Organization",
+      editKind: "text",
     }),
   ];
 
@@ -209,6 +215,7 @@ export async function getCodeReposChunk(
       whyItMatters:
         "Projects not owned by this team shouldn't be in scope. Catching a wrong one here saves hours of rework.",
       label: p.name,
+      editKind: "text",
     }),
   );
 
@@ -223,6 +230,18 @@ export async function getCodeReposChunk(
   // repositories reviewed). Drop this block when real persistence lands.
   const DEMO_PREACCEPTED_REPO_COUNT = 4;
   const repos = team.codebase?.repos ?? [];
+  const memberEmails = team.members.map((m) => m.email);
+  const visibilityOptions = ["private", "internal", "public", "archived"];
+  // Common default-branch choices. Include the repo's current value so the
+  // select doesn't force a change to pick one of the defaults.
+  const branchOptionsBase = ["main", "master", "develop", "trunk"];
+  const branchProtectionOptions = [
+    "required reviewers",
+    "build validation",
+    "work item linked",
+    "comment resolution",
+    "no protections set",
+  ];
   const preacceptedRepoIds = new Set(
     repos.slice(0, DEMO_PREACCEPTED_REPO_COUNT).map((r) => r.id),
   );
@@ -257,6 +276,7 @@ export async function getCodeReposChunk(
         whyItMatters:
           "Renaming mid-migration breaks URLs baked into pipelines, docs, and bookmarks. Confirm now rather than after cutover.",
         label: "Repository name",
+        editKind: "text",
       }),
     );
 
@@ -273,6 +293,8 @@ export async function getCodeReposChunk(
         whyItMatters:
           "Ownership drives who signs off on cutover, who gets admin access on GitHub, and who the migration agent pings for decisions.",
         label: "Primary owner",
+        editKind: "enum",
+        editOptions: memberEmails,
       }),
     );
 
@@ -289,6 +311,10 @@ export async function getCodeReposChunk(
         whyItMatters:
           "Many teams use this migration to rename master → main. If you want to switch, flag this item so the agent does the rename at cutover.",
         label: "Default branch",
+        editKind: "enum",
+        editOptions: Array.from(
+          new Set([r.defaultBranch, ...branchOptionsBase]),
+        ),
       }),
     );
 
@@ -305,6 +331,8 @@ export async function getCodeReposChunk(
         whyItMatters:
           "Mapping visibility wrong at cutover means either a private repo exposed, or collaborators losing access. Double-check archived repos — they often shouldn't migrate at all.",
         label: "Visibility",
+        editKind: "enum",
+        editOptions: visibilityOptions,
       }),
     );
 
@@ -325,6 +353,7 @@ export async function getCodeReposChunk(
         whyItMatters:
           "Changes the migration strategy. LFS repos need a different GEI path and additional post-migration steps.",
         label: "Uses Git LFS?",
+        editKind: "boolean",
       }),
     );
 
@@ -341,6 +370,7 @@ export async function getCodeReposChunk(
         whyItMatters:
           "Submodule URLs need to be rewritten after migration — every consuming repo must be updated or builds break.",
         label: "Has submodules?",
+        editKind: "boolean",
       }),
     );
 
@@ -359,6 +389,8 @@ export async function getCodeReposChunk(
         whyItMatters:
           "These rules need to be recreated as GitHub branch-protection rules after migration. Missing them means code can merge without the checks your team relies on.",
         label: "Active branch-protection rules?",
+        editKind: "multiselect",
+        editOptions: branchProtectionOptions,
       }),
     );
 
@@ -378,6 +410,8 @@ export async function getCodeReposChunk(
         whyItMatters:
           "These people need GitHub access provisioned before cutover weekend. Missing someone means they can't commit after migration until access is fixed.",
         label: "Who else commits here regularly?",
+        editKind: "multiselect",
+        editOptions: memberEmails,
       }),
     );
 
@@ -430,6 +464,7 @@ export async function getCodeReposChunk(
       whyItMatters:
         "Stale pipelines waste review cycles and cloud more important decisions. Confirm what's actually in use.",
       label: w.name,
+      editKind: "text",
     }),
   );
 
@@ -448,6 +483,7 @@ export async function getCodeReposChunk(
       whyItMatters:
         "Classic releases usually stay in ADO under the hybrid model because rebuild cost is high. Confirm the call before a pipeline rewrite lands on someone's plate.",
       label: r.name,
+      editKind: "text",
     }),
   );
 

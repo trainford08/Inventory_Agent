@@ -168,6 +168,214 @@ function SubsectionPanel({
   );
 }
 
+// ─── Field editor ──────────────────────────────────────────────────────────
+// Renders the appropriate control for the field's editKind.
+//   text         single-line input
+//   boolean      two-button Yes / No toggle
+//   enum         segmented control (pick one)
+//   multiselect  comma-separated chip toggles (pick many)
+// Always serializes to a plain string for editFinding.
+function parseMulti(value: string | null): Set<string> {
+  if (!value) return new Set();
+  return new Set(
+    value
+      .split(/[·,]/)
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+}
+
+function truthyBoolean(value: string | null): boolean {
+  if (!value) return false;
+  const v = value.trim().toLowerCase();
+  return v === "true" || v.startsWith("yes") || v.startsWith("y");
+}
+
+function FieldEditor({
+  field,
+  draft,
+  setDraft,
+  onSave,
+  onCancel,
+}: {
+  field: ReviewField;
+  draft: string;
+  setDraft: (v: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
+  const kind = field.editKind ?? "text";
+  const options = field.editOptions ?? [];
+  const iconSize = "12";
+  const btnSize = "h-6 w-6";
+
+  const SaveCancel = (
+    <>
+      <button
+        type="button"
+        onClick={onSave}
+        className={`inline-flex ${btnSize} items-center justify-center rounded text-primary hover:bg-primary-soft`}
+        aria-label="Save"
+        title="Save (Enter)"
+      >
+        <svg
+          width={iconSize}
+          height={iconSize}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={onCancel}
+        className={`inline-flex ${btnSize} items-center justify-center rounded text-ink-muted hover:bg-bg-subtle hover:text-ink`}
+        aria-label="Cancel"
+        title="Cancel (Esc)"
+      >
+        <svg
+          width={iconSize}
+          height={iconSize}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </>
+  );
+
+  if (kind === "boolean") {
+    const current = truthyBoolean(draft);
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-[5px] border border-primary bg-bg-elevated px-1 py-0.5">
+        <span className="inline-flex gap-1">
+          {["true", "false"].map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => setDraft(opt)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onSave();
+                }
+              }}
+              className={`rounded px-2.5 py-0.5 font-mono text-[11px] font-semibold uppercase tracking-[0.04em] ${
+                (opt === "true" && current) || (opt === "false" && !current)
+                  ? "bg-primary text-white"
+                  : "bg-bg-subtle text-ink-muted hover:bg-bg hover:text-ink"
+              }`}
+            >
+              {opt === "true" ? "Yes" : "No"}
+            </button>
+          ))}
+        </span>
+        {SaveCancel}
+      </span>
+    );
+  }
+
+  if (kind === "enum" && options.length > 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-[5px] border border-primary bg-bg-elevated px-1 py-0.5">
+        <select
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onSave();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              onCancel();
+            }
+          }}
+          autoFocus
+          className="min-w-[180px] rounded bg-bg-elevated px-2 py-1 font-mono text-[12px] text-ink focus:outline-none"
+        >
+          {!options.includes(draft) && draft ? (
+            <option value={draft}>{draft}</option>
+          ) : null}
+          {options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        {SaveCancel}
+      </span>
+    );
+  }
+
+  if (kind === "multiselect" && options.length > 0) {
+    const selected = parseMulti(draft);
+    const toggle = (opt: string) => {
+      const next = new Set(selected);
+      if (next.has(opt)) next.delete(opt);
+      else next.add(opt);
+      setDraft(Array.from(next).join(" · "));
+    };
+    return (
+      <span className="inline-flex flex-wrap items-center gap-1.5 rounded-[5px] border border-primary bg-bg-elevated p-1">
+        <span className="inline-flex flex-wrap gap-1">
+          {options.map((opt) => {
+            const on = selected.has(opt);
+            return (
+              <button
+                key={opt}
+                type="button"
+                onClick={() => toggle(opt)}
+                className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                  on
+                    ? "bg-primary text-white"
+                    : "bg-bg-subtle text-ink-muted hover:bg-bg hover:text-ink"
+                }`}
+              >
+                {on ? "✓ " : ""}
+                {opt}
+              </button>
+            );
+          })}
+        </span>
+        {SaveCancel}
+      </span>
+    );
+  }
+
+  // Default: text
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-[5px] border border-primary bg-bg-elevated px-1 py-0.5 focus-within:ring-2 focus-within:ring-primary-mid">
+      <input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onSave();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            onCancel();
+          }
+        }}
+        autoFocus
+        className="min-w-[240px] rounded bg-bg-elevated px-2 py-1 font-mono text-[12px] text-ink focus:outline-none"
+      />
+      {SaveCancel}
+    </span>
+  );
+}
+
 // ─── Reviewed row (compact single-line) ────────────────────────────────────
 function ReviewedRow({ field }: { field: ReviewField }) {
   const [pending, startTransition] = useTransition();
@@ -191,138 +399,94 @@ function ReviewedRow({ field }: { field: ReviewField }) {
 
   return (
     <div
-      className={`mb-1.5 flex items-center gap-3 rounded-lg border border-border-subtle bg-bg-subtle px-4 py-2.5 ${pending ? "opacity-60" : ""}`}
+      className={`mb-1.5 rounded-lg border border-border-subtle bg-bg-subtle px-4 py-2.5 ${pending ? "opacity-60" : ""}`}
     >
-      <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-success text-white">
-        <svg
-          width="8"
-          height="8"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </span>
-      <span className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium text-ink-soft">
-        {field.question ?? field.label}
-        {editing ? (
-          <span className="inline-flex items-center gap-1 rounded border border-primary bg-bg-elevated px-1 py-0.5 focus-within:ring-2 focus-within:ring-primary-mid">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  submitEdit();
-                } else if (e.key === "Escape") {
-                  e.preventDefault();
-                  cancelEdit();
-                }
-              }}
-              autoFocus
-              className="min-w-[200px] rounded bg-bg-elevated px-1.5 py-0.5 font-mono text-[11.5px] text-ink focus:outline-none"
-            />
-            <button
-              type="button"
-              onClick={submitEdit}
-              className="inline-flex h-5 w-5 items-center justify-center rounded text-primary hover:bg-primary-soft"
-              aria-label="Save"
-              title="Save (Enter)"
-            >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={cancelEdit}
-              className="inline-flex h-5 w-5 items-center justify-center rounded text-ink-muted hover:bg-bg-subtle hover:text-ink"
-              aria-label="Cancel"
-              title="Cancel (Esc)"
-            >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </span>
-        ) : field.value ? (
-          <span className="font-mono text-[11.5px] text-ink-muted">
-            {field.value}
-          </span>
-        ) : null}
-      </span>
-      {!editing && field.reviewedAgoLabel ? (
-        <span className="font-mono text-[10.5px] text-ink-muted">
-          {field.reviewedAgoLabel}
-        </span>
-      ) : null}
-      <div className="flex items-center gap-1">
-        {!editing ? (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="inline-flex items-center gap-1 rounded px-2 py-[3px] text-[11.5px] font-medium text-ink-muted hover:bg-bg-elevated hover:text-primary"
-          >
-            <svg
-              width="11"
-              height="11"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 20h9" />
-              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-            </svg>
-            Edit
-          </button>
-        ) : null}
-        <button
-          type="button"
-          onClick={doUndo}
-          className="inline-flex items-center gap-1 rounded px-2 py-[3px] text-[11.5px] font-medium text-ink-muted hover:bg-bg-elevated hover:text-ink"
-        >
+      <div className="flex items-center gap-3">
+        <span className="inline-flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-success text-white">
           <svg
-            width="11"
-            height="11"
+            width="8"
+            height="8"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-            <path d="M3 3v5h5" />
+            <polyline points="20 6 9 17 4 12" />
           </svg>
-          Undo
-        </button>
+        </span>
+        <span className="flex min-w-0 flex-1 items-center gap-2 text-[13px] font-medium text-ink-soft">
+          {field.question ?? field.label}
+          {!editing && field.value ? (
+            <span className="font-mono text-[11.5px] text-ink-muted">
+              {field.value}
+            </span>
+          ) : null}
+        </span>
+        {!editing && field.reviewedAgoLabel ? (
+          <span className="font-mono text-[10.5px] text-ink-muted">
+            {field.reviewedAgoLabel}
+          </span>
+        ) : null}
+        <div className="flex items-center gap-1">
+          {!editing ? (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1 rounded px-2 py-[3px] text-[11.5px] font-medium text-ink-muted hover:bg-bg-elevated hover:text-primary"
+            >
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+              Edit
+            </button>
+          ) : null}
+          {!editing ? (
+            <button
+              type="button"
+              onClick={doUndo}
+              className="inline-flex items-center gap-1 rounded px-2 py-[3px] text-[11.5px] font-medium text-ink-muted hover:bg-bg-elevated hover:text-ink"
+            >
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Undo
+            </button>
+          ) : null}
+        </div>
       </div>
+      {editing ? (
+        <div className="mt-2.5 pl-7">
+          <FieldEditor
+            field={field}
+            draft={draft}
+            setDraft={setDraft}
+            onSave={submitEdit}
+            onCancel={cancelEdit}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -400,67 +564,17 @@ function PendingCard({ field }: { field: ReviewField }) {
           ) : null}
         </div>
       ) : (
-        <div className="mb-3 inline-flex items-center gap-1.5 rounded-[5px] border border-primary bg-bg-elevated px-1 py-0.5 focus-within:ring-2 focus-within:ring-primary-mid">
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submitEdit();
-              } else if (e.key === "Escape") {
-                e.preventDefault();
-                setDraft(field.value ?? "");
-                setEditing(false);
-              }
-            }}
-            autoFocus
-            className="min-w-[240px] rounded bg-bg-elevated px-2 py-1 font-mono text-[12px] text-ink focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={submitEdit}
-            className="inline-flex h-6 w-6 items-center justify-center rounded text-primary hover:bg-primary-soft"
-            aria-label="Save edit"
-            title="Save (Enter)"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => {
+        <div className="mb-3">
+          <FieldEditor
+            field={field}
+            draft={draft}
+            setDraft={setDraft}
+            onSave={submitEdit}
+            onCancel={() => {
               setDraft(field.value ?? "");
               setEditing(false);
             }}
-            className="inline-flex h-6 w-6 items-center justify-center rounded text-ink-muted hover:bg-bg-subtle hover:text-ink"
-            aria-label="Cancel edit"
-            title="Cancel (Esc)"
-          >
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
+          />
         </div>
       )}
 
