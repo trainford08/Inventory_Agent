@@ -1,26 +1,88 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Typography — Geist + Geist Mono are loaded in layout.tsx */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Neutral backgrounds */
+  --color-bg: #f7f7f8;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #f0f0f2;
+  --color-bg-muted: #e4e4e7;
+
+  /* Ink — foreground text */
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #3f3f46;
+  --color-ink-muted: #71717a;
+  --color-ink-faint: #a1a1aa;
+
+  /* Borders */
+  --color-border: #e4e4e7;
+  --color-border-strong: #d4d4d8;
+  --color-border-subtle: #f0f0f2;
+
+  /* Primary — indigo */
+  --color-primary: #5b5fcf;
+  --color-primary-hover: #4a4eb8;
+  --color-primary-soft: rgba(91, 95, 207, 0.08);
+  --color-primary-mid: rgba(91, 95, 207, 0.15);
+
+  /* Sidebar */
+  --color-sidebar-bg: #ffffff;
+  --color-sidebar-hover: #f4f4f5;
+  --color-sidebar-active: #f0efff;
+
+  /* Status — success */
+  --color-success: #16a34a;
+  --color-success-soft: #dcfce7;
+  --color-success-ink: #15803d;
+
+  /* Status — warn */
+  --color-warn: #d97706;
+  --color-warn-soft: #fef3c7;
+  --color-warn-ink: #b45309;
+
+  /* Status — danger */
+  --color-danger: #dc2626;
+  --color-danger-soft: #fee2e2;
+  --color-danger-ink: #b91c1c;
+
+  /* Status — info */
+  --color-info: #0284c7;
+  --color-info-soft: #e0f2fe;
+  --color-info-ink: #0369a1;
+
+  /* Accent — Ada / bot surfaces */
+  --color-accent: #0891b2;
+  --color-accent-soft: rgba(8, 145, 178, 0.08);
+  --color-accent-mid: rgba(8, 145, 178, 0.18);
+  --color-accent-ink: #0e7490;
+
+  /* Purple — "mixed" scope segment, misc accents */
+  --color-purple: #8b5cf6;
+  --color-purple-soft: #ede9fe;
+  --color-purple-ink: #6d28d9;
+
+  /* Shadows */
+  --shadow-sm:
+    0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.1);
+  --shadow-md:
+    0 4px 6px -2px rgba(16, 24, 40, 0.03), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+  --shadow-lg:
+    0 12px 16px -4px rgba(16, 24, 40, 0.08),
+    0 4px 6px -2px rgba(16, 24, 40, 0.03);
+  --shadow-xl:
+    0 20px 24px -4px rgba(16, 24, 40, 0.08),
+    0 8px 8px -4px rgba(16, 24, 40, 0.03);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.003em;
+  -webkit-font-smoothing: antialiased;
 }

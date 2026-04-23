@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>/review design preview — Beat 5 minus right rail</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* tokens copied verbatim from app-walkthrough.html */
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --border-subtle: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.08);
+    --primary-mid: rgba(91, 95, 207, 0.15);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+    --r-md: 8px;
+    --r-full: 999px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.003em;
+  }
+  .note {
+    max-width: 1000px;
+    margin: 24px auto 16px;
+    padding: 14px 20px;
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    border: 1px solid #f4c27a;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .note strong { color: var(--ink); }
+  .frame {
+    max-width: 1000px;
+    margin: 0 auto 80px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  /* Beat 5 rc-* styles, right rail (rc-ctx) removed, grid collapsed to 2 cols */
+  .rc-root {
+    display: grid;
+    grid-template-columns: 200px 1fr; /* was: 200px 1fr 240px */
+    min-height: 640px;
+  }
+  .rc-rail {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: 22px 16px;
+  }
+  .rc-rail-head { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 3px; }
+  .rc-rail-hint { font-size: 11px; color: var(--ink-muted); margin-bottom: 10px; }
+  .rc-rail-progress {
+    height: 4px; background: var(--bg-muted); border-radius: 2px; overflow: hidden; margin-bottom: 18px;
+  }
+  .rc-rail-progress-fill { height: 100%; background: var(--success); }
+  .rc-rail-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 8px; border-radius: 5px;
+    font-size: 12px; color: var(--ink-muted);
+    margin-bottom: 2px;
+  }
+  .rc-rail-item.is-current {
+    background: var(--bg-elevated); color: var(--ink);
+    font-weight: 500; border: 1px solid var(--border);
+    padding: 6px 7px;
+  }
+  .rc-rail-item.is-done { color: var(--ink-muted); }
+  .rc-rail-tick {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    background: var(--bg-elevated);
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; color: transparent;
+  }
+  .rc-rail-item.is-done .rc-rail-tick {
+    background: var(--success); border-color: var(--success); color: white;
+  }
+  .rc-rail-item.is-current .rc-rail-tick {
+    background: var(--warn); border-color: var(--warn);
+    box-shadow: 0 0 0 2.5px rgba(217, 119, 6, 0.18);
+    position: relative;
+  }
+  .rc-rail-item.is-current .rc-rail-tick::after {
+    content: ""; width: 4px; height: 4px; border-radius: 50%; background: white;
+  }
+  .rc-rail-count {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 10.5px; color: var(--ink-muted);
+  }
+  .rc-rail-item.is-current .rc-rail-count { color: var(--warn-ink); font-weight: 600; }
+
+  .rc-main { padding: 28px 32px; }
+  .rc-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; background: var(--primary-soft);
+    color: var(--primary); border-radius: var(--r-full);
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.06em; margin-bottom: 10px;
+  }
+  .rc-title {
+    font-size: 22px; font-weight: 600;
+    letter-spacing: -0.02em; margin: 0 0 6px; line-height: 1.2;
+  }
+  .rc-subtitle {
+    font-size: 13px; color: var(--ink-muted);
+    margin: 0 0 22px; max-width: 520px; line-height: 1.5;
+  }
+  .rc-subtitle strong { color: var(--ink); font-weight: 600; }
+  .rc-subsection { margin-bottom: 22px; }
+  .rc-subsection-head {
+    display: flex; align-items: center; gap: 10px;
+    padding-bottom: 10px; margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rc-sub-num {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    color: var(--ink-muted); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 7px; border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-elevated);
+  }
+  .rc-sub-name { font-size: 13px; font-weight: 600; }
+  .rc-sub-progress {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 10.5px;
+    color: var(--warn-ink); font-weight: 600;
+    padding: 2px 7px; background: var(--warn-soft); border-radius: var(--r-full);
+  }
+  .rc-field {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .rc-field--focused {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(91, 95, 207, 0.12);
+  }
+  .rc-field--verified {
+    background: var(--bg-subtle);
+    border-color: var(--border-subtle);
+    padding: 10px 16px;
+  }
+  .rc-field-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 14px; margin-bottom: 10px;
+  }
+  .rc-field-label {
+    font-size: 14px; font-weight: 600;
+    color: var(--ink); letter-spacing: -0.005em;
+  }
+  .rc-field--verified .rc-field-label {
+    font-size: 12.5px; font-weight: 500; color: var(--ink-soft);
+  }
+  .rc-field-path {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-faint);
+    white-space: nowrap; padding-top: 2px;
+  }
+  .rc-field-value {
+    padding: 8px 12px; background: var(--bg);
+    border: 1px solid var(--border-subtle); border-radius: 5px;
+    font-family: var(--mono); font-size: 12px; margin-bottom: 10px;
+  }
+  .rc-field--verified .rc-field-value {
+    padding: 0; background: transparent; border: none;
+    font-size: 11px; color: var(--ink-muted); margin-bottom: 0;
+  }
+  .rc-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 7px; border-radius: var(--r-full);
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .rc-pill-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+  .rc-pill--success { background: var(--success-soft); color: var(--success-ink); }
+  .rc-pill--warn { background: var(--warn-soft); color: var(--warn-ink); }
+  .rc-field-meta {
+    display: flex; gap: 8px; align-items: center;
+    font-size: 11.5px; color: var(--ink-muted); margin-bottom: 12px;
+    flex-wrap: wrap; line-height: 1.5;
+  }
+  .rc-field-meta code {
+    font-family: var(--mono); font-size: 10.5px;
+    background: var(--bg-subtle); padding: 1px 4px; border-radius: 3px;
+    color: var(--ink-soft);
+  }
+  .rc-field-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .rc-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 11px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-family: var(--sans); font-size: 11.5px; font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .rc-btn--success { background: var(--success); color: white; border-color: var(--success); }
+  .rc-btn--flag { color: var(--danger-ink); }
+  .rc-btn-kbd {
+    padding: 1px 4px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    font-family: var(--mono); font-size: 9px; font-weight: 500;
+  }
+  .rc-btn:not(.rc-btn--success) .rc-btn-kbd {
+    background: var(--bg-subtle);
+    border-color: var(--border);
+    color: var(--ink-muted);
+  }
+  .rc-verified-note {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; color: var(--success-ink); font-weight: 500;
+  }
+  .rc-verified-check {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--success); color: white;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .rc-verified-time {
+    color: var(--ink-muted); font-weight: 400;
+    font-family: var(--mono); font-size: 10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="note">
+  <strong>Preview</strong> — this is Beat 5 "Review in action" from
+  <code>app-walkthrough.html</code>, <strong>with the right rail (rc-ctx) removed</strong>
+  per your direction. The grid went from 3 columns (200px / 1fr / 240px) to 2 columns (200px / 1fr).
+  Nothing else was changed. If this looks right, I'll build it at <code>/teams/[slug]/review</code>
+  scoped to the Code & repos chunk only.
+</div>
+
+<div class="frame">
+  <div class="rc-root">
+    <aside class="rc-rail">
+      <div class="rc-rail-head">Code &amp; repos</div>
+      <div class="rc-rail-hint">8 of 22 fields reviewed</div>
+      <div class="rc-rail-progress"><div class="rc-rail-progress-fill" style="width: 36%;"></div></div>
+
+      <div class="rc-rail-item is-done">
+        <span class="rc-rail-tick">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        Organization
+        <span class="rc-rail-count">1</span>
+      </div>
+      <div class="rc-rail-item is-done">
+        <span class="rc-rail-tick">
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+        Projects
+        <span class="rc-rail-count">3</span>
+      </div>
+      <div class="rc-rail-item is-current">
+        <span class="rc-rail-tick"></span>
+        Repositories
+        <span class="rc-rail-count">4/12</span>
+      </div>
+      <div class="rc-rail-item">
+        <span class="rc-rail-tick"></span>
+        Pipelines (YAML)
+        <span class="rc-rail-count">5</span>
+      </div>
+      <div class="rc-rail-item">
+        <span class="rc-rail-tick"></span>
+        Pipelines (classic)
+        <span class="rc-rail-count">1</span>
+      </div>
+    </aside>
+
+    <main class="rc-main">
+      <div class="rc-eyebrow">CHUNK 02 / 06 · CODE &amp; REPOS</div>
+      <h2 class="rc-title">Code &amp; repository setup</h2>
+      <p class="rc-subtitle">
+        The Inventory Agent detected these from the ADO REST API.
+        <strong>Most fields should be correct</strong> — accept is the default action.
+      </p>
+
+      <div class="rc-subsection">
+        <div class="rc-subsection-head">
+          <span class="rc-sub-num">Sub 03 / 05</span>
+          <span class="rc-sub-name">Repositories</span>
+          <span class="rc-sub-progress">4 of 12 complete</span>
+        </div>
+
+        <div class="rc-field rc-field--verified">
+          <div class="rc-field-top">
+            <div class="rc-field-label">Repository name · coreai-backend-main</div>
+            <div class="rc-field-path">ado_footprint.repos[0].name</div>
+          </div>
+          <div class="rc-field-value">coreai-backend-main</div>
+          <div class="rc-verified-note">
+            <span class="rc-verified-check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            Accepted
+            <span class="rc-verified-time">· 2 min ago</span>
+          </div>
+        </div>
+
+        <div class="rc-field rc-field--focused">
+          <div class="rc-field-top">
+            <div class="rc-field-label">Uses Git LFS?</div>
+            <div class="rc-field-path">ado_footprint.repos[0].uses_lfs</div>
+          </div>
+          <div class="rc-field-value">true</div>
+          <div class="rc-field-meta">
+            <span class="rc-pill rc-pill--success"><span class="rc-pill-dot"></span>ADO API</span>
+            <span>Detected by scanning <code>.gitattributes</code></span>
+          </div>
+          <div class="rc-field-actions">
+            <button class="rc-btn rc-btn--success">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Accept
+              <span class="rc-btn-kbd">Y</span>
+            </button>
+            <button class="rc-btn">Edit <span class="rc-btn-kbd">E</span></button>
+            <button class="rc-btn">Not sure <span class="rc-btn-kbd">?</span></button>
+            <button class="rc-btn rc-btn--flag">Flag <span class="rc-btn-kbd">F</span></button>
+          </div>
+        </div>
+
+        <div class="rc-field">
+          <div class="rc-field-top">
+            <div class="rc-field-label">Contains large binaries?</div>
+            <div class="rc-field-path">ado_footprint.repos[0].binary_heavy</div>
+          </div>
+          <div class="rc-field-value">true</div>
+          <div class="rc-field-meta">
+            <span class="rc-pill rc-pill--warn"><span class="rc-pill-dot"></span>Inferred</span>
+            <span>38% of files are <code>.dll</code>, <code>.so</code>, <code>.onnx</code></span>
+          </div>
+          <div class="rc-field-actions">
+            <button class="rc-btn">Accept</button>
+            <button class="rc-btn">Edit</button>
+            <button class="rc-btn">Not sure</button>
+            <button class="rc-btn rc-btn--flag">Flag</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>
+</content>

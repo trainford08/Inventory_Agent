@@ -21,18 +21,24 @@ model Org {
 }
 
 model Team {
-  id    String @id @default(cuid())
-  name  String
-  slug  String @unique
-  orgId String
-  org   Org    @relation(fields: [orgId], references: [id])
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  tagline     String?
+  description String?
+  orgId       String
+  org         Org     @relation(fields: [orgId], references: [id])
 
-  codebase       Codebase?
-  workflows      Workflow[]
-  jtbds          JtbdEntry[]
-  customizations Customization[]
-  risks          Risk[]
-  ownership      Ownership?
+  codebase           Codebase?
+  workflows          Workflow[]
+  jtbds              JtbdEntry[]
+  customizations     Customization[]
+  risks              Risk[]
+  ownership          Ownership?
+  adoProjects        AdoProject[]
+  serviceConnections ServiceConnection[]
+  releaseDefinitions ReleaseDefinition[]
+  extensions         Extension[]
 
   champion   TeamMember?  @relation("Champion", fields: [championId], references: [id])
   championId String?      @unique
@@ -42,11 +48,47 @@ model Team {
   wave           Int?
   migrationState MigrationState @default(NOT_STARTED)
 
+  // Profile facts (surfaced in hero)
+  engineerCount          Int?
+  tier                   Tier?
+  securityClassification String?
+
+  // Health / planning
+  healthStatus            HealthStatus?
+  effortEstimateLowWeeks  Int?
+  effortEstimateHighWeeks Int?
+  effortConfidence        Confidence?
+  effortProgressWeeks     Float?
+  targetCutoverAt         DateTime?
+  slackWeeks              Int?
+
+  // Discovery snapshot counters
+  workItemsActive    Int?
+  workItemsClosed90d Int?
+  buildArtifactCount Int?
+  wikiPageCount      Int?
+
   latestFindings   AgentRun? @relation(fields: [latestFindingsId], references: [id])
   latestFindingsId String?   @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([healthStatus])
+  @@index([targetCutoverAt])
+}
+
+enum Tier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum HealthStatus {
+  ON_TRACK
+  AT_RISK
+  BLOCKED
+  DONE
 }
 
 enum Cohort {
@@ -108,13 +150,25 @@ model Repo {
   codebase   Codebase @relation(fields: [codebaseId], references: [id])
   codebaseId String
 
-  name          String
-  defaultBranch String
-  isArchived    Boolean   @default(false)
-  sizeGb        Float?
-  hasSubmodules Boolean   @default(false)
-  primaryOwner  String?
-  lastCommitAt  DateTime?
+  name              String
+  defaultBranch     String
+  isArchived        Boolean   @default(false)
+  sizeGb            Float?
+  hasSubmodules     Boolean   @default(false)
+  primaryOwner      String?
+  lastCommitAt      DateTime?
+  loc               Int?
+  languageBreakdown Json?
+  branchProtected   Boolean   @default(false)
+  contributorCount  Int?
+  hasWiki           Boolean   @default(false)
+  wikiPageCount     Int?
+  commits90d        Int?
+  hasLfs            Boolean   @default(false)
+  lfsSizeGb         Float?
+  submoduleUrls     String[]
+
+  @@index([codebaseId])
 }
 
 model Workflow {
@@ -122,10 +176,20 @@ model Workflow {
   team   Team   @relation(fields: [teamId], references: [id])
   teamId String
 
-  name        String
-  type        WorkflowType
-  isClassic   Boolean      @default(false)
-  customTasks String[]
+  name               String
+  type               WorkflowType
+  isClassic          Boolean      @default(false)
+  customTasks        String[]
+  runnerType         RunnerType   @default(MICROSOFT_HOSTED)
+  stageCount         Int          @default(1)
+  agentPool          String?
+  deprecatedTasks    String[]
+  averageDurationMin Int?
+  triggersPerWeek    Int?
+  failsLast30d       Int?
+  usesVariableGroups Boolean      @default(false)
+
+  @@index([teamId])
 }
 
 enum WorkflowType {
@@ -136,16 +200,31 @@ enum WorkflowType {
   OTHER
 }
 
+enum RunnerType {
+  MICROSOFT_HOSTED
+  SELF_HOSTED
+  MIXED
+}
+
 model JtbdEntry {
   id     String @id @default(cuid())
   team   Team   @relation(fields: [teamId], references: [id])
   teamId String
 
-  jtbdCode  String
-  title     String
-  performed Boolean @default(true)
-  frequency String?
-  notes     String?
+  jtbdCode          String
+  title             String
+  category          String
+  performed         Boolean            @default(true)
+  frequency         String?
+  notes             String?
+  migrationApproach MigrationApproach?
+}
+
+enum MigrationApproach {
+  MOVES
+  STAYS
+  BOTH
+  MIXED
 }
 
 model Customization {
@@ -235,8 +314,14 @@ model Finding {
   value      String?
   source     FindingSource
   confidence Confidence    @default(HIGH)
-  triedNote  String?
-  status     FindingStatus @default(PENDING)
+
+  evidence  Evidence[]
+  triedNote String?
+  status    FindingStatus @default(PENDING)
+
+  lastActor   LastActor?
+  lastActorId String?
+  updatedAt   DateTime   @updatedAt
 }
 
 enum FindingSource {
@@ -250,4 +335,112 @@ enum FindingStatus {
   ACCEPTED
   CORRECTED
   OVERRIDDEN
+}
+
+enum LastActor {
+  AGENT
+  HUMAN
+}
+
+model Evidence {
+  id        String  @id @default(cuid())
+  finding   Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  findingId String
+
+  kind      EvidenceKind
+  path      String
+  snippet   String?
+  metadata  String?
+  sourceUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([findingId])
+}
+
+enum EvidenceKind {
+  FILE
+  FOLDER
+  URL
+  API_RESPONSE
+  CONFIG
+  LOG
+  SNIPPET
+}
+
+// -----------------------------------------------------------------------
+// ADO-native resources discovered by the agent
+// -----------------------------------------------------------------------
+
+model AdoProject {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  name          String
+  description   String?
+  visibility    String // "private" | "public" — small fixed set, candidate enum later
+  repoCount     Int
+  pipelineCount Int
+  boardCount    Int     @default(0)
+
+  @@index([teamId])
+}
+
+model ServiceConnection {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  name                String
+  type                ServiceConnectionType
+  targetService       String
+  authMethod          String // "service-principal" | "OIDC" | "PAT" | "service-account" | "managed-identity"
+  hasStoredCredential Boolean               @default(false)
+  usedByCount         Int                   @default(0)
+  lastRotatedAt       DateTime?
+
+  @@index([teamId])
+}
+
+enum ServiceConnectionType {
+  AZURE_RM
+  AZURE_CONTAINER_REGISTRY
+  DOCKER_HUB
+  GITHUB
+  KUBERNETES
+  NUGET_FEED
+  NPM_FEED
+  SSH
+  GENERIC
+}
+
+model ReleaseDefinition {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  name           String
+  stages         Int
+  isClassic      Boolean   @default(true)
+  hasManualGates Boolean   @default(false)
+  gateTypes      String[] // e.g. ["servicenow", "manual-approval", "azure-monitor"]
+  deployTargets  String[] // e.g. ["prod-eastus", "prod-westus2"]
+  lastRunAt      DateTime?
+
+  @@index([teamId])
+}
+
+model Extension {
+  id     String @id @default(cuid())
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+
+  name                String
+  publisher           String
+  category            String // "code-quality" | "security" | "work-items" | "reporting" | "other"
+  hasGitHubEquivalent Boolean @default(false)
+  notes               String?
+
+  @@index([teamId])
 }
