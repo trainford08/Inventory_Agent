@@ -2,6 +2,18 @@ import "server-only";
 import { completionPercent } from "@/lib/completion";
 import { getTeamBySlug, type TeamProfile } from "./teams";
 
+export type SidebarSectionProgress = {
+  key: CompleteProfileSection["key"];
+  title: string;
+  reviewedCount: number;
+  totalCount: number;
+};
+
+export type SidebarTeamProgress = {
+  slug: string;
+  sections: SidebarSectionProgress[];
+};
+
 export type CompleteProfileSection = {
   key:
     | "scope"

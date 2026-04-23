@@ -20,6 +20,7 @@ export type LifecycleCounts = {
   planning: number;
   execution: number;
   cutover: number;
+  done: number;
   rolledBack: number;
 };
 
@@ -58,7 +59,7 @@ const LIFECYCLE_BUCKET: Record<MigrationState, keyof LifecycleCounts | null> = {
   REVIEWING: "planning",
   READY: "planning",
   IN_PROGRESS: "execution",
-  COMPLETED: "cutover",
+  COMPLETED: "done",
   ROLLED_BACK: "rolledBack",
 };
 
@@ -92,6 +93,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     planning: 0,
     execution: 0,
     cutover: 0,
+    done: 0,
     rolledBack: 0,
   };
   const health: HealthCounts = {

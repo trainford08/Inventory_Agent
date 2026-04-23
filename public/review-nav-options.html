@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Review nav options — Migration Hub</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-subtle: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91,95,207,0.08);
+    --primary-active: #f0efff;
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--ink);
+    padding: 40px 32px 80px;
+    line-height: 1.5;
+  }
+  h1 {
+    font-size: 28px; font-weight: 700; letter-spacing: -0.025em;
+    margin-bottom: 8px;
+  }
+  .lede {
+    color: var(--ink-soft); font-size: 14.5px; max-width: 620px;
+    margin-bottom: 36px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 280px);
+    gap: 28px;
+    justify-content: start;
+  }
+  .option {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .option-head {
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .option-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+  .option-title {
+    font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .option-desc {
+    font-size: 12.5px; color: var(--ink-muted); line-height: 1.5;
+  }
+
+  /* ---- Sidebar mock ---- */
+  .sb {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 12px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .sb-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px 18px;
+  }
+  .sb-logo {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    color: white; font-weight: 700; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .sb-brandname { font-weight: 600; font-size: 13.5px; letter-spacing: -0.005em; }
+
+  .sb-group {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--ink-faint); letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 0 10px; margin: 12px 0 6px;
+  }
+  .sb-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 13px; color: var(--ink-soft); font-weight: 500;
+    margin-bottom: 1px; cursor: pointer;
+  }
+  .sb-item:hover { background: var(--bg-subtle); }
+  .sb-item .sb-icon { width: 15px; height: 15px; flex-shrink: 0; color: var(--ink-muted); }
+  .sb-item.active { background: var(--primary-active); color: var(--primary); font-weight: 600; }
+  .sb-item.active .sb-icon { color: var(--primary); }
+
+  .sb-item.sub {
+    padding-left: 34px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .sb-item.sub .sb-icon {
+    width: 5px; height: 5px; background: var(--ink-faint); border-radius: 50%; color: transparent;
+  }
+  .sb-item.sub.done .sb-icon { background: var(--success); }
+  .sb-item.sub.active { background: var(--primary-active); color: var(--primary); font-weight: 600; }
+  .sb-item.sub.active .sb-icon { background: var(--primary); }
+  .sb-item .trailing {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 10.5px; font-weight: 500;
+    color: var(--ink-muted);
+  }
+  .sb-item.active .trailing { color: var(--primary); }
+
+  /* Option 2 resume CTA styling */
+  .sb-resume {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 7px;
+    background: linear-gradient(135deg, rgba(91,95,207,0.12), rgba(139,92,246,0.10));
+    border: 1px solid rgba(91,95,207,0.20);
+    margin-bottom: 2px;
+    font-size: 13px; font-weight: 600; color: var(--primary);
+    cursor: pointer;
+  }
+  .sb-resume .sb-icon { width: 15px; height: 15px; color: var(--primary); }
+  .sb-resume .trailing {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+    color: var(--primary);
+  }
+  .sb-resume .progress-bar {
+    position: absolute;
+    left: 10px; right: 10px; bottom: 4px;
+    height: 2px; background: rgba(91,95,207,0.15); border-radius: 1px;
+    overflow: hidden;
+  }
+  .sb-resume-wrap { position: relative; padding-bottom: 10px; }
+  .sb-resume .progress-fill {
+    height: 100%; background: var(--primary); border-radius: 1px;
+  }
+
+  /* Option 3 contextual expand badge */
+  .ctx-note {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--success-soft);
+    border-left: 2px solid var(--success);
+    border-radius: 0 4px 4px 0;
+    font-size: 11.5px;
+    color: var(--success-ink);
+    font-family: var(--mono);
+  }
+</style>
+</head>
+<body>
+  <h1>Review nav — three options</h1>
+  <p class="lede">
+    All three mocks show the sidebar at <span style="font-family: var(--mono); background: var(--bg-muted); padding: 1px 6px; border-radius: 3px; font-size: 13px;">/teams/alpha</span> with a team selected and an in-progress review (4 of 12 chunks done).
+  </p>
+
+  <div class="grid">
+
+    <!-- ========== OPTION 1: Indent Review chunks ========== -->
+    <div class="option">
+      <div class="option-head">
+        <div class="option-label">Option 1</div>
+        <div class="option-title">Indented sub-items</div>
+        <div class="option-desc">Review chunks always visible as children under Complete profile. Highest clarity, most visual weight.</div>
+      </div>
+      <div class="sb">
+        <div class="sb-brand">
+          <div class="sb-logo">M</div>
+          <div class="sb-brandname">Migration Hub</div>
+        </div>
+        <div class="sb-group">Program</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          All teams
+        </div>
+        <div class="sb-group">This team</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Overview
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Agent findings
+        </div>
+        <div class="sb-item active">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+          Complete profile
+          <span class="trailing">4/12</span>
+        </div>
+        <div class="sb-item sub done">
+          <span class="sb-icon"></span>
+          Identity
+        </div>
+        <div class="sb-item sub done">
+          <span class="sb-icon"></span>
+          Codebase
+        </div>
+        <div class="sb-item sub done">
+          <span class="sb-icon"></span>
+          Ownership
+        </div>
+        <div class="sb-item sub done">
+          <span class="sb-icon"></span>
+          Workflows
+        </div>
+        <div class="sb-item sub active">
+          <span class="sb-icon"></span>
+          Customizations
+        </div>
+        <div class="sb-item sub">
+          <span class="sb-icon"></span>
+          JTBDs
+        </div>
+        <div class="sb-item sub">
+          <span class="sb-icon"></span>
+          Risks
+        </div>
+        <div class="sb-item sub" style="color: var(--ink-faint); font-size: 11.5px;">
+          + 5 more
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          People
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+          Risks
+          <span class="trailing">3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== OPTION 2: Smart Resume CTA ========== -->
+    <div class="option">
+      <div class="option-head">
+        <div class="option-label">Option 2 · recommended</div>
+        <div class="option-title">"Resume review" CTA</div>
+        <div class="option-desc">Styled to stand out, deep-links to the next pending chunk, shows progress. Collapses to subtle when review is done.</div>
+      </div>
+      <div class="sb">
+        <div class="sb-brand">
+          <div class="sb-logo">M</div>
+          <div class="sb-brandname">Migration Hub</div>
+        </div>
+        <div class="sb-group">Program</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          All teams
+        </div>
+        <div class="sb-group">This team</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Overview
+        </div>
+        <div class="sb-resume-wrap">
+          <div class="sb-resume">
+            <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            Resume review
+            <span class="trailing">4/12</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: 33%;"></div>
+          </div>
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Agent findings
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+          Complete profile
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          People
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+          Risks
+          <span class="trailing">3</span>
+        </div>
+        <div class="ctx-note">
+          ✓ When review is complete, the pill fades to a neutral "Review ✓ 12/12" and loses the accent background.
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== OPTION 3: Contextual expand ========== -->
+    <div class="option">
+      <div class="option-head">
+        <div class="option-label">Option 3</div>
+        <div class="option-title">Contextual expand</div>
+        <div class="option-desc">Review chunks only appear as children when the user is on a <code style="font-family: var(--mono); font-size: 12px;">/complete</code> or <code style="font-family: var(--mono); font-size: 12px;">/review</code> page. Calm by default.</div>
+      </div>
+      <div class="sb">
+        <div class="sb-brand">
+          <div class="sb-logo">M</div>
+          <div class="sb-brandname">Migration Hub</div>
+        </div>
+        <div class="sb-group">Program</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          All teams
+        </div>
+        <div class="sb-group">This team</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Overview
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Agent findings
+        </div>
+        <div class="sb-item active">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>
+          Complete profile
+          <span class="trailing">4/12</span>
+        </div>
+        <div class="sb-item sub done"><span class="sb-icon"></span>Identity</div>
+        <div class="sb-item sub done"><span class="sb-icon"></span>Codebase</div>
+        <div class="sb-item sub done"><span class="sb-icon"></span>Ownership</div>
+        <div class="sb-item sub done"><span class="sb-icon"></span>Workflows</div>
+        <div class="sb-item sub active"><span class="sb-icon"></span>Customizations</div>
+        <div class="sb-item sub" style="color: var(--ink-faint); font-size: 11.5px;">+ 7 more</div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          People
+        </div>
+        <div class="sb-item">
+          <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+          Risks
+          <span class="trailing">3</span>
+        </div>
+        <div class="ctx-note">
+          ✓ Looks like Option 1 when on /complete or /review; collapses back to just "Complete profile" everywhere else.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
