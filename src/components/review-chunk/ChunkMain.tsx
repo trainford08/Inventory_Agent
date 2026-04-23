@@ -92,17 +92,12 @@ function SubsectionPanel({
     subsection.subjectReviewedCount ?? subsection.reviewedCount;
   const headerNoun = subsection.subjectNoun ?? "items";
   const remaining = headerTotal - headerReviewed;
-  // Reviewed = anything a human has touched. Agent-pre-filled rows remain
-  // in the pending bucket so the Champion can still Accept/Edit/Flag them.
-  const reviewedFields = subsection.fields.filter(
-    (f) =>
-      f.state === "accepted" ||
-      f.state === "corrected" ||
-      f.state === "flagged",
-  );
-  const pendingFields = subsection.fields.filter(
-    (f) => f.state === "pending" || f.state === "agent_accepted",
-  );
+  // Items render in their declared order regardless of state. A row's
+  // visual style (compact reviewed vs pending card) flips based on state,
+  // but its position in the list stays put — so undo returns a field to
+  // the exact slot it was in, preserving the reviewer's mental map.
+  const isHumanTouched = (f: ReviewField) =>
+    f.state === "accepted" || f.state === "corrected" || f.state === "flagged";
 
   return (
     <section className="mb-8">
@@ -157,12 +152,13 @@ function SubsectionPanel({
       ) : null}
 
       <div>
-        {reviewedFields.map((f) => (
-          <ReviewedRow key={f.id} field={f} />
-        ))}
-        {pendingFields.map((f) => (
-          <PendingCard key={f.id} field={f} />
-        ))}
+        {subsection.fields.map((f) =>
+          isHumanTouched(f) ? (
+            <ReviewedRow key={f.id} field={f} />
+          ) : (
+            <PendingCard key={f.id} field={f} />
+          ),
+        )}
       </div>
     </section>
   );

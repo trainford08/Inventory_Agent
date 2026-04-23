@@ -20,9 +20,12 @@ export function ReviewShell({
   children,
 }: ShellProps) {
   return (
-    <div className="grid min-h-screen grid-cols-[260px_1fr] bg-bg">
+    // Sits inside AppShell's main column. Page-scoped secondary nav on the
+    // left, review content on the right. AppShell provides the primary
+    // (app-level) sidebar + topbar outside of this.
+    <div className="grid min-h-full grid-cols-[260px_1fr] bg-bg">
       <ReviewRail section={section} teamSlug={teamSlug} chunk={chunk} />
-      <main className="min-w-0 overflow-x-hidden">{children}</main>
+      <div className="min-w-0 overflow-x-hidden">{children}</div>
     </div>
   );
 }
@@ -51,36 +54,11 @@ function ReviewRail({
     currentSub?.subjectNoun ?? currentSub?.name.toLowerCase() ?? "items";
 
   return (
-    <aside className="flex flex-col gap-4 border-r border-border bg-bg-elevated px-[14px] py-[18px]">
-      {/* Brand */}
-      <Link href="/teams" className="flex items-center gap-2.5 px-2.5 pb-5">
-        <div className="flex h-7 w-7 items-center justify-center rounded-[7px] bg-gradient-to-br from-primary to-purple text-[12.5px] font-bold text-white">
-          M
-        </div>
-        <div className="text-[13.5px] font-semibold tracking-[-0.005em] text-ink">
-          Migration Readiness
-        </div>
-      </Link>
-
-      {/* Back to team profile */}
-      <Link
-        href={`/teams/${teamSlug}`}
-        className="-mt-2 inline-flex items-center gap-[7px] rounded-md px-2.5 py-2 text-[12.5px] font-medium text-ink-muted hover:bg-sidebar-hover hover:text-ink"
-      >
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-        Back to team profile
-      </Link>
+    <aside className="flex flex-col gap-4 border-r border-border bg-bg-subtle px-[14px] py-[18px]">
+      {/* Section tag — identifies this rail as page-scoped within the app shell */}
+      <div className="px-2.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+        Review · {section.label}
+      </div>
 
       {/* Section card */}
       <div className="rounded-lg bg-bg-subtle px-3 py-[14px]">

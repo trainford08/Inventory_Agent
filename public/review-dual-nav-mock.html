@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Review · dual-nav mock</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --sidebar-bg: #ffffff;
+    --sidebar-hover: #f4f4f5;
+    --sidebar-active: #f0efff;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-strong: #d4d4d8;
+    --border-subtle: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.08);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --purple: #8b5cf6;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #e9e9ed;
+    font-family: var(--sans);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  * { box-sizing: border-box; }
+  .page-title { font-size: 20px; font-weight: 700; margin: 0 0 6px; }
+  .page-sub { color: var(--ink-muted); font-size: 13.5px; margin: 0 0 24px; max-width: 720px; }
+  .variant { margin-bottom: 40px; }
+  .variant-head {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 10px 14px;
+    background: var(--ink);
+    color: white;
+    border-radius: 6px 6px 0 0;
+  }
+  .variant-tag {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    opacity: 0.6;
+  }
+  .variant-title {
+    font-size: 15px; font-weight: 600;
+  }
+  .variant-note {
+    margin-left: auto;
+    font-size: 12px;
+    opacity: 0.75;
+  }
+  .frame {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .app {
+    display: grid;
+    min-height: 620px;
+  }
+  /* Variant A: [primary] [secondary] [main] — the conventional order */
+  .app--A { grid-template-columns: 248px 260px 1fr; }
+  /* Variant B: [secondary] [primary] [main] — literal reading of "secondary to the left of primary" */
+  .app--B { grid-template-columns: 260px 248px 1fr; }
+
+  /* ===== PRIMARY (app) SIDEBAR ===== */
+  .primary-sb {
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    padding: 20px 14px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px 20px;
+  }
+  .brand-logo {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--purple) 100%);
+    border-radius: 7px;
+    color: white; font-weight: 700; font-size: 12.5px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-name { font-weight: 600; font-size: 13.5px; }
+  .nav-group-label {
+    padding: 14px 10px 6px;
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 13px; color: var(--ink-soft);
+    margin-bottom: 2px;
+  }
+  .nav-item.active {
+    background: var(--sidebar-active);
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .nav-item svg { width: 15px; height: 15px; flex-shrink: 0; color: currentColor; opacity: 0.8; }
+
+  /* ===== SECONDARY (page) SIDEBAR ===== */
+  .secondary-sb {
+    background: var(--bg-subtle);
+    border-right: 1px solid var(--border);
+    padding: 18px 14px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .secondary-sb .sec-tag {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 0 10px;
+  }
+  .sec-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 12px 14px;
+  }
+  .sec-label {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .sec-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .sec-count {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-muted); margin-bottom: 8px;
+  }
+  .sec-count strong { color: var(--ink); font-weight: 600; }
+  .sec-bar { height: 4px; background: var(--bg-muted); border-radius: 2px; }
+  .sec-bar-fill { height: 100%; width: 22%; background: var(--primary); border-radius: 2px; }
+  .sec-sub-label {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 10px 2px;
+  }
+  .sub-item {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 10px; border-radius: 6px;
+    font-size: 12.5px; color: var(--ink-muted);
+  }
+  .sub-item.current { background: var(--sidebar-active); color: var(--primary); font-weight: 600; }
+  .sub-tick {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sub-tick.done { background: var(--success); border-color: var(--success); color: white; }
+  .sub-tick.current-tick { background: var(--primary); border-color: var(--primary); }
+  .sub-tick.current-tick::after {
+    content: ""; width: 4px; height: 4px; border-radius: 50%; background: white;
+  }
+  .sub-count { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-muted); }
+  .sub-item.current .sub-count { color: var(--primary); font-weight: 600; }
+  .sec-footer {
+    margin-top: auto;
+    align-self: flex-start;
+    padding: 8px 12px;
+    background: var(--success-soft);
+    color: var(--success-ink);
+    border-radius: 999px;
+    font-size: 11.5px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .sec-footer-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  /* ===== MAIN ===== */
+  .main {
+    padding: 32px 40px;
+    background: var(--bg);
+  }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.06em; color: var(--ink-muted); margin-bottom: 8px;
+  }
+  .main h2 { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+  .main p.lede { font-size: 14px; color: var(--ink-soft); margin: 0 0 24px; font-weight: 500; }
+  .sub-head {
+    display: flex; align-items: baseline; gap: 14px;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0; margin-bottom: 14px;
+  }
+  .sub-head h3 { font-size: 15px; font-weight: 600; margin: 0; }
+  .sub-progress { font-family: var(--mono); font-size: 11.5px; color: var(--ink-muted); }
+  .sub-remaining {
+    margin-left: auto;
+    background: var(--primary-soft); color: var(--primary);
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    padding: 2px 9px; border-radius: 999px;
+  }
+  .now-reviewing {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-subtle);
+    padding: 7px 11px; border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12.5px;
+  }
+  .now-label { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-muted); }
+  .now-name { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+  .row-reviewed {
+    background: var(--bg-subtle); border: 1px solid var(--border-subtle);
+    border-radius: 8px; padding: 8px 14px; margin-bottom: 5px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; color: var(--ink-soft);
+  }
+  .row-reviewed .check {
+    width: 16px; height: 16px; border-radius: 50%; background: var(--success);
+    display: inline-flex; align-items: center; justify-content: center; color: white;
+  }
+  .row-reviewed .val { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); }
+  .row-reviewed .time { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--ink-muted); }
+  .row-reviewed .btn { font-size: 11px; color: var(--ink-muted); padding: 2px 6px; }
+  .card-pending {
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 7px;
+  }
+  .card-pending-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .card-pending-q { font-size: 13px; font-weight: 600; }
+  .pill { font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; }
+  .pill--ado { background: var(--success-soft); color: var(--success-ink); margin-left: auto; }
+  .val-pill { display: inline-block; background: var(--bg-subtle); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 4px 10px; font-family: var(--mono); font-size: 11px; margin-bottom: 10px; }
+  .seg { display: flex; gap: 6px; }
+  .seg button { padding: 6px 14px; background: var(--bg-elevated); border: 1.5px solid rgba(91,95,207,0.15); border-radius: 7px; font: inherit; font-size: 12px; font-weight: 600; color: var(--primary); }
+
+  /* Annotations */
+  .annotate {
+    margin-top: 12px;
+    padding: 14px 18px;
+    background: var(--bg-elevated);
+    border: 1px dashed var(--border-strong);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .annotate b { color: var(--ink); font-weight: 600; }
+  .annotate ul { margin: 8px 0 0; padding-left: 20px; }
+  .annotate li { margin: 4px 0; }
+
+  .trade {
+    margin: 32px 0 8px;
+    font-size: 16px; font-weight: 600;
+  }
+  .trade-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .trade-card {
+    padding: 14px 18px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .trade-card h4 { margin: 0 0 8px; font-size: 13px; font-weight: 700; }
+  .trade-card p { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); }
+  .trade-card .tag {
+    display: inline-block;
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px;
+    margin-bottom: 6px;
+  }
+  .trade-card .tag--A { background: var(--success-soft); color: var(--success-ink); }
+  .trade-card .tag--B { background: #fef3c7; color: #b45309; }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">Review · dual-nav layout mock</h1>
+<p class="page-sub">
+  Two options for how the persistent app sidebar stacks with the review-page-specific sidebar.
+  Both keep the full review content intact. The question is the order. Primary = app nav (Migration Hub
+  Team profiles / Complete profile / Overview / …). Secondary = review-page-specific nav
+  (Reviewing section · In this section).
+</p>
+
+<!-- VARIANT A -->
+<div class="variant">
+  <div class="variant-head">
+    <span class="variant-tag">Variant A</span>
+    <span class="variant-title">Primary → Secondary → Main</span>
+    <span class="variant-note">Conventional pattern (Gmail, VS Code, Linear).</span>
+  </div>
+  <div class="frame">
+    <div class="app app--A">
+      <!-- Primary (app) sidebar -->
+      <aside class="primary-sb">
+        <div class="brand">
+          <div class="brand-logo">M</div>
+          <div class="brand-name">Migration Hub</div>
+        </div>
+        <div class="nav-group-label">Program</div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Team profiles
+        </div>
+        <div class="nav-group-label">This team</div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Complete profile
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Agent findings
+        </div>
+        <div class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Review team profile
+        </div>
+      </aside>
+
+      <!-- Secondary (page) sidebar -->
+      <aside class="secondary-sb">
+        <div class="sec-tag">Review · Code &amp; repos</div>
+        <div class="sec-card">
+          <div class="sec-label">Reviewing section</div>
+          <div class="sec-name">Code &amp; repos</div>
+          <div class="sec-count"><strong>4 of 18</strong> repositories reviewed</div>
+          <div class="sec-bar"><div class="sec-bar-fill"></div></div>
+        </div>
+        <div>
+          <div class="sec-sub-label">In this section</div>
+          <div class="sub-item"><span class="sub-tick done"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Organization<span class="sub-count">1</span></div>
+          <div class="sub-item"><span class="sub-tick done"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Projects<span class="sub-count">3</span></div>
+          <div class="sub-item current"><span class="sub-tick current-tick"></span>Repositories<span class="sub-count">4/18</span></div>
+          <div class="sub-item"><span class="sub-tick"></span>Pipelines<span class="sub-count">0/28</span></div>
+          <div class="sub-item"><span class="sub-tick"></span>Classic releases<span class="sub-count">0/4</span></div>
+        </div>
+        <div class="sec-footer"><span class="sec-footer-dot"></span>All progress saves</div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="hero-eyebrow">SECTION 01 OF 05 · CODE &amp; REPOS</div>
+        <h2>Code &amp; repos</h2>
+        <p class="lede">Confirm or correct each item below. The agents found these from Azure DevOps — you decide what's right.</p>
+        <div class="sub-head">
+          <h3>Repositories</h3>
+          <span class="sub-progress">4 of 18 repositories reviewed</span>
+          <span class="sub-remaining">14 remaining</span>
+        </div>
+        <div class="now-reviewing">
+          <span class="now-label">Now reviewing</span>
+          <span class="now-name">charlie-cli</span>
+        </div>
+        <div class="row-reviewed"><span class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Repository name <span class="val">charlie-cli</span><span class="time">2 min ago</span><span class="btn">Edit</span><span class="btn">Undo</span></div>
+        <div class="row-reviewed"><span class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Primary owner <span class="val">carlos.rivera@contoso.com</span><span class="time">2 min ago</span><span class="btn">Edit</span><span class="btn">Undo</span></div>
+        <div class="card-pending">
+          <div class="card-pending-top">
+            <span class="card-pending-q">Uses Git LFS?</span>
+            <span class="pill pill--ado">ADO API</span>
+          </div>
+          <div class="val-pill">false</div>
+          <div class="seg">
+            <button>✓ Accept</button><button>✎ Edit</button><button>Not sure</button><button>⚑ Flag</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="annotate">
+    <b>Variant A</b> — primary (app) sidebar leftmost, secondary (page) sidebar in the middle, content right.
+    This matches how most nav-heavy apps are wired (Gmail → Inbox folders → messages; VS Code → file tree → editor).
+    Reads naturally: <em>which app section am I in</em> → <em>what page context</em> → <em>my work</em>.
+    <ul>
+      <li>Main content area ends up narrower (3 columns fighting for space). Currently ~ <b>248 + 260 + remaining</b>.</li>
+      <li>User can still click other app-nav items to leave the review at any time.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- VARIANT B -->
+<div class="variant">
+  <div class="variant-head">
+    <span class="variant-tag">Variant B</span>
+    <span class="variant-title">Secondary → Primary → Main</span>
+    <span class="variant-note">Literal reading: "secondary to the LEFT of primary".</span>
+  </div>
+  <div class="frame">
+    <div class="app app--B">
+      <!-- Secondary (page) sidebar FIRST -->
+      <aside class="secondary-sb">
+        <div class="sec-tag">Review · Code &amp; repos</div>
+        <div class="sec-card">
+          <div class="sec-label">Reviewing section</div>
+          <div class="sec-name">Code &amp; repos</div>
+          <div class="sec-count"><strong>4 of 18</strong> repositories reviewed</div>
+          <div class="sec-bar"><div class="sec-bar-fill"></div></div>
+        </div>
+        <div>
+          <div class="sec-sub-label">In this section</div>
+          <div class="sub-item"><span class="sub-tick done"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Organization<span class="sub-count">1</span></div>
+          <div class="sub-item"><span class="sub-tick done"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Projects<span class="sub-count">3</span></div>
+          <div class="sub-item current"><span class="sub-tick current-tick"></span>Repositories<span class="sub-count">4/18</span></div>
+          <div class="sub-item"><span class="sub-tick"></span>Pipelines<span class="sub-count">0/28</span></div>
+          <div class="sub-item"><span class="sub-tick"></span>Classic releases<span class="sub-count">0/4</span></div>
+        </div>
+        <div class="sec-footer"><span class="sec-footer-dot"></span>All progress saves</div>
+      </aside>
+
+      <!-- Primary (app) sidebar SECOND -->
+      <aside class="primary-sb">
+        <div class="brand">
+          <div class="brand-logo">M</div>
+          <div class="brand-name">Migration Hub</div>
+        </div>
+        <div class="nav-group-label">Program</div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          Team profiles
+        </div>
+        <div class="nav-group-label">This team</div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Complete profile
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Overview
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Agent findings
+        </div>
+        <div class="nav-item active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Review team profile
+        </div>
+      </aside>
+
+      <!-- Main -->
+      <main class="main">
+        <div class="hero-eyebrow">SECTION 01 OF 05 · CODE &amp; REPOS</div>
+        <h2>Code &amp; repos</h2>
+        <p class="lede">Confirm or correct each item below. The agents found these from Azure DevOps — you decide what's right.</p>
+        <div class="sub-head">
+          <h3>Repositories</h3>
+          <span class="sub-progress">4 of 18 repositories reviewed</span>
+          <span class="sub-remaining">14 remaining</span>
+        </div>
+        <div class="now-reviewing">
+          <span class="now-label">Now reviewing</span>
+          <span class="now-name">charlie-cli</span>
+        </div>
+        <div class="row-reviewed"><span class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Repository name <span class="val">charlie-cli</span><span class="time">2 min ago</span><span class="btn">Edit</span><span class="btn">Undo</span></div>
+        <div class="row-reviewed"><span class="check"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>Primary owner <span class="val">carlos.rivera@contoso.com</span><span class="time">2 min ago</span><span class="btn">Edit</span><span class="btn">Undo</span></div>
+        <div class="card-pending">
+          <div class="card-pending-top">
+            <span class="card-pending-q">Uses Git LFS?</span>
+            <span class="pill pill--ado">ADO API</span>
+          </div>
+          <div class="val-pill">false</div>
+          <div class="seg">
+            <button>✓ Accept</button><button>✎ Edit</button><button>Not sure</button><button>⚑ Flag</button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="annotate">
+    <b>Variant B</b> — page-specific (secondary) sidebar leftmost, app (primary) sidebar inside, content right.
+    Reads: <em>what I'm doing right now</em> → <em>the app around it</em> → <em>my work</em>. Less conventional,
+    but puts the active-work scaffold closest to the screen edge where reviewers' eyes live.
+    <ul>
+      <li>Primary nav becomes visually nested — people may read it as secondary-to-the-page even though it's global.</li>
+      <li>Same column widths as Variant A (~ <b>260 + 248 + remaining</b>).</li>
+    </ul>
+  </div>
+</div>
+
+<h3 class="trade">Trade-offs side-by-side</h3>
+<div class="trade-grid">
+  <div class="trade-card">
+    <span class="tag tag--A">Variant A</span>
+    <h4>Primary → Secondary → Main</h4>
+    <p><b>Pro:</b> matches every major app users already know. "Global nav on the outside" is muscle memory.</p>
+    <p><b>Pro:</b> when the user leaves the review (clicks a different app-nav item), their finger travels from the far-left edge — a familiar motion.</p>
+    <p><b>Con:</b> page-specific scaffold is one column in from the edge.</p>
+  </div>
+  <div class="trade-card">
+    <span class="tag tag--B">Variant B</span>
+    <h4>Secondary → Primary → Main</h4>
+    <p><b>Pro:</b> review progress sits at the screen edge — the Champion's daily scaffold is "closest".</p>
+    <p><b>Con:</b> breaks convention — the global nav looks nested, which implies subordinate scope.</p>
+    <p><b>Con:</b> harder to learn for new users; they'll often try to close the "inner" bar thinking it's page-scoped.</p>
+  </div>
+</div>
+
+<p style="margin-top: 24px; font-size: 13px; color: var(--ink-muted); max-width: 720px;">
+  Say which variant to build, or ask for a third option. If the intent behind "secondary to the left of the primary" was
+  Variant A (conventional order), that's what I'd recommend.
+</p>
+
+</body>
+</html>

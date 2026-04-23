@@ -246,13 +246,15 @@ export async function getCodeReposChunk(
     repos.slice(0, DEMO_PREACCEPTED_REPO_COUNT).map((r) => r.id),
   );
   // Attributes that the reviewer has already confirmed on the currently-
-  // in-progress repo (matches the mock's 4 accepted rows at the top:
-  // Repository name, Primary owner, Default branch, Visibility).
+  // in-progress repo. Six of the eight attrs start accepted; LFS and
+  // submodules remain pending so the Champion can see active cards.
   const DEMO_CURRENT_REPO_PREACCEPTED_ATTRS = new Set([
-    "name",
     "primaryOwner",
     "defaultBranch",
     "visibility",
+    "contributorCount",
+    "branchProtected",
+    "hasSubmodules",
   ]);
   const currentRepo =
     (requestedRepoId && repos.find((r) => r.id === requestedRepoId)) ||
@@ -416,21 +418,28 @@ export async function getCodeReposChunk(
     );
 
     // DEMO: pre-accept every attribute of the first N repos so the Champion
-    // lands on a partially-reviewed page.
+    // lands on a partially-reviewed page. Only overrides items still in
+    // their default agent-accepted state — once the user has touched an
+    // item (accepted / edited / flagged / undone), respect the DB.
     if (preacceptedRepoIds.has(r.id)) {
       for (const it of items) {
-        it.state = "accepted";
-        it.reviewedAgoLabel = "2 min ago";
+        if (it.state === "agent_accepted") {
+          it.state = "accepted";
+          it.reviewedAgoLabel = "2 min ago";
+        }
       }
     }
     // DEMO: on the currently-in-progress repo, pre-accept the top attrs so
     // the reviewer sees "mid-review" state (matches the mock: name, owner,
     // branch, visibility reviewed; LFS, submodules, protection, contributors
-    // still pending).
+    // still pending). Same gating — don't clobber user-touched state.
     if (r.id === currentRepoId) {
       for (const it of items) {
         const attr = it.fieldPath.split(".").pop() ?? "";
-        if (DEMO_CURRENT_REPO_PREACCEPTED_ATTRS.has(attr)) {
+        if (
+          DEMO_CURRENT_REPO_PREACCEPTED_ATTRS.has(attr) &&
+          it.state === "agent_accepted"
+        ) {
           it.state = "accepted";
           it.reviewedAgoLabel =
             attr === "name" || attr === "primaryOwner"
