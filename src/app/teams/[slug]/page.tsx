@@ -1,20 +1,20 @@
 import { notFound } from "next/navigation";
 import { PhaseTracker } from "@/components/PhaseTracker";
-import { TeamProfileHeader } from "@/components/team/TeamProfileHeader";
-
-export const dynamic = "force-dynamic";
 import { EffortCard } from "@/components/team/EffortCard";
 import {
   OutstandingWork,
   type OutstandingItem,
 } from "@/components/team/OutstandingWork";
-import { ReviewProgress } from "@/components/team/ReviewProgress";
+import { ReadinessCard } from "@/components/team/ReadinessCard";
 import { ScopeCard } from "@/components/team/ScopeCard";
+import { TeamMakeupCard } from "@/components/team/TeamMakeupCard";
+import { TeamProfileHeader } from "@/components/team/TeamProfileHeader";
 import type { MigrationApproach } from "@/generated/prisma/enums";
-import { completionPercent } from "@/lib/completion";
 import { PHASE_STEPS, phaseSnapshot } from "@/lib/phase";
 import { relativeTime } from "@/lib/time";
 import { getTeamBySlug } from "@/server/teams";
+
+export const dynamic = "force-dynamic";
 
 export default async function TeamOverviewPage({
   params,
@@ -37,12 +37,6 @@ export default async function TeamOverviewPage({
   const phase = phaseSnapshot(team.migrationState);
   const scopeCounts = countByApproach(team.jtbds);
   const outstanding = buildOutstanding(team);
-
-  const allFindings = team.latestFindings?.findings ?? [];
-  const reviewPct = completionPercent(allFindings);
-  const humanVerifiedCount = allFindings.filter(
-    (f) => f.lastActor === "HUMAN" && f.status !== "PENDING",
-  ).length;
 
   // eslint-disable-next-line react-hooks/purity -- server component renders once per request
   const nowMs = Date.now();
@@ -72,12 +66,6 @@ export default async function TeamOverviewPage({
         }))}
       />
 
-      <ReviewProgress
-        percent={reviewPct}
-        humanVerified={humanVerifiedCount}
-        total={allFindings.length}
-      />
-
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <ScopeCard total={team.jtbds.length} counts={scopeCounts} />
         <EffortCard
@@ -88,6 +76,11 @@ export default async function TeamOverviewPage({
           targetCutoverAt={team.targetCutoverAt}
           slackWeeks={team.slackWeeks}
         />
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        <ReadinessCard team={team} />
+        <TeamMakeupCard team={team} />
       </div>
 
       <OutstandingWork items={outstanding} />
