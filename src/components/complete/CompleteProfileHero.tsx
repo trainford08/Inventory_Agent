@@ -31,7 +31,7 @@ export function CompleteProfileHero({
       <div className="flex flex-wrap items-center gap-4">
         <Link
           href={`/teams/${teamSlug}/review`}
-          className="inline-flex items-center gap-2 rounded-md bg-ink px-[16px] py-[10px] text-[13px] font-semibold text-white transition-colors hover:bg-[#18181b]"
+          className="inline-flex items-center gap-2 rounded-md border border-primary bg-primary px-[16px] py-[10px] text-[13px] font-semibold text-white shadow-[0_1px_3px_rgba(91,95,207,0.3)] transition-colors hover:bg-primary-hover hover:border-primary-hover"
         >
           {hasStarted ? "Continue profile" : "Start review"}
           <ArrowRight />
