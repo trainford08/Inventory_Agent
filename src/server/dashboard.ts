@@ -213,7 +213,10 @@ export async function getDashboardData(): Promise<DashboardData> {
       count: blockers.length,
       items: blockers.slice(0, 4),
     },
-    adaHandoffs: { count: 0, items: [] },
+    // Ada handoffs: the agent isn't wired up yet (M4), so we surface a
+    // representative canned handoff for whichever team is mid-review so
+    // reviewers can see what a handoff looks like in the queue.
+    adaHandoffs: buildDemoAdaHandoffs(teams),
     cutoverSlips: {
       count: cutoverSlips.length,
       items: cutoverSlips.slice(0, 4),
@@ -226,5 +229,37 @@ export async function getDashboardData(): Promise<DashboardData> {
     health,
     waves,
     actionItemCount,
+  };
+}
+
+// Demo-only: Ada isn't live yet, but the dashboard design needs a handoff
+// entry to convey what the queue looks like once she is. Pick the first
+// team that's actively in review; if no one is, return empty.
+function buildDemoAdaHandoffs(
+  teams: Array<{
+    slug: string;
+    name: string;
+    cohort: string;
+    wave: number | null;
+    migrationState: MigrationState;
+  }>,
+): { count: number; items: TriageItem[] } {
+  const candidate =
+    teams.find((t) => t.migrationState === "REVIEWING") ??
+    teams.find((t) => t.migrationState === "IN_PROGRESS");
+  if (!candidate) return { count: 0, items: [] };
+  return {
+    count: 1,
+    items: [
+      {
+        slug: candidate.slug,
+        name: candidate.name,
+        cohort: candidate.cohort,
+        wave: candidate.wave,
+        subtitle:
+          "Ada couldn't resolve an access policy question without security input",
+        age: "2 hr ago",
+      },
+    ],
   };
 }

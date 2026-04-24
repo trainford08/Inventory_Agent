@@ -6,12 +6,14 @@ export function ProgramPulse({
   health,
   waveCount,
   readyCount,
+  refreshedLabel,
 }: {
   teamTotal: number;
   lifecycle: LifecycleCounts;
   health: HealthCounts;
   waveCount: number;
   readyCount: number;
+  refreshedLabel: string;
 }) {
   const { onTrack, atRisk, blocked, done } = health;
   const active = teamTotal - done;
@@ -29,10 +31,27 @@ export function ProgramPulse({
             {waveCount} {waveCount === 1 ? "wave" : "waves"}
           </span>
         </div>
-        <a className="inline-flex cursor-pointer items-center gap-1 text-[12.5px] font-semibold text-primary">
-          Full metrics
-          <ChevronRight />
-        </a>
+        <div className="flex items-center gap-[14px]">
+          <span className="inline-flex items-center gap-[5px] font-mono text-[10.5px] text-ink-muted">
+            <svg
+              className="h-[10px] w-[10px]"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M23 4v6h-6M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            Refreshed {refreshedLabel}
+          </span>
+          <a className="inline-flex cursor-pointer items-center gap-1 text-[12.5px] font-semibold text-primary">
+            Full metrics
+            <ChevronRight />
+          </a>
+        </div>
       </header>
 
       <div className="px-7 py-[22px]">
@@ -95,15 +114,18 @@ export function ProgramPulse({
               <PhasePill count={lifecycle.done} name="Done" done last />
             </div>
             <div className="ml-auto flex items-center gap-[14px]">
+              {done > 0 ? (
+                <TrendPill tone="up" delta={done} label="done this week" />
+              ) : null}
+              {atRisk > 0 ? (
+                <TrendPill tone="down" delta={atRisk} label="new at risk" />
+              ) : null}
               {readyCount > 0 ? (
                 <TrendPill
                   tone="up"
                   delta={readyCount}
                   label="ready to advance"
                 />
-              ) : null}
-              {atRisk > 0 ? (
-                <TrendPill tone="down" delta={atRisk} label="at risk" />
               ) : null}
             </div>
           </div>

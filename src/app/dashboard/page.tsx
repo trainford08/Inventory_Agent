@@ -34,6 +34,7 @@ export default async function DashboardPage() {
         health={data.health}
         waveCount={data.waves.filter((w) => w.key !== "unassigned").length}
         readyCount={data.readyToAdvance.count}
+        refreshedLabel="just now"
       />
 
       <AttentionQueue
