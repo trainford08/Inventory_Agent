@@ -162,6 +162,20 @@ export function alphaConfig(orgId: string): CohortShape {
         "team size: 3 · CODEOWNERS: TBD",
         "INFERRED domain reasoning from team size + GitHub's CODEOWNERS model. With 3 engineers, if the Champion is listed as a code-owner on every path, they become a PR-review bottleneck whenever they're OOO. Not independently documented but a standard small-team pattern worth flagging before migration.",
       ),
+      anomaly(
+        "Code & repos",
+        "codebase.bus-factor",
+        "Bus-factor risk on alpha-worker",
+        "alpha-worker: 2 contributors · primary owner: maria.lopez",
+        "INFERRED: alpha-worker has two contributors and a single primary owner. If the owner leaves or is OOO mid-migration, there's no documented second-in-command for the repo. Worth confirming coverage before cutover.",
+      ),
+      anomaly(
+        "Build / pipelines",
+        "workflows.no-status-badge",
+        "Build pipeline has no visible status badge in README",
+        "repo: alpha-service · README: no badge",
+        "INFERRED from repo content — the main README doesn't surface the build status. Not a blocker, but it's a common smell: teams that don't badge their build often don't notice when main goes red. Worth flagging so the team adds a GitHub Actions status badge post-migration.",
+      ),
     ],
   };
 }
