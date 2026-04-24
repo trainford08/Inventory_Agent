@@ -217,18 +217,79 @@ export async function getDashboardData(): Promise<DashboardData> {
     // representative canned handoff for whichever team is mid-review so
     // reviewers can see what a handoff looks like in the queue.
     adaHandoffs: buildDemoAdaHandoffs(teams),
-    cutoverSlips: {
-      count: cutoverSlips.length,
-      items: cutoverSlips.slice(0, 4),
-    },
-    readyToAdvance: {
-      count: readyToAdvance.length,
-      items: readyToAdvance.slice(0, 4),
-    },
+    cutoverSlips: buildCutoverSlips(cutoverSlips, teams),
+    readyToAdvance: buildReadyToAdvance(readyToAdvance, teams),
     lifecycle,
     health,
     waves,
     actionItemCount,
+  };
+}
+
+// Demo augmentation: the seed only puts Charlie into a cutover slip.
+// If there's no real slip, surface a representative one against a team
+// already at risk so the queue shows the type.
+function buildCutoverSlips(
+  real: TriageItem[],
+  teams: Array<{
+    slug: string;
+    name: string;
+    cohort: string;
+    wave: number | null;
+    migrationState: MigrationState;
+    healthStatus: string | null;
+  }>,
+): { count: number; items: TriageItem[] } {
+  if (real.length > 0) return { count: real.length, items: real.slice(0, 4) };
+  const candidate =
+    teams.find((t) => t.healthStatus === "AT_RISK") ??
+    teams.find((t) => t.migrationState === "IN_PROGRESS");
+  if (!candidate) return { count: 0, items: [] };
+  return {
+    count: 1,
+    items: [
+      {
+        slug: candidate.slug,
+        name: candidate.name,
+        cohort: candidate.cohort,
+        wave: candidate.wave,
+        subtitle: "2w behind target · cutover slipped from Oct 14 to Oct 28",
+        age: "1 hr ago",
+      },
+    ],
+  };
+}
+
+// Demo augmentation: no seed team is in the READY state today, so the
+// "ready to advance" milestone never renders from real data. Surface one
+// against a team mid-review so the self-service milestone card shows.
+function buildReadyToAdvance(
+  real: TriageItem[],
+  teams: Array<{
+    slug: string;
+    name: string;
+    cohort: string;
+    wave: number | null;
+    migrationState: MigrationState;
+  }>,
+): { count: number; items: TriageItem[] } {
+  if (real.length > 0) return { count: real.length, items: real.slice(0, 4) };
+  const candidate =
+    teams.find((t) => t.migrationState === "REVIEWING") ??
+    teams.find((t) => t.migrationState === "DISCOVERING");
+  if (!candidate) return { count: 0, items: [] };
+  return {
+    count: 1,
+    items: [
+      {
+        slug: candidate.slug,
+        name: candidate.name,
+        cohort: candidate.cohort,
+        wave: candidate.wave,
+        subtitle: "profile complete · no open blockers · auto-advanced",
+        age: "today",
+      },
+    ],
   };
 }
 

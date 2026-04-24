@@ -29,55 +29,64 @@ export function AttentionQueue({
   cutoverSlips: { count: number; items: TriageItem[] };
   readyToAdvance: { count: number; items: TriageItem[] };
 }) {
-  const items: QueueItem[] = [
-    ...blockers.items.map<QueueItem>((t) => ({
-      tone: "critical",
-      typeLabel: "Blocker",
-      age: t.age === "blocker" ? "open" : "needs review",
-      headline: `${t.name} — ${t.subtitle}`,
-      teamName: t.name,
-      teamSlug: t.slug,
-      teamSubtitle: teamSub(t),
-      detail:
-        "Open risks are preventing this team from advancing. Review mitigations before the next wave gate.",
-      primaryLabel: "View team",
-    })),
-    ...adaHandoffs.items.map<QueueItem>((t) => ({
-      tone: "handoff",
-      typeLabel: "Ada handoff",
-      age: t.age,
-      headline: t.subtitle,
-      teamName: t.name,
-      teamSlug: t.slug,
-      teamSubtitle: teamSub(t),
-      detail: "Ada gathered evidence but couldn't resolve without human input.",
-      primaryLabel: "Resume with Ada",
-    })),
-    ...cutoverSlips.items.map<QueueItem>((t) => ({
-      tone: "high",
-      typeLabel: "Schedule slip",
-      age: t.age,
-      headline: `${t.name} is ${t.subtitle}`,
-      teamName: t.name,
-      teamSlug: t.slug,
-      teamSubtitle: teamSub(t),
-      detail:
-        "Target cutover is slipping. Downstream teams in the same wave may be affected.",
-      primaryLabel: "View team",
-    })),
-    ...readyToAdvance.items.map<QueueItem>((t) => ({
-      tone: "ready",
-      typeLabel: "Self-service milestone",
-      age: "today",
-      headline: `${t.name} is ready to cut over`,
-      teamName: t.name,
-      teamSlug: t.slug,
-      teamSubtitle: teamSub(t),
-      detail:
-        "Profile complete, no open blockers. Team has auto-advanced to ready.",
-      passive: true,
-    })),
-  ];
+  const blockerItems = blockers.items.map<QueueItem>((t) => ({
+    tone: "critical",
+    typeLabel: "Blocker",
+    age: t.age === "blocker" ? "open" : "needs review",
+    headline: `${t.name} — ${t.subtitle}`,
+    teamName: t.name,
+    teamSlug: t.slug,
+    teamSubtitle: teamSub(t),
+    detail:
+      "Open risks are preventing this team from advancing. Review mitigations before the next wave gate.",
+    primaryLabel: "View team",
+  }));
+  const handoffItems = adaHandoffs.items.map<QueueItem>((t) => ({
+    tone: "handoff",
+    typeLabel: "Ada handoff",
+    age: t.age,
+    headline: t.subtitle,
+    teamName: t.name,
+    teamSlug: t.slug,
+    teamSubtitle: teamSub(t),
+    detail: "Ada gathered evidence but couldn't resolve without human input.",
+    primaryLabel: "Resume with Ada",
+  }));
+  const slipItems = cutoverSlips.items.map<QueueItem>((t) => ({
+    tone: "high",
+    typeLabel: "Schedule slip",
+    age: t.age,
+    headline: `${t.name} is ${t.subtitle}`,
+    teamName: t.name,
+    teamSlug: t.slug,
+    teamSubtitle: teamSub(t),
+    detail:
+      "Target cutover is slipping. Downstream teams in the same wave may be affected.",
+    primaryLabel: "View team",
+  }));
+  const milestoneItems = readyToAdvance.items.map<QueueItem>((t) => ({
+    tone: "ready",
+    typeLabel: "Self-service milestone",
+    age: "today",
+    headline: `${t.name} is ready to cut over`,
+    teamName: t.name,
+    teamSlug: t.slug,
+    teamSubtitle: teamSub(t),
+    detail:
+      "Profile complete, no open blockers. Team has auto-advanced to ready.",
+    passive: true,
+  }));
+
+  // Interleave the buckets so the reader sees variety instead of four
+  // blockers in a row. Critical blockers lead, then the list cycles
+  // through the other types, pulling a second blocker only after
+  // every other type has had its turn.
+  const items: QueueItem[] = interleave([
+    blockerItems,
+    handoffItems,
+    slipItems,
+    milestoneItems,
+  ]);
 
   const total =
     blockers.count +
@@ -179,6 +188,21 @@ function QueueCard({ item }: { item: QueueItem }) {
       </div>
     </div>
   );
+}
+
+function interleave<T>(buckets: T[][]): T[] {
+  const out: T[] = [];
+  const queues = buckets.map((b) => [...b]);
+  let empties = 0;
+  while (empties < queues.length) {
+    empties = 0;
+    for (const q of queues) {
+      const next = q.shift();
+      if (next !== undefined) out.push(next);
+      else empties += 1;
+    }
+  }
+  return out;
 }
 
 function teamSub(t: TriageItem): string {
