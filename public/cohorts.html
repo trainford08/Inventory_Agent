@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meet the six teams — Migration Hub demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f7f5ef;
+    --card: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #3a3a3a;
+    --ink-muted: #6b6b6b;
+    --ink-faint: #a0a0a0;
+    --rule: #e6e0d0;
+    --accent: #c65a1f;
+    --primary: #5b5fcf;
+    --success: #15803d;
+    --success-bg: #dcfce7;
+    --warn: #b45309;
+    --warn-bg: #fef3c7;
+    --danger: #b91c1c;
+    --danger-bg: #fee2e2;
+    --gray-bg: #e4e4e7;
+    --gray-ink: #71717a;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.6;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 72px 32px 120px;
+  }
+
+  /* Header */
+  .eyebrow {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 18px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(38px, 5.5vw, 58px);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  h1 em { font-style: italic; font-weight: 300; color: var(--ink-soft); }
+  .lede {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 66ch;
+    line-height: 1.55;
+    margin-bottom: 56px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Section heading between card grid and detailed profiles */
+  h2 {
+    font-family: var(--serif);
+    font-size: 30px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin-top: 72px;
+    margin-bottom: 10px;
+  }
+  .section-intro {
+    color: var(--ink-soft);
+    font-size: 16px;
+    max-width: 58ch;
+    margin-bottom: 32px;
+  }
+
+  /* At-a-glance card grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .card-head {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 10px; margin-bottom: 10px;
+  }
+  .card-name {
+    font-family: var(--serif);
+    font-size: 22px; font-weight: 500;
+    letter-spacing: -0.01em; line-height: 1.15;
+  }
+  .card-sub {
+    font-size: 12px; font-weight: 500;
+    color: var(--ink-muted); margin-top: 2px;
+    font-style: italic;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .chip--on-track { background: var(--success-bg); color: var(--success); }
+  .chip--at-risk  { background: var(--warn-bg);    color: var(--warn); }
+  .chip--blocked  { background: var(--danger-bg);  color: var(--danger); }
+  .chip--done     { background: var(--gray-bg);    color: var(--gray-ink); }
+
+  .card-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+  }
+  .stat-label {
+    font-size: 10.5px; color: var(--ink-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .stat-val {
+    color: var(--ink); font-weight: 500;
+    margin-top: 1px;
+  }
+
+  /* Profile blocks */
+  .profile {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .profile:last-of-type { border-bottom: none; }
+  .profile-head {
+    display: flex; align-items: baseline; gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .profile-name {
+    font-family: var(--serif);
+    font-size: 30px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .profile-tag {
+    font-style: italic; color: var(--ink-muted); font-size: 17px;
+  }
+  .profile-intro {
+    font-size: 16.5px;
+    color: var(--ink-soft);
+    max-width: 68ch;
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+  .profile-body {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 32px;
+  }
+  @media (max-width: 760px) {
+    .profile-body { grid-template-columns: 1fr; gap: 20px; }
+  }
+  .profile-facts {
+    font-size: 14px;
+    line-height: 1.8;
+  }
+  .profile-facts dt {
+    font-size: 10.5px; color: var(--ink-muted);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600;
+    margin-top: 8px;
+  }
+  .profile-facts dt:first-child { margin-top: 0; }
+  .profile-facts dd { color: var(--ink); margin-bottom: 2px; }
+  .profile-notes { font-size: 15px; line-height: 1.6; color: var(--ink-soft); }
+  .profile-notes h4 {
+    font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-muted);
+    margin-bottom: 8px; font-weight: 600;
+  }
+  .profile-notes ul { padding-left: 18px; }
+  .profile-notes li { margin-bottom: 6px; }
+  .profile-notes strong { color: var(--ink); font-weight: 600; }
+  .profile-role {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: #fdfaf3;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 14px;
+    color: #4a4135;
+  }
+  .profile-role strong { color: #1f1c14; font-weight: 600; }
+
+  /* Why-it-matters closing */
+  .closing {
+    margin-top: 64px;
+    padding: 28px 32px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+  }
+  .closing h3 {
+    font-family: var(--serif);
+    font-size: 22px; font-weight: 500;
+    letter-spacing: -0.01em; margin-bottom: 10px;
+  }
+  .closing p { color: var(--ink-soft); font-size: 15px; max-width: 66ch; margin-bottom: 10px; }
+  .closing ul { padding-left: 22px; color: var(--ink-soft); font-size: 15px; }
+  .closing li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Migration Hub · Demo data</div>
+  <h1>Meet the <em>six teams</em></h1>
+  <p class="lede">
+    The Migration Hub demo is populated with six fabricated teams — each one
+    designed to represent a different kind of migration story. Together
+    they cover the full range of what a real program looks like: the
+    simple ones, the complicated ones, the stuck ones, and the ones that
+    already tried once and had to stop.
+  </p>
+
+  <!-- ================================================================= -->
+  <h2>At a glance</h2>
+  <p class="section-intro">A quick read on all six. Full profiles below.</p>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-name">Alpha Platform</div>
+          <div class="card-sub">The easy yes</div>
+        </div>
+        <span class="chip chip--on-track">On track</span>
+      </div>
+      <div class="card-stats">
+        <div><div class="stat-label">Size</div><div class="stat-val">3 engineers</div></div>
+        <div><div class="stat-label">Stage</div><div class="stat-val">Not started</div></div>
+        <div><div class="stat-label">Target</div><div class="stat-val">~6 weeks out</div></div>
+        <div><div class="stat-label">Risk</div><div class="stat-val">Low</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-name">Bravo Services</div>
+          <div class="card-sub">The typical healthy team</div>
+        </div>
+        <span class="chip chip--on-track">On track</span>
+      </div>
+      <div class="card-stats">
+        <div><div class="stat-label">Size</div><div class="stat-val">6 engineers</div></div>
+        <div><div class="stat-label">Stage</div><div class="stat-val">Discovering</div></div>
+        <div><div class="stat-label">Target</div><div class="stat-val">~10 weeks out</div></div>
+        <div><div class="stat-label">Risk</div><div class="stat-val">Low</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-name">Charlie Toolkit</div>
+          <div class="card-sub">The interesting one</div>
+        </div>
+        <span class="chip chip--at-risk">At risk</span>
+      </div>
+      <div class="card-stats">
+        <div><div class="stat-label">Size</div><div class="stat-val">11 engineers</div></div>
+        <div><div class="stat-label">Stage</div><div class="stat-val">Reviewing</div></div>
+        <div><div class="stat-label">Target</div><div class="stat-val">~14 weeks — slipping</div></div>
+        <div><div class="stat-label">Risk</div><div class="stat-val">FedRAMP High</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-name">Delta Data Platform</div>
+          <div class="card-sub">The heavyweight</div>
+        </div>
+        <span class="chip chip--on-track">On track</span>
+      </div>
+      <div class="card-stats">
+        <div><div class="stat-label">Size</div><div class="stat-val">14 engineers</div></div>
+        <div><div class="stat-label">Stage</div><div class="stat-val">In progress</div></div>
+        <div><div class="stat-label">Target</div><div class="stat-val">~8 weeks out</div></div>
+        <div><div class="stat-label">Risk</div><div class="stat-val">FedRAMP High</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-name">Echo Mobile</div>
+          <div class="card-sub">The Champion still has work</div>
+        </div>
+        <span class="chip chip--blocked">Blocked</span>
+      </div>
+      <div class="card-stats">
+        <div><div class="stat-label">Size</div><div class="stat-val">4 engineers</div></div>
+        <div><div class="stat-label">Stage</div><div class="stat-val">Not started</div></div>
+        <div><div class="stat-label">Target</div><div class="stat-val">Not set yet</div></div>
+        <div><div class="stat-label">Risk</div><div class="stat-val">Champion gaps</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="card-name">Foxtrot Archive</div>
+          <div class="card-sub">The edge case</div>
+        </div>
+        <span class="chip chip--done">Done · parked</span>
+      </div>
+      <div class="card-stats">
+        <div><div class="stat-label">Size</div><div class="stat-val">2 engineers</div></div>
+        <div><div class="stat-label">Stage</div><div class="stat-val">Rolled back</div></div>
+        <div><div class="stat-label">Target</div><div class="stat-val">Paused</div></div>
+        <div><div class="stat-label">Risk</div><div class="stat-val">Waiting on others</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================================================================= -->
+  <h2>The six stories</h2>
+  <p class="section-intro">Each team was designed to make a point about what real migrations look like — and to make sure every screen in the product has meaningful data behind it.</p>
+
+  <!-- ALPHA -->
+  <div class="profile">
+    <div class="profile-head">
+      <div class="profile-name">Alpha Platform</div>
+      <div class="profile-tag">“The easy yes”</div>
+      <span class="chip chip--on-track">On track</span>
+    </div>
+    <p class="profile-intro">
+      Small, modern team. One clean codebase, a standard build pipeline,
+      nothing weird under the hood. The system did most of the work
+      automatically — the team lead just has to glance through and approve.
+    </p>
+    <div class="profile-body">
+      <dl class="profile-facts">
+        <dt>Team lead</dt><dd>Alex Chen, Engineering Lead</dd>
+        <dt>Team size</dt><dd>3 engineers</dd>
+        <dt>Codebase</dt><dd>TypeScript, ~2 GB</dd>
+        <dt>When they'll cut over</dt><dd>About 6 weeks from now</dd>
+      </dl>
+      <div class="profile-notes">
+        <h4>What makes them interesting</h4>
+        <ul>
+          <li>Almost nothing to review — proves the system can stay out of the way when things are simple.</li>
+          <li>High confidence on how much work is left (4–6 weeks of effort).</li>
+          <li>Comfortable buffer — no time pressure.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="profile-role"><strong>Role in the demo:</strong> the fast path. Shows what migration feels like when everything cooperates.</div>
+  </div>
+
+  <!-- BRAVO -->
+  <div class="profile">
+    <div class="profile-head">
+      <div class="profile-name">Bravo Services</div>
+      <div class="profile-tag">“The typical healthy team”</div>
+      <span class="chip chip--on-track">On track</span>
+    </div>
+    <p class="profile-intro">
+      Normal team doing normal work. Eight repositories, a couple of older
+      release pipelines that need a decision, a few third-party add-ons
+      that don't have direct equivalents on the new platform. Nothing is
+      blocking, but there are real choices to make.
+    </p>
+    <div class="profile-body">
+      <dl class="profile-facts">
+        <dt>Team lead</dt><dd>Jordan Kim, Staff Engineer</dd>
+        <dt>Team size</dt><dd>6 engineers</dd>
+        <dt>Activity</dt><dd>~58 active work items</dd>
+        <dt>When they'll cut over</dt><dd>About 10 weeks from now</dd>
+      </dl>
+      <div class="profile-notes">
+        <h4>What makes them interesting</h4>
+        <ul>
+          <li>The median experience — most real teams will look something like this.</li>
+          <li>A few judgment calls but no emergencies.</li>
+          <li>Demonstrates the steady, day-to-day review pace.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="profile-role"><strong>Role in the demo:</strong> the baseline. What "typical" looks like for the bulk of the fleet.</div>
+  </div>
+
+  <!-- CHARLIE -->
+  <div class="profile">
+    <div class="profile-head">
+      <div class="profile-name">Charlie Toolkit</div>
+      <div class="profile-tag">“The interesting one”</div>
+      <span class="chip chip--at-risk">At risk</span>
+    </div>
+    <p class="profile-intro">
+      A mid-size team with one foot in modern software and one in legacy
+      tooling. Old-style pipelines, an on-prem signing service that doesn't
+      exist on the target platform, and a <strong>FedRAMP High</strong>
+      security classification that creates strict rules about where data
+      can live. This team has the most real migration decisions of any
+      in the demo.
+    </p>
+    <div class="profile-body">
+      <dl class="profile-facts">
+        <dt>Team lead</dt><dd>Rory McDonald, Principal Engineer</dd>
+        <dt>Team size</dt><dd>11 engineers</dd>
+        <dt>Security</dt><dd>FedRAMP High (regulated)</dd>
+        <dt>When they'll cut over</dt><dd>~14 weeks — already 2 weeks behind</dd>
+      </dl>
+      <div class="profile-notes">
+        <h4>What makes them interesting</h4>
+        <ul>
+          <li>The federal compliance requirements force specific architectural decisions.</li>
+          <li>The on-prem signing service has no direct equivalent — someone has to figure out a replacement.</li>
+          <li><strong>Already running 2 weeks behind schedule</strong> — the kind of team a program lead actually has to pay attention to.</li>
+          <li>Every "interesting" review state in the product shows up here: anomalies, needs-more-info flags, low-confidence evidence.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="profile-role"><strong>Role in the demo:</strong> the hero team. The richest review experience — this is the team you'd actually walk through during the pitch.</div>
+  </div>
+
+  <!-- DELTA -->
+  <div class="profile">
+    <div class="profile-head">
+      <div class="profile-name">Delta Data Platform</div>
+      <div class="profile-tag">“The heavyweight”</div>
+      <span class="chip chip--on-track">On track</span>
+    </div>
+    <p class="profile-intro">
+      Large data platform, mid-migration. Almost 100 GB of code. A
+      separate 38 GB data repository with its own special handling. Shared
+      code that pulls in from other teams' projects. Canary deployments
+      coordinated across four regions. The big decisions are already made
+      — what's left is executing without breaking anything.
+    </p>
+    <div class="profile-body">
+      <dl class="profile-facts">
+        <dt>Team lead</dt><dd>Elena Volkov, Engineering Director</dd>
+        <dt>Team size</dt><dd>14 engineers</dd>
+        <dt>Security</dt><dd>FedRAMP High (regulated)</dd>
+        <dt>When they'll cut over</dt><dd>About 8 weeks from now — zero buffer</dd>
+      </dl>
+      <div class="profile-notes">
+        <h4>What makes them interesting</h4>
+        <ul>
+          <li>The "monster repo" case — tests how the product handles very large codebases.</li>
+          <li>Coordination across regions means any slip cascades.</li>
+          <li>Already 20 weeks into the work — execution risk, not decision risk.</li>
+          <li>No slack left: a single delay pushes the cutover date.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="profile-role"><strong>Role in the demo:</strong> the scale case. Proves the product handles teams where a misstep costs weeks.</div>
+  </div>
+
+  <!-- ECHO -->
+  <div class="profile">
+    <div class="profile-head">
+      <div class="profile-name">Echo Mobile</div>
+      <div class="profile-tag">“The Champion still has work”</div>
+      <span class="chip chip--blocked">Blocked</span>
+    </div>
+    <p class="profile-intro">
+      iOS + Android team, mid-review. The system did its part —
+      discovery turned up a bunch of questions about signing keys, the
+      mobile build service, and mobile-specific release gates. The team
+      lead just hasn't answered most of them yet. Everything downstream
+      is stuck until they do.
+    </p>
+    <div class="profile-body">
+      <dl class="profile-facts">
+        <dt>Team lead</dt><dd>Karen Lee, Mobile Lead</dd>
+        <dt>Team size</dt><dd>4 engineers</dd>
+        <dt>Status</dt><dd>Blocked on Champion input</dd>
+        <dt>When they'll cut over</dt><dd>Can't be estimated yet</dd>
+      </dl>
+      <div class="profile-notes">
+        <h4>What makes them interesting</h4>
+        <ul>
+          <li>Shows what happens when the human side of the process stalls.</li>
+          <li>No effort estimate, no target date — all downstream of answers the team lead owes.</li>
+          <li>Mobile-specific complications (signing, app stores) that most teams don't have.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="profile-role"><strong>Role in the demo:</strong> the stuck case. The team that makes the "needs your attention" queue on the program dashboard light up.</div>
+  </div>
+
+  <!-- FOXTROT -->
+  <div class="profile">
+    <div class="profile-head">
+      <div class="profile-name">Foxtrot Archive</div>
+      <div class="profile-tag">“The edge case”</div>
+      <span class="chip chip--done">Done · parked</span>
+    </div>
+    <p class="profile-intro">
+      Already tried to migrate once last quarter and had to roll back.
+      Legacy C++ codebase, a signing process nobody's touched in years,
+      archived code still tied to old-style pipelines. On pause until
+      Delta figures out the tooling problems that stopped them last time.
+    </p>
+    <div class="profile-body">
+      <dl class="profile-facts">
+        <dt>Team lead</dt><dd>Miranda Flint, Engineering Manager</dd>
+        <dt>Team size</dt><dd>2 engineers</dd>
+        <dt>Status</dt><dd>Rolled back — waiting</dd>
+        <dt>When they'll cut over</dt><dd>TBD (paused)</dd>
+      </dl>
+      <div class="profile-notes">
+        <h4>What makes them interesting</h4>
+        <ul>
+          <li>Proves the product handles teams that <em>tried and stopped</em> — not a failure state, just a pause.</li>
+          <li>A post-mortem waiting to happen.</li>
+          <li>Dependency on another team's progress — shows how teams relate to each other.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="profile-role"><strong>Role in the demo:</strong> the rolled-back case. Makes the fleet realistic — not every team is in motion at once.</div>
+  </div>
+
+  <!-- ================================================================= -->
+  <div class="closing">
+    <h3>Why six, and why these six?</h3>
+    <p>
+      Real migration programs have hundreds or thousands of teams, and every one is different. The demo's six are curated so that together they cover the whole range:
+    </p>
+    <ul>
+      <li><strong>Every health state</strong> — On track, At risk, Blocked, and Done are all represented.</li>
+      <li><strong>Every stage of the journey</strong> — from "haven't started" through "mid-cutover" to "rolled back."</li>
+      <li><strong>Every kind of difficulty</strong> — easy, typical, regulated, huge, stalled, and paused.</li>
+    </ul>
+    <p style="margin-top: 10px;">
+      That way, every screen in the product has real data to show — and every story a champion, a team lead, or a program PM might tell about their teams has a cohort that matches.
+    </p>
+  </div>
+
+</div>
+</body>
+</html>
