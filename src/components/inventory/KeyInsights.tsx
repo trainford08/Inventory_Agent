@@ -96,6 +96,24 @@ const INSIGHT_CATEGORIES: Array<{
 // Coverage tiers measure how widely a framework JTBD is performed across the
 // 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
 // performed" — anything below that is long-tail and likely skippable.
+const INSIGHT_IDENTITY = {
+  totalConnections: 1847,
+  oidcFederated: 1037,
+  patBased: 810,
+  // Where the manual rotation work concentrates (top cohorts by PAT count).
+  // teams = number of teams in the cohort, pats = PAT-based connections.
+  patConcentration: [
+    { cohort: "Bravo", teams: 47, pats: 312 },
+    { cohort: "Echo", teams: 13, pats: 248 },
+    { cohort: "Charlie", teams: 24, pats: 132 },
+    { cohort: "Alpha", teams: 32, pats: 68 },
+    { cohort: "Delta", teams: 19, pats: 35 },
+    { cohort: "Foxtrot", teams: 7, pats: 15 },
+  ],
+  actionSignal:
+    "Bravo and Echo cohorts together hold 69% of the PAT rotations. Start ramping those teams to OIDC pre-cutover so they don't bottleneck the wave.",
+};
+
 const INSIGHT_REPOS = {
   reposTotal: 1847,
   totalSizeGb: 412,
@@ -182,6 +200,7 @@ export function KeyInsights() {
       <CoveragePanel />
       <LeveragePanel />
       <RepoFootprintPanel />
+      <IdentityPanel />
     </section>
   );
 }
@@ -669,6 +688,165 @@ function ApproachChip({ approach }: { approach: "move" | "stay" | "gap" }) {
   if (approach === "move") return <Chip tone="ok">Move</Chip>;
   if (approach === "stay") return <Chip tone="warn">Stay (hybrid)</Chip>;
   return <Chip tone="danger">Gap</Chip>;
+}
+
+/* -------------------------------------------------------------------------- */
+/* §06 — Program-wide identity surface                                        */
+/* -------------------------------------------------------------------------- */
+
+function IdentityPanel() {
+  const {
+    totalConnections,
+    oidcFederated,
+    patBased,
+    patConcentration,
+    actionSignal,
+  } = INSIGHT_IDENTITY;
+  const oidcPct = Math.round((oidcFederated / totalConnections) * 100);
+  const patPct = Math.round((patBased / totalConnections) * 100);
+
+  // Top 2 cohorts by PAT count for the concentration bar headline.
+  const topPats = [...patConcentration].sort((a, b) => b.pats - a.pats);
+  const top2Sum = topPats[0]!.pats + topPats[1]!.pats;
+  const top2Pct = Math.round((top2Sum / patBased) * 100);
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Identity surface
+      </div>
+      <div className="mb-4 text-[12px] leading-[1.55] text-ink-muted">
+        How many <em>service connections</em> the program has — saved logins a
+        team&apos;s pipelines (automated build/deploy jobs) use to reach
+        external systems like Azure, AWS, and package registries. Each
+        connection uses one of two authentication methods, and only one of them
+        transfers to GitHub without manual work.
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <RepoStat
+          label="Service connections"
+          value={totalConnections.toLocaleString()}
+          sub="saved logins pipelines use to reach Azure, AWS, package registries, etc. · across all 142 teams"
+        />
+        <IdentityStat
+          tone="success"
+          label="OIDC federated"
+          value={`${oidcFederated.toLocaleString()} · ${oidcPct}%`}
+          sub={
+            <>
+              <em>OpenID Connect federation</em> — GitHub and the target system
+              trust each other directly. No tokens to copy; transfers cleanly at
+              cutover.
+            </>
+          }
+        />
+        <IdentityStat
+          tone="warn"
+          label="PAT-based (manual rotation)"
+          value={`${patBased.toLocaleString()} · ${patPct}%`}
+          sub={
+            <>
+              <em>Personal Access Tokens</em> — static credentials, like
+              passwords. Every one must be manually re-issued in GitHub at
+              cutover before pipelines can authenticate.
+            </>
+          }
+        />
+      </div>
+
+      <div>
+        <div className="mb-1 text-[12.5px] font-semibold text-ink">
+          Where the rotation work concentrates
+        </div>
+        <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+          Two cohorts own <strong>{top2Pct}%</strong> of the{" "}
+          {patBased.toLocaleString()} PAT-based connections — these are the
+          teams whose engineers will have the most token-by-token rotation work
+          to do during the cutover window.
+        </div>
+        <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
+          {patConcentration.map((row, i) => {
+            const pct = (row.pats / patBased) * 100;
+            const shades = [
+              "bg-warn",
+              "bg-warn-soft",
+              "bg-warn-soft",
+              "bg-bg-muted",
+              "bg-bg-muted",
+              "bg-bg-muted",
+            ];
+            const sortedIdx = topPats.findIndex((p) => p.cohort === row.cohort);
+            return (
+              <div
+                key={row.cohort}
+                className={`flex items-center justify-start pl-2 text-[10px] font-semibold ${
+                  sortedIdx < 2 ? "text-white" : "text-warn-ink"
+                } ${shades[sortedIdx] ?? "bg-bg-muted"}`}
+                style={{ width: `${pct}%` }}
+                title={`${row.cohort}: ${row.pats} PATs (${row.teams} teams)`}
+              >
+                {pct >= 6 ? `${row.cohort.slice(0, 3)} ${row.pats}` : ""}
+              </div>
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11.5px] text-ink-soft sm:grid-cols-3">
+          {patConcentration.map((row) => (
+            <div
+              key={row.cohort}
+              className="flex items-baseline justify-between gap-2"
+            >
+              <span>
+                <strong className="font-semibold text-ink">{row.cohort}</strong>{" "}
+                <span className="text-ink-muted">({row.teams} teams)</span>
+              </span>
+              <span className="font-mono text-[11px] text-ink-soft">
+                {row.pats} PATs
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        {actionSignal}
+      </div>
+    </div>
+  );
+}
+
+function IdentityStat({
+  label,
+  value,
+  sub,
+  tone,
+}: {
+  label: string;
+  value: string;
+  sub: React.ReactNode;
+  tone: "success" | "warn";
+}) {
+  const accent = tone === "success" ? "border-t-success" : "border-t-warn";
+  const labelColor = tone === "success" ? "text-success-ink" : "text-warn-ink";
+  return (
+    <div
+      className={`rounded-md border border-border bg-bg p-3 border-t-[3px] ${accent}`}
+    >
+      <div
+        className={`mb-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] ${labelColor}`}
+      >
+        {label}
+      </div>
+      <div className="text-[22px] font-bold leading-none tracking-[-0.02em] text-ink">
+        {value}
+      </div>
+      <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
+        {sub}
+      </div>
+    </div>
+  );
 }
 
 /* -------------------------------------------------------------------------- */
