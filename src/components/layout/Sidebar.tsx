@@ -93,7 +93,7 @@ export function Sidebar({
         </NavItem>
         <NavItem
           href="/inventory"
-          active={pathname === "/inventory" || pathname.endsWith("/inventory")}
+          active={pathname === "/inventory"}
           icon={
             <>
               <path d="M3 3h7v7H3z" />
@@ -105,6 +105,16 @@ export function Sidebar({
         >
           Inventory
         </NavItem>
+        <PlainSubNavItem
+          href="/inventory/program-overview"
+          active={pathname === "/inventory/program-overview"}
+          label="Overview"
+        />
+        <PlainSubNavItem
+          href="/inventory"
+          active={pathname === "/inventory"}
+          label="Team inventories"
+        />
       </NavGroup>
 
       <NavGroup label="This team">
@@ -316,6 +326,34 @@ function NavItem({
     <div className={className} aria-disabled="true">
       {content}
     </div>
+  );
+}
+
+function PlainSubNavItem({
+  href,
+  active,
+  label,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+}) {
+  const className = `mb-px flex items-center gap-[10px] rounded-md py-[6px] pl-[34px] pr-[10px] text-[12.5px] transition-colors ${
+    active
+      ? "bg-sidebar-active font-semibold text-primary"
+      : "cursor-pointer text-ink-soft hover:bg-sidebar-hover hover:text-ink"
+  }`;
+  return (
+    <Link href={href} className={className}>
+      <span
+        className={`h-[7px] w-[7px] flex-shrink-0 rounded-full ${
+          active
+            ? "bg-primary shadow-[0_0_0_3px_rgba(91,95,207,0.18)]"
+            : "bg-bg-muted"
+        }`}
+      />
+      <span className="flex-1 truncate">{label}</span>
+    </Link>
   );
 }
 
