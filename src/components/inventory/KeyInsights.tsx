@@ -93,6 +93,32 @@ const INSIGHT_CATEGORIES: Array<{
   { label: "Extensions", count: 168, pct: 6 },
 ];
 
+// Coverage tiers measure how widely a framework JTBD is performed across the
+// 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
+// performed" — anything below that is long-tail and likely skippable.
+const INSIGHT_COVERAGE = {
+  totalJtbds: 118,
+  thresholdPctOfTeams: 5,
+  commonlyPerformed: 101,
+  rarelyPerformed: 12,
+  unused: 5,
+  rarelyPerformedJobs: [
+    { code: "J42", label: "Cross-team package promotion" },
+    { code: "J55", label: "Manual security signoff" },
+    { code: "J71", label: "Custom dashboard authoring" },
+    { code: "J78", label: "Path-scoped permission gating" },
+    { code: "J89", label: "Universal package publishing" },
+    { code: "J93", label: "Wiki-based change auditing" },
+  ],
+  unusedJobs: [
+    { code: "J19", label: "Manual UAT signoff" },
+    { code: "J34", label: "ADO portal admin tooling" },
+    { code: "J52", label: "Release notes auto-generation" },
+    { code: "J61", label: "Compliance attestation gates" },
+    { code: "J67", label: "Cross-org branch sharing" },
+  ],
+};
+
 type LeverageRow = {
   feature: string;
   teams: number;
@@ -130,6 +156,7 @@ export function KeyInsights() {
         <DiscoveryPanel />
         <CategoryPanel />
       </div>
+      <CoveragePanel />
       <LeveragePanel />
     </section>
   );
@@ -386,6 +413,145 @@ function CategoryPanel() {
         <strong className="font-semibold text-ink">Read:</strong> Pipelines (45)
         + Boards (36) = 57% of customizations sit on surfaces the hybrid already
         preserves.
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* §08 — JTBD coverage gaps                                                   */
+/* -------------------------------------------------------------------------- */
+
+function CoveragePanel() {
+  const {
+    totalJtbds,
+    thresholdPctOfTeams,
+    commonlyPerformed,
+    rarelyPerformed,
+    unused,
+    rarelyPerformedJobs,
+    unusedJobs,
+  } = INSIGHT_COVERAGE;
+  const commonPct = Math.round((commonlyPerformed / totalJtbds) * 100);
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        JTBD coverage gaps
+      </div>
+      <div className="mb-4 text-[12px] text-ink-muted">
+        Of {totalJtbds} framework JTBDs, how widely each is actually performed
+        across the program. <em>Commonly performed</em> = ≥{" "}
+        {thresholdPctOfTeams}% of teams. The rest are long-tail — candidates to
+        deprioritize in tooling, training, and forecasting.
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <CoverageTier
+          tone="success"
+          count={commonlyPerformed}
+          label="Commonly performed"
+          sub={`≥ ${thresholdPctOfTeams}% of teams · ${commonPct}% of framework`}
+        />
+        <CoverageTier
+          tone="warn"
+          count={rarelyPerformed}
+          label="Rarely performed"
+          sub={`< ${thresholdPctOfTeams}% of teams · long-tail`}
+        />
+        <CoverageTier
+          tone="muted"
+          count={unused}
+          label="Never performed"
+          sub="0 teams · skip in tooling"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <CoverageList
+          label="Rarely-performed jobs"
+          sub="Used by < 5% of teams. Likely deprioritize."
+          jobs={rarelyPerformedJobs}
+        />
+        <CoverageList
+          label="Never-performed jobs"
+          sub="No team in the program does these. Skip."
+          jobs={unusedJobs}
+        />
+      </div>
+    </div>
+  );
+}
+
+function CoverageTier({
+  tone,
+  count,
+  label,
+  sub,
+}: {
+  tone: "success" | "warn" | "muted";
+  count: number;
+  label: string;
+  sub: string;
+}) {
+  const accent =
+    tone === "success"
+      ? "border-t-success"
+      : tone === "warn"
+        ? "border-t-warn"
+        : "border-t-ink-faint";
+  const labelColor =
+    tone === "success"
+      ? "text-success-ink"
+      : tone === "warn"
+        ? "text-warn-ink"
+        : "text-ink-muted";
+  return (
+    <div
+      className={`rounded-md border border-border bg-bg p-3 border-t-[3px] ${accent}`}
+    >
+      <div
+        className={`mb-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] ${labelColor}`}
+      >
+        {label}
+      </div>
+      <div className="text-[22px] font-bold leading-none tracking-[-0.02em] text-ink">
+        {count}
+      </div>
+      <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
+        {sub}
+      </div>
+    </div>
+  );
+}
+
+function CoverageList({
+  label,
+  sub,
+  jobs,
+}: {
+  label: string;
+  sub: string;
+  jobs: Array<{ code: string; label: string }>;
+}) {
+  return (
+    <div>
+      <div className="mb-1 text-[12.5px] font-semibold text-ink">{label}</div>
+      <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+        {sub}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {jobs.map((j) => (
+          <span
+            key={j.code}
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-bg-subtle px-2 py-[3px] text-[11.5px] text-ink-soft"
+          >
+            <span className="font-mono text-[10px] font-semibold text-ink-muted">
+              {j.code}
+            </span>
+            <span>{j.label}</span>
+          </span>
+        ))}
       </div>
     </div>
   );
