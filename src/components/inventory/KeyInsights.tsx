@@ -196,14 +196,18 @@ function ArchetypePanel() {
       <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
         Cohort archetypes
       </div>
-      <div className="mb-3 text-[12px] text-ink-muted">
-        How each cohort clusters across the{" "}
+      <div className="mb-3 text-[12px] leading-[1.55] text-ink-muted">
+        The{" "}
         <strong className="font-semibold text-ink-soft">
           {ARCHETYPE_TOTAL_TEAMS}
         </strong>{" "}
-        teams scanned. The agent classifies every team&apos;s posture and
-        surfaces the cohort-level archetype that emerges. <em>Match</em> = share
-        of teams in the cohort that landed as the dominant posture.
+        scanned teams are pre-grouped into{" "}
+        <strong className="font-semibold text-ink-soft">6 cohorts</strong>{" "}
+        (Alpha–Foxtrot) by the program — typically by engineering domain (web,
+        mobile, data, infra, payments, QA), tech stack, and target migration
+        wave. For each cohort, the agent classifies every team&apos;s hybrid
+        posture and surfaces the dominant pattern below. <em>Match</em> = share
+        of teams in the cohort that landed as that dominant posture.
       </div>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
