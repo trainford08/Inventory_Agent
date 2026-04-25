@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Team profile spreadsheet — Migration Hub mock</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-subtle: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91,95,207,0.08);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+    --gray-bg: #e4e4e7;
+    --gray-ink: #71717a;
+    --jtbd-tint: rgba(91,95,207,0.06);
+    --feature-tint: rgba(217,119,6,0.05);
+    --entity-tint: rgba(22,163,74,0.04);
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .topbar {
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .crumb {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px;
+  }
+  .crumb a {
+    color: var(--ink-muted); text-decoration: none; cursor: pointer;
+    padding: 4px 8px; border-radius: 4px;
+  }
+  .crumb a:hover { background: var(--bg-subtle); color: var(--ink); }
+  .crumb-current { color: var(--ink); font-weight: 500; padding: 4px 8px; }
+  .crumb-sep { color: var(--ink-faint); }
+  .header-spacer { flex: 1; }
+  .top-action {
+    font-family: var(--mono); font-size: 11.5px;
+    color: var(--ink-muted);
+    padding: 6px 12px; border: 1px solid var(--border);
+    background: var(--bg-elevated); border-radius: 6px; cursor: pointer;
+  }
+
+  .wrap {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 32px 28px 64px;
+  }
+
+  /* Page header */
+  h1 {
+    font-size: 28px; font-weight: 700;
+    letter-spacing: -0.025em; line-height: 1.15;
+    margin-bottom: 6px;
+  }
+  .lede {
+    font-size: 14px; color: var(--ink-muted);
+    margin-bottom: 24px; max-width: 64ch;
+  }
+
+  /* Filter bar */
+  .toolbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .search {
+    flex: 1; min-width: 240px; max-width: 340px;
+    padding: 7px 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    border-radius: 6px;
+    font-size: 13px; color: var(--ink-muted);
+  }
+  .chip {
+    padding: 5px 12px;
+    border: 1px solid var(--border); background: var(--bg-elevated);
+    border-radius: 999px;
+    font-size: 12px; color: var(--ink-soft); cursor: pointer;
+  }
+  .chip.active { background: var(--ink); color: white; border-color: var(--ink); }
+  .toolbar-spacer { flex: 1; }
+  .row-count {
+    font-family: var(--mono); font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+
+  /* Spreadsheet table */
+  .sheet {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg-subtle);
+    border-bottom: 1.5px solid var(--border);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    position: sticky; top: 0;
+  }
+  thead th:not(:last-child) { border-right: 1px solid var(--border); }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+    vertical-align: middle;
+  }
+  tbody td:last-child { border-right: none; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.team-row { cursor: pointer; }
+  tbody tr.team-row:hover { background: var(--bg-subtle); }
+
+  /* Health pill */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 9px; border-radius: 999px;
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill--on-track { background: var(--success-soft); color: var(--success-ink); }
+  .pill--at-risk { background: var(--warn-soft); color: var(--warn-ink); }
+  .pill--blocked { background: var(--danger-soft); color: var(--danger-ink); }
+  .pill--done { background: var(--gray-bg); color: var(--gray-ink); }
+
+  .num {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+  }
+  th.num { text-align: right; }
+  .name {
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .name-sub {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--ink-muted);
+    margin-top: 1px;
+  }
+  .swatch {
+    display: inline-block;
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  /* ============ Profile view ============ */
+  .profile-view { display: none; }
+  body.profile .list-view { display: none; }
+  body.profile .profile-view { display: block; }
+
+  .profile-meta {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin-bottom: 24px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .meta-cell {
+    padding: 14px 18px;
+    border-right: 1px solid var(--border);
+  }
+  .meta-cell:last-child { border-right: none; }
+  .meta-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .meta-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* Nested table */
+  .nested-table tbody tr {
+    transition: background 0.1s;
+  }
+  .nested-table tbody tr:hover { background: rgba(0,0,0,0.02); }
+  tbody tr.row-jtbd-cat {
+    background: var(--bg-subtle);
+    border-top: 1.5px solid var(--ink);
+  }
+  tbody tr.row-jtbd-cat td {
+    padding: 9px 14px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--bg-subtle);
+  }
+  tbody tr.row-jtbd { background: var(--jtbd-tint); }
+  tbody tr.row-feature { background: var(--feature-tint); }
+  tbody tr.row-entity { background: var(--entity-tint); }
+  tbody tr.row-field {}
+
+  .indent-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .indent { display: inline-block; flex-shrink: 0; }
+  .indent-1 { width: 0px; }
+  .indent-2 { width: 22px; }
+  .indent-3 { width: 44px; }
+  .indent-4 { width: 66px; }
+
+  .toggle {
+    width: 18px; height: 18px;
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    color: var(--ink-muted);
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .toggle.no-children {
+    color: transparent;
+    cursor: default;
+  }
+  .row-jtbd .toggle { color: var(--primary); }
+  .row-feature .toggle { color: var(--warn-ink); }
+  .row-entity .toggle { color: var(--success-ink); }
+
+  .layer-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-right: 8px;
+    min-width: 38px;
+    text-align: center;
+  }
+  .layer-tag--jtbd { background: var(--primary-soft); color: var(--primary); }
+  .layer-tag--feature { background: var(--warn-soft); color: var(--warn-ink); }
+  .layer-tag--entity { background: var(--success-soft); color: var(--success-ink); }
+  .layer-tag--field { background: var(--bg-muted); color: var(--ink-muted); }
+
+  .row-label {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .row-jtbd .row-label { font-weight: 600; }
+  .row-field .row-label { color: var(--ink-soft); font-weight: 400; }
+
+  .stays {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .stays--ado { background: rgba(217,119,6,0.10); color: var(--warn-ink); }
+  .stays--gh { background: rgba(22,163,74,0.10); color: var(--success-ink); }
+  .stays--both { background: rgba(91,95,207,0.10); color: var(--primary); }
+  .stays--na { color: var(--ink-faint); }
+
+  .pattern {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border: 1px solid;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .p-p1 { color: var(--success-ink); border-color: var(--success-ink); }
+  .p-p2 { color: var(--warn-ink); border-color: var(--warn-ink); }
+  .p-p3 { color: var(--primary); border-color: var(--primary); }
+  .p-p4 { color: var(--warn-ink); border-color: var(--warn-ink); }
+  .p-p5 { color: var(--danger-ink); border-color: var(--danger-ink); }
+  .p-p6 { color: var(--danger-ink); border-color: var(--danger-ink); background: var(--danger-soft); }
+
+  .legend {
+    margin-top: 18px;
+    padding: 14px 18px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .legend-item {
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .legend-swatch {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+  }
+
+  /* Hidden rows when collapsed */
+  tr.hidden { display: none; }
+
+  /* Toggle for view switching (debugging) */
+  .view-toggle {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--primary);
+    background: none;
+    border: 1px solid var(--primary);
+    padding: 5px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ TOPBAR ============ -->
+<div class="topbar">
+  <div class="crumb">
+    <a class="js-home">All teams</a>
+    <span class="crumb-sep js-only-profile" style="display:none;">/</span>
+    <span class="crumb-current js-only-profile" id="crumb-team" style="display:none;">Charlie Toolkit</span>
+  </div>
+  <div class="header-spacer"></div>
+  <button class="top-action js-export">⬇ Export CSV</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ LIST VIEW ============ -->
+  <div class="list-view">
+    <h1>Team profiles</h1>
+    <p class="lede">A single spreadsheet view across the program. Click a team to drill into its profile — JTBDs by category, features under each JTBD, entities under each feature, fields under each entity.</p>
+
+    <div class="toolbar">
+      <input class="search" placeholder="Search teams…" />
+      <span class="chip active">All</span>
+      <span class="chip">On track</span>
+      <span class="chip">At risk</span>
+      <span class="chip">Blocked</span>
+      <span class="toolbar-spacer"></span>
+      <span class="row-count">6 teams</span>
+    </div>
+
+    <div class="sheet">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 22%;">Team</th>
+            <th style="width: 11%;">Cohort</th>
+            <th style="width: 9%;">Wave</th>
+            <th style="width: 11%;">State</th>
+            <th style="width: 11%;">Health</th>
+            <th class="num" style="width: 8%;">Engineers</th>
+            <th class="num" style="width: 9%;">Open risks</th>
+            <th class="num" style="width: 9%;">% reviewed</th>
+            <th style="width: 10%;">Cutover</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="team-row" data-team="alpha">
+            <td><span class="swatch" style="background:linear-gradient(135deg,#5b5fcf,#8b5cf6);"></span><span class="name">Alpha Platform <span class="name-sub">The easy yes</span></span></td>
+            <td>Alpha</td>
+            <td class="num">W01</td>
+            <td>Not started</td>
+            <td><span class="pill pill--on-track"><span class="pill-dot"></span>On track</span></td>
+            <td class="num">3</td>
+            <td class="num">0</td>
+            <td class="num">98%</td>
+            <td>+42 days</td>
+          </tr>
+          <tr class="team-row" data-team="bravo">
+            <td><span class="swatch" style="background:linear-gradient(135deg,#06b6d4,#0ea5e9);"></span><span class="name">Bravo Services <span class="name-sub">Typical healthy team</span></span></td>
+            <td>Bravo</td>
+            <td class="num">W01</td>
+            <td>Discovering</td>
+            <td><span class="pill pill--on-track"><span class="pill-dot"></span>On track</span></td>
+            <td class="num">6</td>
+            <td class="num">2</td>
+            <td class="num">52%</td>
+            <td>+70 days</td>
+          </tr>
+          <tr class="team-row" data-team="charlie">
+            <td><span class="swatch" style="background:linear-gradient(135deg,#f59e0b,#ef4444);"></span><span class="name">Charlie Toolkit <span class="name-sub">The interesting one</span></span></td>
+            <td>Charlie</td>
+            <td class="num">W02</td>
+            <td>Reviewing</td>
+            <td><span class="pill pill--at-risk"><span class="pill-dot"></span>At risk</span></td>
+            <td class="num">11</td>
+            <td class="num">5</td>
+            <td class="num">34%</td>
+            <td>+98 days</td>
+          </tr>
+          <tr class="team-row" data-team="delta">
+            <td><span class="swatch" style="background:linear-gradient(135deg,#1f4d3a,#3a6b4d);"></span><span class="name">Delta Data Platform <span class="name-sub">The heavyweight</span></span></td>
+            <td>Delta</td>
+            <td class="num">W02</td>
+            <td>In progress</td>
+            <td><span class="pill pill--on-track"><span class="pill-dot"></span>On track</span></td>
+            <td class="num">14</td>
+            <td class="num">3</td>
+            <td class="num">71%</td>
+            <td>+56 days</td>
+          </tr>
+          <tr class="team-row" data-team="echo">
+            <td><span class="swatch" style="background:linear-gradient(135deg,#dc2626,#ef4444);"></span><span class="name">Echo Mobile <span class="name-sub">Champion still has work</span></span></td>
+            <td>Echo</td>
+            <td class="num">W03</td>
+            <td>Not started</td>
+            <td><span class="pill pill--blocked"><span class="pill-dot"></span>Blocked</span></td>
+            <td class="num">4</td>
+            <td class="num">7</td>
+            <td class="num">12%</td>
+            <td>+120 days</td>
+          </tr>
+          <tr class="team-row" data-team="foxtrot">
+            <td><span class="swatch" style="background:linear-gradient(135deg,#71717a,#a1a1aa);"></span><span class="name">Foxtrot Archive <span class="name-sub">The edge case</span></span></td>
+            <td>Foxtrot</td>
+            <td class="num">—</td>
+            <td>Rolled back</td>
+            <td><span class="pill pill--done"><span class="pill-dot"></span>Done</span></td>
+            <td class="num">2</td>
+            <td class="num">0</td>
+            <td class="num">—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ PROFILE VIEW ============ -->
+  <div class="profile-view">
+    <h1 id="profile-title">Charlie Toolkit · profile</h1>
+    <p class="lede">Every JTBD, feature, entity, and field for this team. Click the arrows to expand. <span style="color: var(--ink-soft);">JTBDs are grouped by category; features nest under JTBDs; entities nest under features; fields nest under entities.</span></p>
+
+    <div class="profile-meta">
+      <div class="meta-cell"><div class="meta-label">Cohort</div><div class="meta-val">Charlie · Wave 02</div></div>
+      <div class="meta-cell"><div class="meta-label">Engineers</div><div class="meta-val">11</div></div>
+      <div class="meta-cell"><div class="meta-label">Migration state</div><div class="meta-val">Reviewing</div></div>
+      <div class="meta-cell"><div class="meta-label">Health</div><div class="meta-val"><span class="pill pill--at-risk"><span class="pill-dot"></span>At risk</span></div></div>
+      <div class="meta-cell"><div class="meta-label">Target cutover</div><div class="meta-val">+98 days</div></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="chip active" id="filter-all">All layers</button>
+      <button class="chip" id="filter-jtbd">JTBDs only</button>
+      <button class="chip" id="filter-stays">Stays in ADO</button>
+      <button class="chip" id="filter-moves">Moves to GitHub</button>
+      <span class="toolbar-spacer"></span>
+      <button class="top-action" id="expand-all">Expand all</button>
+      <button class="top-action" id="collapse-all">Collapse all</button>
+    </div>
+
+    <div class="sheet">
+      <table class="nested-table">
+        <thead>
+          <tr>
+            <th style="width: 38%;">Item</th>
+            <th style="width: 14%;">Layer</th>
+            <th style="width: 11%;">Stays in ADO?</th>
+            <th style="width: 9%;">Pattern</th>
+            <th style="width: 16%;">Notes</th>
+            <th class="num" style="width: 12%;">Status</th>
+          </tr>
+        </thead>
+        <tbody id="profile-body">
+
+          <!-- ===== CATEGORY: Code work ===== -->
+          <tr class="row-jtbd-cat"><td colspan="6">Code work · 4 JTBDs</td></tr>
+
+          <!-- JTBD 01 -->
+          <tr class="row-jtbd" data-id="j01" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j01">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J01 · Commit and push code</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--gh">No → GitHub</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Direct migration via GEI</td>
+            <td class="num">2 features</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j01" data-id="f01" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle js-toggle" data-target="f01">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F01 · Git commit & push</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>GEI preserves history</td>
+            <td class="num">2 entities</td>
+          </tr>
+          <tr class="row-entity hidden child-of-f01" data-id="e15" data-level="4">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle js-toggle" data-target="e15">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E15 · Repository</span></div></td>
+            <td>Entity</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Full history migrates</td>
+            <td class="num">16 fields</td>
+          </tr>
+          <tr class="row-field hidden child-of-e15"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">repos.name</span></div></td><td>Field · string</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>1:1 direct copy</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e15"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">repos.defaultBranch</span></div></td><td>Field · git ref</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>Often renamed master→main</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e15"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">repos.visibility</span></div></td><td>Field · enum</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>private/internal/public</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e15"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">repos.usesLfs</span></div></td><td>Field · boolean</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p2">P2</span></td><td>LFS pointers vs objects</td><td class="num">Medium fidelity</td></tr>
+          <tr class="row-field hidden child-of-e15"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">repos.branchProtected</span></div></td><td>Field · boolean</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p2">P2</span></td><td>Maps to branch protection rules</td><td class="num">Medium fidelity</td></tr>
+          <tr class="row-entity hidden child-of-f01" data-id="e16" data-level="4">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle js-toggle" data-target="e16">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E16 · Branch</span></div></td>
+            <td>Entity</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Git refs preserved</td>
+            <td class="num">3 fields</td>
+          </tr>
+          <tr class="row-field hidden child-of-e16"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">branch.name</span></div></td><td>Field · string</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>Direct copy</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e16"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">branch.headSha</span></div></td><td>Field · git sha</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>Direct copy</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e16"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">branch.lockState</span></div></td><td>Field · enum</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p2">P2</span></td><td>Becomes branch protection</td><td class="num">Medium fidelity</td></tr>
+
+          <tr class="row-feature hidden child-of-j01" data-id="f02" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle js-toggle" data-target="f02">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F02 · Branch management</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Git-native</td>
+            <td class="num">1 entity</td>
+          </tr>
+          <tr class="row-entity hidden child-of-f02"><td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E16 · Branch (shared)</span></div></td><td>Entity (ref)</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>See above</td><td class="num">—</td></tr>
+
+          <!-- JTBD 12 -->
+          <tr class="row-jtbd" data-id="j12" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j12">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J12 · Open a pull request</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--gh">No → GitHub</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>GitHub PR ergonomics gain</td>
+            <td class="num">3 features</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j12" data-id="f05" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle js-toggle" data-target="f05">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F05 · Pull request review</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Threaded reviews preserved</td>
+            <td class="num">1 entity</td>
+          </tr>
+          <tr class="row-entity hidden child-of-f05" data-id="e14" data-level="4">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle js-toggle" data-target="e14">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E14 · Pull Request</span></div></td>
+            <td>Entity</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>GEI handles full PR shape</td>
+            <td class="num">17 fields</td>
+          </tr>
+          <tr class="row-field hidden child-of-e14"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pr.title</span></div></td><td>Field · string</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>Direct copy</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e14"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pr.body</span></div></td><td>Field · markdown</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>ADO markdown ≈ GitHub</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e14"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pr.status</span></div></td><td>Field · enum</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p4">P4</span></td><td>3 enum values → state + merged</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e14"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pr.workItemLinks</span></div></td><td>Field · refs</td><td><span class="stays stays--both">Both</span></td><td><span class="pattern p-p2">P2</span></td><td>AB#123 syntax bridges to ADO</td><td class="num">High fidelity</td></tr>
+
+          <tr class="row-feature hidden child-of-j12" data-id="f06" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F06 · Code review comments</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p2">P2</span></td>
+            <td>Comments preserved; rich text degrades</td>
+            <td class="num">—</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j12" data-id="f09" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F09 · Draft pull requests</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Direct feature parity</td>
+            <td class="num">—</td>
+          </tr>
+
+          <!-- ===== CATEGORY: Work planning ===== -->
+          <tr class="row-jtbd-cat"><td colspan="6">Work planning · 3 JTBDs</td></tr>
+
+          <tr class="row-jtbd" data-id="j22" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j22">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J22 · Create a work item</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--ado">Yes → Boards</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>Hybrid: stays in ADO Boards</td>
+            <td class="num">1 feature</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j22" data-id="f14" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle js-toggle" data-target="f14">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F14 · Work item creation</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--ado">Yes</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>Stays in ADO</td>
+            <td class="num">1 entity</td>
+          </tr>
+          <tr class="row-entity hidden child-of-f14" data-id="e01" data-level="4">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle js-toggle" data-target="e01">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E01 · Work Item</span></div></td>
+            <td>Entity</td>
+            <td><span class="stays stays--ado">Yes</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>No GitHub equivalent for typed work items</td>
+            <td class="num">39 fields</td>
+          </tr>
+          <tr class="row-field hidden child-of-e01"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">workItem.title</span></div></td><td>Field · string</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p1">P1</span></td><td>If migrated, direct copy</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e01"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">workItem.areaPath</span></div></td><td>Field · hierarchical</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p4">P4</span></td><td>Hierarchy lost if migrated</td><td class="num">Low fidelity</td></tr>
+          <tr class="row-field hidden child-of-e01"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">workItem.iterationPath</span></div></td><td>Field · hierarchical</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p3">P3</span></td><td>Composes via Milestone+column</td><td class="num">Medium fidelity</td></tr>
+          <tr class="row-field hidden child-of-e01"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">workItem.state</span></div></td><td>Field · enum</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p4">P4</span></td><td>Decomposes to open+assignee+col</td><td class="num">Medium fidelity</td></tr>
+          <tr class="row-field hidden child-of-e01"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">workItem.assignedTo</span></div></td><td>Field · identity</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p1">P1</span></td><td>Identity remap via Entra</td><td class="num">High fidelity</td></tr>
+
+          <tr class="row-jtbd" data-id="j25" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j25">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J25 · Plan a sprint</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--ado">Yes → Boards</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>Iteration paths preserved</td>
+            <td class="num">2 features</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j25" data-id="f15" data-level="3"><td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F15 · Sprint planning</span></div></td><td>Feature</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p6">P6</span></td><td>Stays in ADO</td><td class="num">—</td></tr>
+          <tr class="row-feature hidden child-of-j25" data-id="f17" data-level="3"><td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F17 · Area path hierarchy</span></div></td><td>Feature</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p6">P6</span></td><td>Stays in ADO</td><td class="num">—</td></tr>
+
+          <tr class="row-jtbd" data-id="j16" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j16">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J16 · Link a PR to a work item</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--both">Both</span></td>
+            <td><span class="pattern p-p3">P3</span></td>
+            <td>Critical hybrid friction point</td>
+            <td class="num">1 feature</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j16"><td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F19 · Work item ↔ PR linking</span></div></td><td>Feature</td><td><span class="stays stays--both">Both</span></td><td><span class="pattern p-p3">P3</span></td><td>AB#12345 syntax + ADO-GitHub app</td><td class="num">—</td></tr>
+
+          <!-- ===== CATEGORY: CI / CD ===== -->
+          <tr class="row-jtbd-cat"><td colspan="6">CI / CD · 2 JTBDs</td></tr>
+
+          <tr class="row-jtbd" data-id="j34" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j34">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J34 · Trigger a CI build</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--ado">Yes → Pipelines</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>Webhook from GitHub triggers ADO</td>
+            <td class="num">1 feature</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j34" data-id="f24" data-level="3">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle js-toggle" data-target="f24">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F24 · CI pipeline (YAML)</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--ado">Yes</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>Pipelines stays in ADO</td>
+            <td class="num">1 entity</td>
+          </tr>
+          <tr class="row-entity hidden child-of-f24" data-id="e21" data-level="4">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle js-toggle" data-target="e21">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E21 · Pipeline / Build Definition</span></div></td>
+            <td>Entity</td>
+            <td><span class="stays stays--ado">Yes</span></td>
+            <td><span class="pattern p-p4">P4</span></td>
+            <td>Stays in ADO under hybrid</td>
+            <td class="num">22 fields</td>
+          </tr>
+          <tr class="row-field hidden child-of-e21"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pipeline.name</span></div></td><td>Field · string</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p1">P1</span></td><td>If migrated, becomes workflow filename</td><td class="num">High fidelity</td></tr>
+          <tr class="row-field hidden child-of-e21"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pipeline.yaml</span></div></td><td>Field · yaml</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p2">P2</span></td><td>~80% Actions Importer auto-translation</td><td class="num">Medium fidelity</td></tr>
+          <tr class="row-field hidden child-of-e21"><td><div class="indent-cell"><span class="indent indent-4"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--field">FLD</span><span class="row-label">pipeline.serviceConnections</span></div></td><td>Field · external auth</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p4">P4</span></td><td>Decomposes to OIDC + secrets</td><td class="num">Low fidelity</td></tr>
+
+          <tr class="row-jtbd" data-id="j44" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j44">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J44 · Deploy to staging</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--ado">Yes → Pipelines</span></td>
+            <td><span class="pattern p-p6">P6</span></td>
+            <td>Release Definitions stay in ADO</td>
+            <td class="num">1 feature</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j44"><td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F31 · Environments</span></div></td><td>Feature</td><td><span class="stays stays--ado">Yes</span></td><td><span class="pattern p-p6">P6</span></td><td>Stays in ADO</td><td class="num">—</td></tr>
+
+          <!-- ===== CATEGORY: Security & compliance ===== -->
+          <tr class="row-jtbd-cat"><td colspan="6">Security & compliance · 1 JTBD</td></tr>
+
+          <tr class="row-jtbd" data-id="j59" data-level="2">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle js-toggle" data-target="j59">▶</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J59 · Respond to a secret-scanning alert</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--gh">No → GitHub</span></td>
+            <td><span class="pattern p-p5">P5</span></td>
+            <td>GHAS native; net capability gain</td>
+            <td class="num">2 features</td>
+          </tr>
+          <tr class="row-feature hidden child-of-j59"><td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F34 · Secret scanning</span></div></td><td>Feature</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p5">P5</span></td><td>GHAS native; broader coverage</td><td class="num">—</td></tr>
+          <tr class="row-feature hidden child-of-j59"><td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle no-children"></span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F35 · Push protection</span></div></td><td>Feature</td><td><span class="stays stays--gh">No</span></td><td><span class="pattern p-p1">P1</span></td><td>No ADO equivalent for most orgs</td><td class="num">—</td></tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch" style="background: var(--jtbd-tint);"></span>JTBD row</span>
+      <span class="legend-item"><span class="legend-swatch" style="background: var(--feature-tint);"></span>Feature row</span>
+      <span class="legend-item"><span class="legend-swatch" style="background: var(--entity-tint);"></span>Entity row</span>
+      <span class="legend-item"><span class="legend-swatch" style="background: white; border: 1px solid var(--border);"></span>Field row</span>
+      <span class="legend-item" style="margin-left: auto;">Click ▶ to expand · Click any row's toggle to drill into a layer</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Wire up team-row clicks to switch to profile view
+  document.querySelectorAll('.team-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const team = row.getAttribute('data-team');
+      const name = row.querySelector('.name').childNodes[0].textContent.trim();
+      document.body.classList.add('profile');
+      document.getElementById('profile-title').textContent = `${name} · profile`;
+      document.getElementById('crumb-team').textContent = name;
+      document.querySelectorAll('.js-only-profile').forEach(el => el.style.display = '');
+      window.scrollTo(0, 0);
+    });
+  });
+
+  // Home / breadcrumb back
+  document.querySelector('.js-home').addEventListener('click', () => {
+    document.body.classList.remove('profile');
+    document.querySelectorAll('.js-only-profile').forEach(el => el.style.display = 'none');
+    window.scrollTo(0, 0);
+  });
+
+  // Toggle expand/collapse on caret click
+  function getDescendants(parentId) {
+    const out = [];
+    const direct = document.querySelectorAll(`.child-of-${parentId}`);
+    direct.forEach(child => {
+      out.push(child);
+      const childId = child.getAttribute('data-id');
+      if (childId) out.push(...getDescendants(childId));
+    });
+    return out;
+  }
+
+  document.querySelectorAll('.js-toggle').forEach(toggle => {
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const targetId = toggle.getAttribute('data-target');
+      const direct = document.querySelectorAll(`.child-of-${targetId}`);
+      const isExpanded = toggle.textContent.trim() === '▼';
+      if (isExpanded) {
+        // Collapse: hide direct children + all descendants
+        getDescendants(targetId).forEach(row => row.classList.add('hidden'));
+        toggle.textContent = '▶';
+        // Reset child toggles
+        getDescendants(targetId).forEach(row => {
+          const t = row.querySelector('.js-toggle');
+          if (t) t.textContent = '▶';
+        });
+      } else {
+        // Expand: show only direct children
+        direct.forEach(row => row.classList.remove('hidden'));
+        toggle.textContent = '▼';
+      }
+    });
+  });
+
+  // Expand all / collapse all
+  document.getElementById('expand-all').addEventListener('click', () => {
+    document.querySelectorAll('.profile-view tbody tr').forEach(r => r.classList.remove('hidden'));
+    document.querySelectorAll('.profile-view .js-toggle').forEach(t => t.textContent = '▼');
+  });
+  document.getElementById('collapse-all').addEventListener('click', () => {
+    document.querySelectorAll('.profile-view tbody tr.row-feature, .profile-view tbody tr.row-entity, .profile-view tbody tr.row-field').forEach(r => r.classList.add('hidden'));
+    document.querySelectorAll('.profile-view .js-toggle').forEach(t => t.textContent = '▶');
+  });
+</script>
+
+</body>
+</html>

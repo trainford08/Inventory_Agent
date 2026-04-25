@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Complete-profile CTA options — Migration Hub</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --primary: #5b5fcf;
+    --primary-hover: #4a4eb8;
+    --primary-soft: rgba(91,95,207,0.08);
+    --primary-mid: rgba(91,95,207,0.15);
+    --accent: #0891b2;
+    --success: #16a34a;
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--ink);
+    padding: 40px 32px 80px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; margin-bottom: 6px; }
+  .lede { color: var(--ink-soft); font-size: 14px; max-width: 720px; margin-bottom: 36px; }
+
+  .context-note {
+    margin-bottom: 32px;
+    padding: 12px 18px;
+    background: #fdfaf3;
+    border-left: 3px solid #d4a574;
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    color: #4a4135;
+    max-width: 720px;
+  }
+  .context-note strong { color: #1f1c14; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 28px;
+    max-width: 860px;
+  }
+  .opt {
+    border: 1px solid var(--border);
+    background: var(--bg-elevated);
+    border-radius: 12px;
+    padding: 22px 26px;
+  }
+  .opt-head {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 4px;
+  }
+  .opt-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em;
+  }
+  .opt-title { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .opt-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.55; margin-bottom: 18px; max-width: 68ch; }
+
+  /* Side-by-side demo: hero CTA + a section card CTA to show contrast */
+  .demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 10px;
+  }
+  .demo-slot {
+    padding: 16px;
+    background: var(--bg-subtle);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+  .demo-slot-label {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600;
+    color: var(--ink-muted); letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* ---------- Shared button shapes ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 8px;
+    font-family: var(--sans); font-size: 13.5px; font-weight: 600;
+    letter-spacing: -0.003em;
+    cursor: pointer; border: 1.5px solid transparent;
+    transition: all 0.15s;
+  }
+  .btn svg { width: 13px; height: 13px; }
+
+  /* CURRENT style (for reference) */
+  .btn--current {
+    background: var(--ink); color: white; border-color: var(--ink);
+  }
+
+  /* Secondary buttons used elsewhere on the page (for contrast) */
+  .btn--ghost {
+    background: var(--bg-elevated);
+    color: var(--ink);
+    border-color: var(--border);
+  }
+  .btn--delegate {
+    width: 44px; height: 40px; padding: 0;
+    background: var(--bg-elevated); border-color: var(--border);
+    color: var(--ink-muted);
+    justify-content: center;
+  }
+
+  /* ============================================== */
+  /* OPTION A: Primary purple */
+  /* ============================================== */
+  .btn--a {
+    background: var(--primary); color: white; border-color: var(--primary);
+    box-shadow: 0 1px 3px rgba(91,95,207,0.3);
+  }
+  .btn--a:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+  /* ============================================== */
+  /* OPTION B: Gradient (purple → cyan) */
+  /* ============================================== */
+  .btn--b {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 2px 10px rgba(91,95,207,0.25);
+  }
+  .btn--b:hover { filter: brightness(1.05); }
+
+  /* ============================================== */
+  /* OPTION C: Subtle glow + purple ring */
+  /* ============================================== */
+  .btn--c {
+    background: var(--ink); color: white; border-color: var(--ink);
+    box-shadow: 0 0 0 3px var(--primary-mid), 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* ============================================== */
+  /* OPTION D: Larger + accent underline + arrow emphasis */
+  /* ============================================== */
+  .btn--d {
+    background: var(--ink); color: white; border-color: var(--ink);
+    padding: 12px 22px;
+    font-size: 14.5px;
+    position: relative;
+  }
+  .btn--d::after {
+    content: "";
+    position: absolute;
+    left: 18px; right: 18px; bottom: 4px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 1px;
+  }
+  .btn--d svg { width: 15px; height: 15px; }
+
+  /* ============================================== */
+  /* OPTION E: Primary outline, filled on hover */
+  /* ============================================== */
+  .btn--e {
+    background: transparent; color: var(--primary);
+    border: 2px solid var(--primary);
+  }
+  .btn--e:hover { background: var(--primary); color: white; }
+
+  /* ============================================== */
+  /* OPTION F: Split — primary action + secondary chip beside it */
+  /* ============================================== */
+  .split {
+    display: inline-flex;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(91,95,207,0.25);
+  }
+  .split .btn--primary {
+    background: var(--primary); color: white; border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .split .btn--primary:hover { background: var(--primary-hover); }
+  .split .btn--after {
+    background: var(--primary-hover); color: white;
+    padding: 10px 14px; border: none;
+    font-family: var(--mono); font-size: 11.5px;
+    border-left: 1px solid rgba(255,255,255,0.18);
+  }
+
+  .section-card-sample {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .section-card-sample h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .section-card-sample p { color: var(--ink-muted); font-size: 12px; margin-bottom: 12px; }
+  .section-card-sample .row { display: flex; gap: 8px; }
+</style>
+</head>
+<body>
+  <h1>Complete-profile CTA options</h1>
+  <p class="lede">Looking for ways to make the primary "Start review" / "Continue" button distinct from everything else on the page (the section-card CTAs, the Delegate icon, the back-link).</p>
+
+  <div class="context-note">
+    <strong>Today:</strong> the hero CTA and each section card's CTA both use the same dark <code style="font-family:var(--mono); background:var(--bg-subtle); padding:1px 5px; border-radius:3px; font-size:12px;">bg-ink</code> fill. They're indistinguishable, so the champion has no spatial cue about which is the "big" action.
+  </div>
+
+  <div class="grid">
+
+    <!-- ================== Option A ================== -->
+    <div class="opt">
+      <div class="opt-head">
+        <div class="opt-label">Option A</div>
+        <div class="opt-title">Primary purple — same as the brand</div>
+      </div>
+      <p class="opt-desc">Matches the brand primary. The section-card CTAs stay dark, so the hero clearly reads as "the big one." Lowest risk; minimal change; still aligned with everything else in the app (sidebar active state, review chevron pills, etc.).</p>
+      <div class="demo">
+        <div class="demo-slot">
+          <div class="demo-slot-label">Hero CTA</div>
+          <button class="btn btn--a">Start review <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+        <div class="demo-slot">
+          <div class="demo-slot-label">Section card (unchanged)</div>
+          <div class="section-card-sample">
+            <h4>Code & repos</h4>
+            <p>Confirm or correct what the agent found.</p>
+            <div class="row">
+              <button class="btn btn--current">Start <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+              <button class="btn btn--delegate" aria-label="Delegate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== Option B ================== -->
+    <div class="opt">
+      <div class="opt-head">
+        <div class="opt-label">Option B</div>
+        <div class="opt-title">Gradient fill (purple → cyan)</div>
+      </div>
+      <p class="opt-desc">Picks up the Ada gradient. Visually loud — unmistakable as the hero action. Risk: gradient is currently tied to Ada, so re-using it here blurs that signal. Only recommend if Ada's presentation also evolves.</p>
+      <div class="demo">
+        <div class="demo-slot">
+          <div class="demo-slot-label">Hero CTA</div>
+          <button class="btn btn--b">Start review <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+        <div class="demo-slot">
+          <div class="demo-slot-label">Section card (unchanged)</div>
+          <div class="section-card-sample">
+            <h4>Code & repos</h4>
+            <p>Confirm or correct what the agent found.</p>
+            <div class="row">
+              <button class="btn btn--current">Start <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+              <button class="btn btn--delegate" aria-label="Delegate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== Option C ================== -->
+    <div class="opt">
+      <div class="opt-head">
+        <div class="opt-label">Option C</div>
+        <div class="opt-title">Dark + purple glow ring</div>
+      </div>
+      <p class="opt-desc">Keeps the ink fill but adds a soft purple ring around the hero button. Section cards don't get the ring, so the hero stands out while keeping the same color family. Subtler than A.</p>
+      <div class="demo">
+        <div class="demo-slot">
+          <div class="demo-slot-label">Hero CTA</div>
+          <button class="btn btn--c">Start review <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+        <div class="demo-slot">
+          <div class="demo-slot-label">Section card (unchanged)</div>
+          <div class="section-card-sample">
+            <h4>Code & repos</h4>
+            <p>Confirm or correct what the agent found.</p>
+            <div class="row">
+              <button class="btn btn--current">Start <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+              <button class="btn btn--delegate" aria-label="Delegate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== Option D ================== -->
+    <div class="opt">
+      <div class="opt-head">
+        <div class="opt-label">Option D</div>
+        <div class="opt-title">Bigger + accent underline</div>
+      </div>
+      <p class="opt-desc">Same fill but larger padding + a thin gradient underline beneath the label. Differentiates by scale and a small brand flourish, without changing the base color.</p>
+      <div class="demo">
+        <div class="demo-slot">
+          <div class="demo-slot-label">Hero CTA</div>
+          <button class="btn btn--d">Start review <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+        <div class="demo-slot">
+          <div class="demo-slot-label">Section card (unchanged)</div>
+          <div class="section-card-sample">
+            <h4>Code & repos</h4>
+            <p>Confirm or correct what the agent found.</p>
+            <div class="row">
+              <button class="btn btn--current">Start <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+              <button class="btn btn--delegate" aria-label="Delegate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== Option E ================== -->
+    <div class="opt">
+      <div class="opt-head">
+        <div class="opt-label">Option E</div>
+        <div class="opt-title">Primary outline (fills on hover)</div>
+      </div>
+      <p class="opt-desc">Flips the weight — the hero is outlined in purple, the section cards are filled dark. Different visual language entirely. Readers may not instantly recognize the outline as the primary action; good if scrollable, less good if above the fold is the main decision point.</p>
+      <div class="demo">
+        <div class="demo-slot">
+          <div class="demo-slot-label">Hero CTA</div>
+          <button class="btn btn--e">Start review <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+        <div class="demo-slot">
+          <div class="demo-slot-label">Section card (unchanged)</div>
+          <div class="section-card-sample">
+            <h4>Code & repos</h4>
+            <p>Confirm or correct what the agent found.</p>
+            <div class="row">
+              <button class="btn btn--current">Start <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+              <button class="btn btn--delegate" aria-label="Delegate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== Option F ================== -->
+    <div class="opt">
+      <div class="opt-head">
+        <div class="opt-label">Option F</div>
+        <div class="opt-title">Split button with progress chip</div>
+      </div>
+      <p class="opt-desc">Two-piece pill: the left side is the CTA ("Continue"), the right side shows live progress ("4/12"). Section cards remain single-piece, so the hero is structurally distinct. Best for returning users — turns the CTA into a status object, not just an action.</p>
+      <div class="demo">
+        <div class="demo-slot">
+          <div class="demo-slot-label">Hero CTA</div>
+          <div class="split">
+            <button class="btn btn--primary">Continue review <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+            <span class="btn--after">4 / 12</span>
+          </div>
+        </div>
+        <div class="demo-slot">
+          <div class="demo-slot-label">Section card (unchanged)</div>
+          <div class="section-card-sample">
+            <h4>Code & repos</h4>
+            <p>Confirm or correct what the agent found.</p>
+            <div class="row">
+              <button class="btn btn--current">Continue <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+              <button class="btn btn--delegate" aria-label="Delegate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

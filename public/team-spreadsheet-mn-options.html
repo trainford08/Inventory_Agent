@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>M:N handling — three options</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elevated: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-subtle: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91,95,207,0.08);
+    --primary-mid: rgba(91,95,207,0.18);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --jtbd-tint: rgba(91,95,207,0.06);
+    --feature-tint: rgba(217,119,6,0.05);
+    --entity-tint: rgba(22,163,74,0.04);
+    --sans: 'Geist', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: var(--sans);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    padding: 40px 28px 80px;
+  }
+  .wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 26px; font-weight: 700; letter-spacing: -0.025em;
+    margin-bottom: 6px;
+  }
+  .lede {
+    color: var(--ink-soft); font-size: 14px; max-width: 780px;
+    margin-bottom: 24px;
+  }
+  .scenario {
+    margin-bottom: 32px;
+    padding: 14px 18px;
+    background: #fdfaf3;
+    border-left: 3px solid #d4a574;
+    border-radius: 0 6px 6px 0;
+    font-size: 13.5px; color: #4a4135; max-width: 880px;
+  }
+  .scenario strong { color: #1f1c14; }
+  .scenario code {
+    font-family: var(--mono); font-size: 12px;
+    background: #fff; padding: 1px 6px; border-radius: 3px;
+    color: var(--ink); border: 1px solid var(--border);
+  }
+
+  .opt-block {
+    margin-bottom: 56px;
+  }
+  .opt-head {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .opt-label {
+    font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    color: var(--primary); text-transform: uppercase; letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .opt-title { font-size: 19px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 6px; }
+  .opt-desc { font-size: 13.5px; color: var(--ink-muted); line-height: 1.55; max-width: 780px; }
+  .opt-pros { font-size: 12.5px; color: var(--ink-soft); margin-top: 10px; line-height: 1.65; }
+  .opt-pros strong.good { color: var(--success-ink); }
+  .opt-pros strong.bad { color: var(--danger); }
+
+  /* Sheet table */
+  .sheet {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    text-align: left;
+    padding: 10px 14px;
+    background: var(--bg-subtle);
+    border-bottom: 1.5px solid var(--border);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  thead th:not(:last-child) { border-right: 1px solid var(--border); }
+  tbody td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    border-right: 1px solid var(--border-subtle);
+    vertical-align: middle;
+  }
+  tbody td:last-child { border-right: none; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.row-jtbd-cat td {
+    background: var(--bg-subtle);
+    font-family: var(--mono);
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink); padding: 8px 14px;
+  }
+  tbody tr.row-jtbd { background: var(--jtbd-tint); }
+  tbody tr.row-feature { background: var(--feature-tint); }
+  tbody tr.row-entity { background: var(--entity-tint); }
+
+  .indent-cell { display: flex; align-items: center; gap: 6px; }
+  .indent { display: inline-block; flex-shrink: 0; }
+  .indent-1 { width: 0; }
+  .indent-2 { width: 22px; }
+  .indent-3 { width: 44px; }
+  .indent-4 { width: 66px; }
+  .toggle {
+    width: 16px; height: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--ink-muted);
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .row-jtbd .toggle { color: var(--primary); }
+  .row-feature .toggle { color: var(--warn-ink); }
+  .row-entity .toggle { color: var(--success-ink); }
+
+  .layer-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 3px;
+    margin-right: 8px;
+    min-width: 38px; text-align: center;
+  }
+  .layer-tag--jtbd { background: var(--primary-soft); color: var(--primary); }
+  .layer-tag--feature { background: var(--warn-soft); color: var(--warn-ink); }
+  .layer-tag--entity { background: var(--success-soft); color: var(--success-ink); }
+
+  .row-label { color: var(--ink); font-weight: 500; }
+  .row-jtbd .row-label { font-weight: 600; }
+
+  /* === Reference (shared) row treatment === */
+  tr.row-ref {
+    opacity: 0.55;
+  }
+  tr.row-ref td:first-child {
+    font-style: italic;
+  }
+  tr.row-ref .row-label {
+    font-weight: 400;
+    color: var(--ink-muted);
+  }
+  tr.row-ref td:not(:first-child) {
+    color: var(--ink-faint);
+  }
+  .ref-arrow {
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 11px;
+    margin-right: 4px;
+  }
+  .shared-pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    background: var(--bg-muted);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  /* === Pattern chips === */
+  .pattern {
+    font-family: var(--mono);
+    font-size: 10px; font-weight: 600;
+    padding: 1px 5px; border: 1px solid;
+    border-radius: 3px; display: inline-block;
+  }
+  .p-p1 { color: var(--success-ink); border-color: var(--success-ink); }
+  .p-p2 { color: var(--warn-ink); border-color: var(--warn-ink); }
+  .p-p4 { color: var(--warn-ink); border-color: var(--warn-ink); }
+  .p-p6 { color: var(--danger); border-color: var(--danger); background: rgba(220,38,38,0.05); }
+
+  .stays {
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 600; padding: 1px 6px; border-radius: 3px;
+  }
+  .stays--ado { background: rgba(217,119,6,0.10); color: var(--warn-ink); }
+  .stays--gh { background: rgba(22,163,74,0.10); color: var(--success-ink); }
+  .stays--both { background: rgba(91,95,207,0.10); color: var(--primary); }
+
+  /* === Matrix view === */
+  .matrix-wrap {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: auto;
+  }
+  table.matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.matrix thead th {
+    background: var(--bg-subtle);
+    border-bottom: 1.5px solid var(--border);
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 600; letter-spacing: 0.04em;
+    color: var(--ink-muted);
+    padding: 8px 6px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    vertical-align: bottom;
+    height: 120px;
+    white-space: nowrap;
+  }
+  table.matrix thead th.row-header-th {
+    text-align: left;
+    background: var(--bg-subtle);
+    font-family: var(--mono); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 12px;
+    height: auto;
+    vertical-align: middle;
+    min-width: 220px;
+    position: sticky; left: 0; z-index: 2;
+  }
+  table.matrix thead th.jtbd-col {
+    width: 60px;
+    min-width: 60px;
+  }
+  /* rotate JTBD column labels */
+  table.matrix thead th.jtbd-col .col-rot {
+    display: inline-block;
+    transform: rotate(-50deg);
+    transform-origin: left bottom;
+    padding-left: 18px;
+    text-align: left;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    text-transform: none;
+  }
+  table.matrix thead th.jtbd-col .col-id {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+  }
+  table.matrix tbody td {
+    border: 1px solid var(--border-subtle);
+    padding: 6px;
+    text-align: center;
+    height: 36px;
+    width: 60px;
+  }
+  table.matrix tbody td.row-header {
+    text-align: left;
+    background: var(--bg-elevated);
+    padding: 10px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+    border-right: 1.5px solid var(--border);
+    position: sticky; left: 0;
+    min-width: 220px;
+  }
+  table.matrix tbody td.row-header .row-id {
+    display: block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--ink-muted);
+    margin-bottom: 1px;
+    letter-spacing: 0.06em;
+  }
+  .cell-mark {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .cell-mark--primary {
+    background: var(--primary);
+    color: white;
+  }
+  .cell-mark--secondary {
+    background: var(--primary-soft);
+    color: var(--primary);
+    border: 1px solid var(--primary-mid);
+  }
+  .cell-mark--orphan {
+    background: var(--warn-soft);
+    color: var(--warn-ink);
+    border: 1px dashed var(--warn-ink);
+  }
+  .cell-empty { color: var(--ink-faint); }
+
+  table.matrix tbody tr.feature-cat td {
+    background: var(--bg-subtle);
+    color: var(--ink-soft);
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    position: sticky; left: 0;
+  }
+  table.matrix tbody tr.audit-row td.row-header {
+    background: var(--bg-subtle);
+    font-style: italic;
+    color: var(--ink-muted);
+    border-top: 2px solid var(--border);
+  }
+  table.matrix tbody tr.audit-row td {
+    border-top: 2px solid var(--border);
+    background: var(--bg-subtle);
+  }
+
+  /* Legend */
+  .legend {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-muted);
+    align-items: center;
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+  .legend-mark {
+    width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>M:N handling — three options</h1>
+  <p class="lede">Three ways to handle the same data: a <strong>feature shared by multiple JTBDs</strong> (F05 used by J12 and J16) and an <strong>entity shared by multiple features</strong> (E16 used by F01 and F02). Same shape, different visualizations.</p>
+
+  <div class="scenario">
+    <strong>Scenario:</strong> Charlie's profile. <code>F05 · Pull request review</code> is used by both <code>J12 · Open a pull request</code> and <code>J16 · Link a PR to a work item</code>. <code>E16 · Branch</code> sits under both <code>F01 · Git commit & push</code> and <code>F02 · Branch management</code>. The strict tree breaks; we have to make a choice.
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- OPTION 2 ONLY — Reference rows -->
+  <!-- ========================================================== -->
+  <div class="opt-block">
+    <div class="opt-head">
+      <div class="opt-label">Option 2</div>
+      <div class="opt-title">Reference rows in the spreadsheet</div>
+      <div class="opt-desc">Item appears <em>fully</em> under one parent, then <em>ghosted</em> under every other parent it serves with an arrow back to the authoritative row. The tree stays intact; reuse is honest but quiet.</div>
+      <div class="opt-pros">
+        <strong class="good">+</strong> Tree shape preserved; click-and-scan works.
+        &nbsp;&nbsp;<strong class="good">+</strong> Edits happen in one place.
+        &nbsp;&nbsp;<strong class="bad">−</strong> M:N is implied, not visible at a glance.
+      </div>
+    </div>
+    <div class="sheet">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 42%;">Item</th>
+            <th style="width: 14%;">Layer</th>
+            <th style="width: 12%;">Stays in ADO?</th>
+            <th style="width: 9%;">Pattern</th>
+            <th style="width: 23%;">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-jtbd-cat"><td colspan="5">Code work · 2 JTBDs</td></tr>
+
+          <tr class="row-jtbd">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J01 · Commit and push code</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--gh">No → GitHub</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Direct migration via GEI</td>
+          </tr>
+          <tr class="row-feature">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F01 · Git commit & push</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>GEI preserves history</td>
+          </tr>
+          <tr class="row-entity">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E15 · Repository</span><span class="shared-pill">used by 4 features</span></div></td>
+            <td>Entity · authoritative</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Full history migrates · 16 fields</td>
+          </tr>
+          <tr class="row-entity">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E16 · Branch</span><span class="shared-pill">used by 2 features</span></div></td>
+            <td>Entity · authoritative</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Git refs preserved</td>
+          </tr>
+
+          <tr class="row-feature">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F02 · Branch management</span></div></td>
+            <td>Feature</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Git-native</td>
+          </tr>
+          <tr class="row-entity row-ref">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle"></span><span class="ref-arrow">↗</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E16 · Branch — see under F01</span></div></td>
+            <td>Reference</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Same data; expand under F01</td>
+          </tr>
+
+          <tr class="row-jtbd">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J12 · Open a pull request</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--gh">No → GitHub</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>GitHub PR ergonomics gain</td>
+          </tr>
+          <tr class="row-feature">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F05 · Pull request review</span><span class="shared-pill">used by 2 JTBDs</span></div></td>
+            <td>Feature · authoritative</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Threaded reviews preserved</td>
+          </tr>
+          <tr class="row-entity">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E14 · Pull Request</span></div></td>
+            <td>Entity · authoritative</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>17 fields</td>
+          </tr>
+
+          <tr class="row-jtbd">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J16 · Link a PR to a work item</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--both">Both</span></td>
+            <td><span class="pattern p-p2">P2</span></td>
+            <td>Critical hybrid friction point</td>
+          </tr>
+          <tr class="row-feature row-ref">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle"></span><span class="ref-arrow">↗</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F05 · Pull request review — see under J12</span></div></td>
+            <td>Reference</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Same data; expand under J12</td>
+          </tr>
+          <tr class="row-feature">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F19 · Work item ↔ PR linking</span></div></td>
+            <td>Feature · authoritative</td>
+            <td><span class="stays stays--both">Both</span></td>
+            <td><span class="pattern p-p2">P2</span></td>
+            <td>AB#12345 syntax + ADO-GitHub app</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- OPTION 4 ONLY — Matrix view -->
+  <!-- ========================================================== -->
+  <div class="opt-block">
+    <div class="opt-head">
+      <div class="opt-label">Option 4</div>
+      <div class="opt-title">Matrix / coverage view</div>
+      <div class="opt-desc">Rows = features, columns = JTBDs, cells = used (●) / shared (○) / orphan (!). M:N is the <em>point</em>. Use to spot orphans (features with no JTBD), hot features (used by many), and JTBDs with thin coverage.</div>
+      <div class="opt-pros">
+        <strong class="good">+</strong> M:N is fully visible.
+        &nbsp;&nbsp;<strong class="good">+</strong> Surfaces orphans and coverage gaps that the tree hides.
+        &nbsp;&nbsp;<strong class="bad">−</strong> Useless for browsing detail; tells coverage, not story.
+      </div>
+    </div>
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th class="row-header-th">Feature ↓ &nbsp; / &nbsp; JTBD →</th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J01</span>Commit and push</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J02</span>Create branch</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J12</span>Open a PR</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J13</span>Review a PR</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J16</span>Link PR ↔ WI</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J22</span>Create work item</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J34</span>Trigger CI build</div></th>
+            <th class="jtbd-col"><div class="col-rot"><span class="col-id">J59</span>Secret-scan alert</div></th>
+            <th class="jtbd-col" style="background: var(--bg-muted);"><div class="col-rot" style="color: var(--ink-soft);"><span class="col-id">Σ</span>Used by</div></th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr class="feature-cat"><td colspan="10">Source control</td></tr>
+
+          <tr>
+            <td class="row-header"><span class="row-id">F01</span>Git commit & push</td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td><span class="cell-mark cell-mark--secondary">○</span></td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><strong>2</strong></td>
+          </tr>
+          <tr>
+            <td class="row-header"><span class="row-id">F02</span>Branch management</td>
+            <td><span class="cell-mark cell-mark--secondary">○</span></td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><strong>2</strong></td>
+          </tr>
+          <tr>
+            <td class="row-header"><span class="row-id">F05</span>Pull request review</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td><span class="cell-mark cell-mark--secondary">○</span></td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><strong>3</strong></td>
+          </tr>
+          <tr>
+            <td class="row-header"><span class="row-id">F19</span>Work item ↔ PR linking</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><strong>1</strong></td>
+          </tr>
+
+          <tr class="feature-cat"><td colspan="10">Work planning</td></tr>
+
+          <tr>
+            <td class="row-header"><span class="row-id">F14</span>Work item creation</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><strong>1</strong></td>
+          </tr>
+
+          <tr class="feature-cat"><td colspan="10">CI / CD</td></tr>
+
+          <tr>
+            <td class="row-header"><span class="row-id">F24</span>CI pipeline (YAML)</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td class="cell-empty">·</td>
+            <td><strong>1</strong></td>
+          </tr>
+          <tr>
+            <td class="row-header" style="color: var(--warn-ink);"><span class="row-id">F75</span>Code search</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><span class="cell-mark cell-mark--orphan">!</span></td>
+          </tr>
+
+          <tr class="feature-cat"><td colspan="10">Security</td></tr>
+
+          <tr>
+            <td class="row-header"><span class="row-id">F34</span>Secret scanning</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td class="cell-empty">·</td>
+            <td><span class="cell-mark cell-mark--primary">●</span></td>
+            <td><strong>1</strong></td>
+          </tr>
+
+          <tr class="audit-row">
+            <td class="row-header">Σ Features per JTBD</td>
+            <td><strong>2</strong></td>
+            <td><strong>2</strong></td>
+            <td><strong>1</strong></td>
+            <td><strong>1</strong></td>
+            <td><strong>2</strong></td>
+            <td><strong>1</strong></td>
+            <td><strong>1</strong></td>
+            <td><strong>1</strong></td>
+            <td>—</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-mark cell-mark--primary">●</span>Authoritative use (full row in tree view)</span>
+      <span class="legend-item"><span class="legend-mark cell-mark--secondary">○</span>Shared use (reference row in tree view)</span>
+      <span class="legend-item"><span class="legend-mark cell-mark--orphan">!</span>Orphan: no JTBD points at this feature — review or retire</span>
+      <span class="legend-item" style="margin-left: auto;">Σ rows show coverage; high counts = popular feature, low/zero = audit candidate</span>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- OPTION 2 + 4 — Combined -->
+  <!-- ========================================================== -->
+  <div class="opt-block">
+    <div class="opt-head">
+      <div class="opt-label">Recommended · 2 + 4 together</div>
+      <div class="opt-title">Spreadsheet for browsing · Matrix for auditing</div>
+      <div class="opt-desc">A two-tab profile: <strong>"Profile"</strong> tab uses Option 2 reference rows for daily scan-and-edit work. <strong>"Coverage"</strong> tab is the Option 4 matrix for audit, gap-finding, and "is this feature even used" questions. Same data, two lenses.</div>
+      <div class="opt-pros">
+        <strong class="good">+</strong> Browsing stays fast and tree-like.
+        &nbsp;&nbsp;<strong class="good">+</strong> Coverage and orphans get a dedicated home.
+        &nbsp;&nbsp;<strong class="good">+</strong> Each view does one job well.
+        &nbsp;&nbsp;<strong class="bad">−</strong> Two views to maintain.
+      </div>
+    </div>
+
+    <!-- Tab strip mock -->
+    <div style="display: flex; gap: 0; margin-bottom: -1px;">
+      <div style="padding: 9px 18px; background: var(--bg-elevated); border: 1px solid var(--border); border-bottom-color: var(--bg-elevated); border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 600; color: var(--ink); position: relative; z-index: 2;">
+        Profile
+      </div>
+      <div style="padding: 9px 18px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 500; color: var(--ink-muted); margin-left: 4px; cursor: pointer;">
+        Coverage <span style="font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-left: 4px;">(matrix)</span>
+      </div>
+      <div style="padding: 9px 18px; background: var(--bg-subtle); border: 1px solid var(--border); border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 500; color: var(--ink-muted); margin-left: 4px; cursor: pointer;">
+        Risks
+      </div>
+    </div>
+
+    <div class="sheet" style="border-top-left-radius: 0;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 42%;">Item</th>
+            <th style="width: 14%;">Layer</th>
+            <th style="width: 12%;">Stays in ADO?</th>
+            <th style="width: 9%;">Pattern</th>
+            <th style="width: 23%;">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-jtbd-cat"><td colspan="5">Code work · 2 JTBDs (1 of 4 categories shown)</td></tr>
+
+          <tr class="row-jtbd">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J12 · Open a pull request</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--gh">No → GitHub</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>GitHub PR ergonomics gain</td>
+          </tr>
+          <tr class="row-feature">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F05 · Pull request review</span><span class="shared-pill">used by 3 JTBDs</span></div></td>
+            <td>Feature · authoritative</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>Threaded reviews preserved</td>
+          </tr>
+          <tr class="row-entity">
+            <td><div class="indent-cell"><span class="indent indent-3"></span><span class="toggle">▶</span><span class="layer-tag layer-tag--entity">ENT</span><span class="row-label">E14 · Pull Request</span><span class="shared-pill">used by 4 features</span></div></td>
+            <td>Entity · authoritative</td>
+            <td><span class="stays stays--gh">No</span></td>
+            <td><span class="pattern p-p1">P1</span></td>
+            <td>17 fields</td>
+          </tr>
+
+          <tr class="row-jtbd">
+            <td><div class="indent-cell"><span class="indent indent-1"></span><span class="toggle">▼</span><span class="layer-tag layer-tag--jtbd">JTBD</span><span class="row-label">J16 · Link a PR to a work item</span></div></td>
+            <td>Job-to-be-done</td>
+            <td><span class="stays stays--both">Both</span></td>
+            <td><span class="pattern p-p2">P2</span></td>
+            <td>Critical hybrid friction point</td>
+          </tr>
+          <tr class="row-feature row-ref">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle"></span><span class="ref-arrow">↗</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F05 · Pull request review — see under J12</span></div></td>
+            <td>Reference</td>
+            <td>—</td>
+            <td>—</td>
+            <td>Same data; switch to Coverage tab to see all 3 JTBDs at once</td>
+          </tr>
+          <tr class="row-feature">
+            <td><div class="indent-cell"><span class="indent indent-2"></span><span class="toggle">▶</span><span class="layer-tag layer-tag--feature">FEAT</span><span class="row-label">F19 · Work item ↔ PR linking</span></div></td>
+            <td>Feature · authoritative</td>
+            <td><span class="stays stays--both">Both</span></td>
+            <td><span class="pattern p-p2">P2</span></td>
+            <td>AB#12345 syntax + ADO-GitHub app</td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><strong>Profile tab</strong> — full rows + reference rows. Best for "what's in this team's profile".</span>
+      <span class="legend-item" style="margin-left: 12px;"><strong>Coverage tab</strong> — matrix view above. Best for "is this feature used? does this JTBD have features?"</span>
+      <span class="legend-item" style="margin-left: auto; color: var(--ink-soft);">Click a cell in Coverage to jump to the row in Profile.</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
