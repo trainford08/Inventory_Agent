@@ -996,35 +996,56 @@ function IdentityPanel() {
         transfers to GitHub without manual work.
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-        <RepoStat
-          label="Service connections"
-          value={totalConnections.toLocaleString()}
-          sub="saved logins pipelines use to reach Azure, AWS, package registries, etc. · across all 142 teams"
-        />
-        <IdentityStat
-          tone="success"
-          label="OIDC federated"
-          value={`${oidcFederated.toLocaleString()} · ${oidcPct}%`}
-          sub={
+      <div className="mb-2 flex items-baseline gap-2.5">
+        <span className="text-[20px] font-bold tracking-[-0.02em] text-ink">
+          {totalConnections.toLocaleString()}
+        </span>
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
+          Service connections · 142 teams
+        </span>
+      </div>
+
+      <div className="mb-3 flex h-7 overflow-hidden rounded-md">
+        <div
+          className="flex items-center justify-center bg-success font-mono text-[11px] font-semibold text-white"
+          style={{ width: `${oidcPct}%` }}
+        >
+          {oidcPct}%
+        </div>
+        <div
+          className="flex items-center justify-center bg-primary font-mono text-[11px] font-semibold text-white"
+          style={{ width: `${patPct}%` }}
+        >
+          {patPct}%
+        </div>
+      </div>
+
+      <div className="mb-5 grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+        <IdentityLegendItem
+          swatch="bg-success"
+          name="OIDC federated"
+          desc={
             <>
               <em>OpenID Connect federation</em> — GitHub and the target system
               trust each other directly. No tokens to copy; transfers cleanly at
               cutover.
             </>
           }
+          pct={oidcPct}
+          count={oidcFederated}
         />
-        <IdentityStat
-          tone="warn"
-          label="PAT-based (manual rotation)"
-          value={`${patBased.toLocaleString()} · ${patPct}%`}
-          sub={
+        <IdentityLegendItem
+          swatch="bg-primary"
+          name="PAT-based (manual rotation)"
+          desc={
             <>
               <em>Personal Access Tokens</em> — static credentials, like
               passwords. Every one must be manually re-issued in GitHub at
               cutover before pipelines can authenticate.
             </>
           }
+          pct={patPct}
+          count={patBased}
         />
       </div>
 
@@ -1057,7 +1078,7 @@ function IdentityPanel() {
                 </div>
                 <div className="h-[14px] overflow-hidden rounded-sm bg-bg-subtle">
                   <div
-                    className={`h-full rounded-sm ${isTop ? "bg-warn" : "bg-bg-muted"}`}
+                    className={`h-full rounded-sm ${isTop ? "bg-primary" : "bg-bg-muted"}`}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
@@ -1076,6 +1097,42 @@ function IdentityPanel() {
       <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
         <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
         {actionSignal}
+      </div>
+    </div>
+  );
+}
+
+function IdentityLegendItem({
+  swatch,
+  name,
+  desc,
+  pct,
+  count,
+}: {
+  swatch: string;
+  name: string;
+  desc: React.ReactNode;
+  pct: number;
+  count: number;
+}) {
+  return (
+    <div className="grid grid-cols-[14px_1fr_auto] items-baseline gap-x-3">
+      <span
+        className={`mt-[5px] h-[12px] w-[12px] self-start rounded-sm ${swatch}`}
+      />
+      <div>
+        <div className="text-[13px] font-semibold text-ink">{name}</div>
+        <div className="mt-[2px] text-[11.5px] leading-[1.45] text-ink-muted">
+          {desc}
+        </div>
+      </div>
+      <div className="text-right">
+        <div className="text-[15px] font-bold tracking-[-0.01em] text-ink">
+          {pct}%
+        </div>
+        <div className="font-mono text-[10.5px] text-ink-muted">
+          {count.toLocaleString()}
+        </div>
       </div>
     </div>
   );

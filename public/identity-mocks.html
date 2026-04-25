@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Identity surface — visual options</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.10);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --warn-bg: #fffaf0;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; }
+  .mock-banner {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  .opt-tag {
+    display: inline-flex;
+    margin-bottom: 10px;
+    padding: 3px 10px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .opt-note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    max-width: 760px;
+  }
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 36px;
+  }
+  .panel-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .panel-sub {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+  .panel-sub em { font-style: italic; }
+  .label-mono {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .reco {
+    margin-top: 18px;
+    border: 1px solid var(--border-soft);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .reco strong { color: var(--ink); font-weight: 600; }
+
+  /* ============ Option 1 — Two-column split (easy / work) ============ */
+  .o1-split {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 16px;
+    align-items: stretch;
+  }
+  .o1-side {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+  }
+  .o1-side.good { border-top: 3px solid var(--success); }
+  .o1-side.work { border-top: 3px solid var(--warn); background: var(--warn-bg); }
+  .o1-eyebrow {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .o1-side.good .o1-eyebrow { color: var(--success-ink); }
+  .o1-side.work .o1-eyebrow { color: var(--warn-ink); }
+  .o1-num {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .o1-num span {
+    font-family: "Geist Mono", monospace;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  .o1-name {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .o1-desc {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .o1-conc-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-top: 16px;
+    margin-bottom: 4px;
+  }
+  .o1-conc-sub {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+  }
+  .o1-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 110px;
+    align-items: center;
+    gap: 10px;
+    padding: 3px 0;
+    font-size: 12px;
+  }
+  .o1-cohort { font-weight: 600; color: var(--ink); }
+  .o1-cohort span {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    font-weight: 400;
+    margin-left: 6px;
+  }
+  .o1-bar {
+    height: 12px;
+    border-radius: 3px;
+    background: var(--bg-subtle);
+    overflow: hidden;
+  }
+  .o1-bar > div {
+    height: 100%;
+    border-radius: 3px;
+  }
+  .o1-bar > div.top { background: var(--warn); }
+  .o1-bar > div.rest { background: var(--bg-muted); }
+  .o1-num-r {
+    text-align: right;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+  .o1-num-r strong { color: var(--ink); font-weight: 700; }
+
+  /* ============ Option 2 — Stacked bar + concentration ============ */
+  .o2-total {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .o2-total .num {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .o2-total .lab {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .o2-bar {
+    display: flex;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .o2-bar > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .o2-bar .oidc { background: var(--success); }
+  .o2-bar .pat { background: var(--warn); }
+  .o2-leg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 24px;
+    margin-bottom: 4px;
+  }
+  .o2-leg-item {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .o2-sw { width: 12px; height: 12px; border-radius: 3px; align-self: center; }
+  .o2-sw.oidc { background: var(--success); }
+  .o2-sw.pat { background: var(--warn); }
+  .o2-leg-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .o2-leg-desc {
+    font-size: 11.5px; color: var(--ink-muted); margin-top: 2px;
+    line-height: 1.45;
+  }
+  .o2-leg-num {
+    font-size: 16px; font-weight: 700; color: var(--ink);
+    letter-spacing: -0.01em; text-align: right;
+  }
+  .o2-leg-num span {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px; color: var(--ink-muted);
+    font-weight: 500; margin-left: 6px; display: block;
+  }
+  .o2-conc {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ============ Option 3 — Headline + cards + concentration table ============ */
+  .o3-hero {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--warn-soft);
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .o3-hero .pct {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--warn-ink);
+  }
+  .o3-hero .lede {
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    line-height: 1.5;
+  }
+  .o3-hero .lede strong { font-weight: 700; }
+  .o3-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .o3-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-left: 3px solid var(--ink-faint);
+  }
+  .o3-card.good { border-left-color: var(--success); }
+  .o3-card.work { border-left-color: var(--warn); }
+  .o3-card .lab {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .o3-card .num {
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+    color: var(--ink); line-height: 1.1;
+  }
+  .o3-card .num span {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px; color: var(--ink-muted);
+    font-weight: 500; margin-left: 4px;
+  }
+  .o3-card .desc {
+    margin-top: 6px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--ink-muted);
+  }
+  .o3-conc-title { font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+  .o3-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .o3-table th {
+    text-align: left;
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-muted);
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-subtle);
+  }
+  .o3-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink-soft);
+  }
+  .o3-table tr:last-child td { border-bottom: 0; }
+  .o3-table .cohort { font-weight: 600; color: var(--ink); }
+  .o3-table .ratehi { color: var(--warn-ink); font-weight: 600; }
+  .o3-table .num { font-family: "Geist Mono", monospace; text-align: right; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mock-banner">
+    <strong>3 visual options</strong> for the Identity surface block — same content (OIDC vs PAT split, where PAT rotation work concentrates, recommendation), three different layouts.
+  </div>
+
+  <!-- ============ Option 1 ============ -->
+  <span class="opt-tag">Option 1 · Two-column split — easy half / work half</span>
+  <div class="opt-note">Frames the panel as the choice it really is: one half transfers free (OIDC), the other half is the rotation backlog (PAT). The concentration list lives <em>inside</em> the work column so the spatial story matches the editorial story.</div>
+  <div class="panel">
+    <div class="panel-title">Identity surface</div>
+    <div class="panel-sub">
+      How many <em>service connections</em> the program has — saved logins a team&rsquo;s pipelines (automated build/deploy jobs) use to reach external systems like Azure, AWS, and package registries. Each connection uses one of two authentication methods, and only one of them transfers to GitHub without manual work. <strong>1,847 total · across 142 teams.</strong>
+    </div>
+
+    <div class="o1-split">
+      <div class="o1-side good">
+        <div class="o1-eyebrow">Transfers cleanly</div>
+        <div class="o1-num">1,037 <span>· 56%</span></div>
+        <div class="o1-name">OIDC federated</div>
+        <div class="o1-desc"><em>OpenID Connect federation</em> — GitHub and the target system trust each other directly. No tokens to copy; transfers cleanly at cutover.</div>
+      </div>
+
+      <div class="o1-side work">
+        <div class="o1-eyebrow">Manual rotation work</div>
+        <div class="o1-num">810 <span>· 44%</span></div>
+        <div class="o1-name">PAT-based</div>
+        <div class="o1-desc"><em>Personal Access Tokens</em> — static credentials, like passwords. Every one must be manually re-issued in GitHub at cutover before pipelines can authenticate.</div>
+
+        <div class="o1-conc-title">Where the rotation work concentrates</div>
+        <div class="o1-conc-sub">Two cohorts own <strong>76%</strong> of the 810 PAT-based connections.</div>
+
+        <div class="o1-row">
+          <div class="o1-cohort">Echo <span>(13 teams)</span></div>
+          <div class="o1-bar"><div class="top" style="width: 49%"></div></div>
+          <div class="o1-num-r"><strong>49%</strong> · 397</div>
+        </div>
+        <div class="o1-row">
+          <div class="o1-cohort">Bravo <span>(47 teams)</span></div>
+          <div class="o1-bar"><div class="top" style="width: 27%"></div></div>
+          <div class="o1-num-r"><strong>27%</strong> · 220</div>
+        </div>
+        <div class="o1-row">
+          <div class="o1-cohort">Charlie <span>(24 teams)</span></div>
+          <div class="o1-bar"><div class="rest" style="width: 11%"></div></div>
+          <div class="o1-num-r"><strong>11%</strong> · 89</div>
+        </div>
+        <div class="o1-row">
+          <div class="o1-cohort">Foxtrot <span>(7 teams)</span></div>
+          <div class="o1-bar"><div class="rest" style="width: 6%"></div></div>
+          <div class="o1-num-r"><strong>6%</strong> · 51</div>
+        </div>
+        <div class="o1-row">
+          <div class="o1-cohort">Alpha <span>(32 teams)</span></div>
+          <div class="o1-bar"><div class="rest" style="width: 5%"></div></div>
+          <div class="o1-num-r"><strong>5%</strong> · 38</div>
+        </div>
+        <div class="o1-row">
+          <div class="o1-cohort">Delta <span>(19 teams)</span></div>
+          <div class="o1-bar"><div class="rest" style="width: 2%"></div></div>
+          <div class="o1-num-r"><strong>2%</strong> · 15</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reco">
+      <strong>Recommendation:</strong> Echo holds 49% of all PAT rotations and runs at ~30 per team — 4× the program-wide average — because its regulated workflows hard-code static credentials. Foxtrot&rsquo;s QA tooling pushes its per-team rate above average too. Bravo&rsquo;s 27% absolute share looks high, but at ~5 PATs per team it&rsquo;s actually below program average — a sign of operational maturity, not migration risk. Focus the OIDC ramp on Echo and Foxtrot pre-cutover.
+    </div>
+  </div>
+
+  <!-- ============ Option 2 ============ -->
+  <span class="opt-tag">Option 2 · Stacked bar + legend (matches parity panel)</span>
+  <div class="opt-note">Same visual grammar as the parity panel: one 100%-stacked bar shows OIDC vs PAT at a glance, then the legend carries the meaning. Concentration sits below as a separate sub-block.</div>
+  <div class="panel">
+    <div class="panel-title">Identity surface</div>
+    <div class="panel-sub">
+      How many <em>service connections</em> the program has — saved logins a team&rsquo;s pipelines use to reach Azure, AWS, package registries, etc. Only one of the two auth methods transfers to GitHub without manual work.
+    </div>
+
+    <div class="o2-total">
+      <span class="num">1,847</span>
+      <span class="lab">Service connections · 142 teams</span>
+    </div>
+
+    <div class="o2-bar">
+      <div class="oidc" style="flex: 56">56%</div>
+      <div class="pat" style="flex: 44">44%</div>
+    </div>
+
+    <div class="o2-leg">
+      <div class="o2-leg-item">
+        <span class="o2-sw oidc"></span>
+        <div>
+          <div class="o2-leg-name">OIDC federated</div>
+          <div class="o2-leg-desc"><em>OpenID Connect federation</em> — GitHub and the target system trust each other directly. No tokens to copy; transfers cleanly at cutover.</div>
+        </div>
+        <div class="o2-leg-num">56%<span>1,037</span></div>
+      </div>
+      <div class="o2-leg-item">
+        <span class="o2-sw pat"></span>
+        <div>
+          <div class="o2-leg-name">PAT-based (manual rotation)</div>
+          <div class="o2-leg-desc"><em>Personal Access Tokens</em> — static credentials. Every one must be manually re-issued in GitHub before pipelines can authenticate.</div>
+        </div>
+        <div class="o2-leg-num">44%<span>810</span></div>
+      </div>
+    </div>
+
+    <div class="o2-conc">
+      <div class="o3-conc-title">Where the rotation work concentrates</div>
+      <div class="o1-conc-sub">Two cohorts own <strong>76%</strong> of the 810 PAT-based connections.</div>
+      <div class="o1-row">
+        <div class="o1-cohort">Echo <span>(13 teams)</span></div>
+        <div class="o1-bar"><div class="top" style="width: 49%"></div></div>
+        <div class="o1-num-r"><strong>49%</strong> · 397</div>
+      </div>
+      <div class="o1-row">
+        <div class="o1-cohort">Bravo <span>(47 teams)</span></div>
+        <div class="o1-bar"><div class="top" style="width: 27%"></div></div>
+        <div class="o1-num-r"><strong>27%</strong> · 220</div>
+      </div>
+      <div class="o1-row">
+        <div class="o1-cohort">Charlie <span>(24 teams)</span></div>
+        <div class="o1-bar"><div class="rest" style="width: 11%"></div></div>
+        <div class="o1-num-r"><strong>11%</strong> · 89</div>
+      </div>
+      <div class="o1-row">
+        <div class="o1-cohort">Foxtrot <span>(7 teams)</span></div>
+        <div class="o1-bar"><div class="rest" style="width: 6%"></div></div>
+        <div class="o1-num-r"><strong>6%</strong> · 51</div>
+      </div>
+      <div class="o1-row">
+        <div class="o1-cohort">Alpha <span>(32 teams)</span></div>
+        <div class="o1-bar"><div class="rest" style="width: 5%"></div></div>
+        <div class="o1-num-r"><strong>5%</strong> · 38</div>
+      </div>
+      <div class="o1-row">
+        <div class="o1-cohort">Delta <span>(19 teams)</span></div>
+        <div class="o1-bar"><div class="rest" style="width: 2%"></div></div>
+        <div class="o1-num-r"><strong>2%</strong> · 15</div>
+      </div>
+    </div>
+
+    <div class="reco">
+      <strong>Recommendation:</strong> Focus the OIDC ramp on Echo and Foxtrot pre-cutover — they run at 4× the program-average per-team PAT rate. Bravo&rsquo;s 27% absolute share is operational scale, not risk.
+    </div>
+  </div>
+
+  <!-- ============ Option 3 ============ -->
+  <span class="opt-tag">Option 3 · Headline takeaway + cards + concentration table</span>
+  <div class="opt-note">Lead with the punchline (&ldquo;44% of identity is manual rotation work&rdquo;) in a tinted hero; three cards establish the program shape; the concentration becomes a tight table including a per-team rate column — which is the actual signal.</div>
+  <div class="panel">
+    <div class="panel-title">Identity surface</div>
+    <div class="panel-sub">
+      <em>Service connections</em> are saved logins a team&rsquo;s pipelines use to reach Azure, AWS, and package registries. Each one uses OIDC (cleanly transfers) or a PAT (must be manually re-issued at cutover).
+    </div>
+
+    <div class="o3-hero">
+      <div class="pct">44%</div>
+      <div class="lede">
+        of the <strong>1,847</strong> service connections are PAT-based — every one becomes a manual rotation in the cutover window. The rest (56%, OIDC federated) transfer for free.
+      </div>
+    </div>
+
+    <div class="o3-cards">
+      <div class="o3-card">
+        <div class="lab">Service connections</div>
+        <div class="num">1,847 <span>· 142 teams</span></div>
+        <div class="desc">Total surface area — the saved logins the program&rsquo;s pipelines use.</div>
+      </div>
+      <div class="o3-card good">
+        <div class="lab">OIDC federated</div>
+        <div class="num">1,037 <span>· 56%</span></div>
+        <div class="desc">Direct trust between GitHub and the target system. No tokens to copy.</div>
+      </div>
+      <div class="o3-card work">
+        <div class="lab">PAT-based</div>
+        <div class="num">810 <span>· 44%</span></div>
+        <div class="desc">Static credentials. Every one re-issued in GitHub before pipelines run.</div>
+      </div>
+    </div>
+
+    <div class="o3-conc-title">Where the rotation work concentrates</div>
+    <table class="o3-table">
+      <thead>
+        <tr>
+          <th>Cohort</th>
+          <th class="num">Teams</th>
+          <th class="num">PATs</th>
+          <th class="num">Share</th>
+          <th class="num">Per team</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cohort">Echo</td>
+          <td class="num">13</td>
+          <td class="num">397</td>
+          <td class="num"><strong>49%</strong></td>
+          <td class="num ratehi">~30</td>
+        </tr>
+        <tr>
+          <td class="cohort">Bravo</td>
+          <td class="num">47</td>
+          <td class="num">220</td>
+          <td class="num"><strong>27%</strong></td>
+          <td class="num">~5</td>
+        </tr>
+        <tr>
+          <td class="cohort">Charlie</td>
+          <td class="num">24</td>
+          <td class="num">89</td>
+          <td class="num">11%</td>
+          <td class="num">~4</td>
+        </tr>
+        <tr>
+          <td class="cohort">Foxtrot</td>
+          <td class="num">7</td>
+          <td class="num">51</td>
+          <td class="num">6%</td>
+          <td class="num ratehi">~7</td>
+        </tr>
+        <tr>
+          <td class="cohort">Alpha</td>
+          <td class="num">32</td>
+          <td class="num">38</td>
+          <td class="num">5%</td>
+          <td class="num">~1</td>
+        </tr>
+        <tr>
+          <td class="cohort">Delta</td>
+          <td class="num">19</td>
+          <td class="num">15</td>
+          <td class="num">2%</td>
+          <td class="num">~1</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="reco">
+      <strong>Recommendation:</strong> The per-team column is the signal. Echo (~30 PATs/team) and Foxtrot (~7) sit well above the program average — focus the OIDC ramp there pre-cutover. Bravo&rsquo;s 27% absolute share is scale, not risk.
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

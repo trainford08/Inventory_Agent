@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Identity surface — PAT color options</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.10);
+    --success: #16a34a;
+    --warn: #d97706;
+    --danger: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  .opt-tag {
+    display: inline-flex;
+    margin-bottom: 8px;
+    padding: 3px 10px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .opt-note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 26px;
+  }
+  .total {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .total .num { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .total .lab {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px; color: var(--ink-muted);
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .bar {
+    display: flex;
+    height: 26px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .bar > div {
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px; font-weight: 600;
+  }
+  .leg {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+  .leg-item {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .sw { width: 12px; height: 12px; border-radius: 3px; align-self: center; }
+  .leg-name { font-size: 13px; font-weight: 600; }
+  .leg-desc { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; line-height: 1.45; }
+  .leg-num { font-size: 15px; font-weight: 700; text-align: right; }
+  .leg-num span {
+    font-family: "Geist Mono", monospace; font-size: 10.5px; color: var(--ink-muted);
+    font-weight: 500; margin-left: 6px; display: block;
+  }
+
+  /* OIDC stays green across all options */
+  .c-oidc { background: var(--success); }
+
+  /* PAT color variants */
+  .c-red { background: #dc2626; }
+  .c-amber-deep { background: #ca8a04; }   /* deeper amber, less brown */
+  .c-slate { background: #64748b; }        /* neutral slate-grey */
+  .c-indigo { background: var(--primary); } /* brand indigo */
+  .c-violet { background: #8b5cf6; }
+  .c-rose { background: #e11d48; }
+  .c-coral { background: #f97316; }        /* orange, not brown */
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h2 style="font-size:16px;font-weight:700;margin-bottom:18px;">PAT color options — same Option 2 layout, different "work" hue</h2>
+
+  <!-- Red / Danger -->
+  <span class="opt-tag">A · Red (danger)</span>
+  <div class="opt-note">Reads as "this is risk." Strongest signal but may overstate — not all rotation work is dangerous, just manual.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-red" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-red"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+  <!-- Coral / Orange -->
+  <span class="opt-tag">B · Coral / Orange</span>
+  <div class="opt-note">Vivid orange (#f97316). Same "needs attention" feel as warn but brighter and less muddy than the current brown.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-coral" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-coral"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+  <!-- Deeper amber -->
+  <span class="opt-tag">C · Deeper amber (gold)</span>
+  <div class="opt-note">Goldenrod (#ca8a04). Still "warn" family but cleaner — more gold, less brown.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-amber-deep" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-amber-deep"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+  <!-- Slate / Neutral -->
+  <span class="opt-tag">D · Slate (neutral grey)</span>
+  <div class="opt-note">Slate-500 (#64748b). Reads as "the other half" without judgment — accurate framing if PAT is just <em>different</em>, not <em>bad</em>.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-slate" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-slate"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+  <!-- Indigo -->
+  <span class="opt-tag">E · Indigo (brand)</span>
+  <div class="opt-note">Brand primary. Pairs nicely with the green and ties the panel to the rest of the product. Reads neutral / informational.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-indigo" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-indigo"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+  <!-- Violet -->
+  <span class="opt-tag">F · Violet</span>
+  <div class="opt-note">Violet-500 (#8b5cf6). Distinct from indigo, modern, neutral.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-violet" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-violet"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+  <!-- Rose -->
+  <span class="opt-tag">G · Rose</span>
+  <div class="opt-note">Rose-600 (#e11d48). Like red but warmer/pinker — softer urgency.</div>
+  <div class="panel">
+    <div class="total"><span class="num">1,847</span><span class="lab">Service connections</span></div>
+    <div class="bar"><div class="c-oidc" style="flex:56">56%</div><div class="c-rose" style="flex:44">44%</div></div>
+    <div class="leg">
+      <div class="leg-item"><span class="sw c-oidc"></span><div><div class="leg-name">OIDC federated</div><div class="leg-desc">Transfers cleanly at cutover.</div></div><div class="leg-num">56%<span>1,037</span></div></div>
+      <div class="leg-item"><span class="sw c-rose"></span><div><div class="leg-name">PAT-based</div><div class="leg-desc">Manual re-issue required.</div></div><div class="leg-num">44%<span>810</span></div></div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
