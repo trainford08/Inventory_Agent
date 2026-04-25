@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { Field } from "@/lib/inventory-fields";
 import type { CategoryGroup, FeatureNode, JtbdNode } from "@/server/inventory";
 
 type Row =
@@ -26,6 +27,13 @@ type Row =
       parentId: string;
       entity: FeatureNode["entityNodes"][number];
       isRef: boolean;
+    }
+  | {
+      kind: "field";
+      id: string;
+      rowKey: string;
+      parentId: string;
+      field: Field;
     };
 
 type Destination = "all" | "ado" | "gh" | "both";
@@ -41,11 +49,12 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
-    // Expand cats + JTBDs + non-ref features by default so the full nested
-    // structure (jtbd → feature → entity) is visible from the start.
+    // Expand cats + JTBDs + non-ref features + non-ref entities by default
+    // so the full nested structure is visible from the start in any layer.
     for (const r of rows) {
       if (r.kind === "cat" || r.kind === "jtbd") set.add(r.id);
       else if (r.kind === "feature" && !r.isRef) set.add(r.rowKey);
+      else if (r.kind === "entity" && !r.isRef) set.add(r.rowKey);
     }
     return set;
   }, [rows]);
@@ -73,8 +82,8 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
     const next = new Set<string>();
     for (const r of rows) {
       if (r.kind === "cat" || r.kind === "jtbd") next.add(r.id);
-      else if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
-      else if (r.kind === "entity" && !r.isRef) next.add(r.rowKey);
+      else if ((r.kind === "feature" || r.kind === "entity") && !r.isRef)
+        next.add(r.rowKey);
     }
     setExpanded(next);
   };
@@ -87,6 +96,11 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
 
   const matchesFilters = (r: Row): boolean => {
     if (r.kind === "cat") return true;
+    if (r.kind === "field") {
+      if (patternFilter !== "all" && r.field.pattern !== patternFilter)
+        return false;
+      return true;
+    }
     if (destination !== "all") {
       const stays =
         r.kind === "jtbd"
@@ -104,11 +118,14 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
     return true;
   };
 
-  // Layer "all" → tree with collapse semantics; other layers → flat list of that layer.
+  // Tree-with-collapse for All / JTBD / Feature / Entity layers.
+  // Each layer view shows the chosen layer + descendants (nested), except
+  // Field which falls through to the flat FieldTable below.
   const visibleRows: Row[] = (() => {
     if (layer === "all") {
       return rows.filter((r) => {
         if (!matchesFilters(r)) return false;
+        if (r.kind === "field") return false; // fields excluded from All view
         if (r.kind === "cat") return true;
         if (r.kind === "jtbd") return expanded.has(`cat:${r.jtbd.category}`);
         if (r.kind === "feature") return expanded.has(r.parentId);
@@ -116,41 +133,75 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         return false;
       });
     }
-    // Flat layer view: show category headers (JTBD layer only) + matching rows.
-    // Dedupe features/entities by id.
-    const seen = new Set<string>();
-    const flat: Row[] = [];
-    let pendingCat: (Row & { kind: "cat" }) | null = null;
-    let catEmitted = false;
-    for (const r of rows) {
-      if (r.kind === "cat") {
-        pendingCat = r;
-        catEmitted = false;
-        continue;
-      }
-      if (r.kind === "jtbd" && layer === "jtbd" && matchesFilters(r)) {
-        if (pendingCat && !catEmitted) {
-          flat.push(pendingCat);
-          catEmitted = true;
+    if (layer === "jtbd") {
+      // Cat headers + JTBDs + nested feat/entity descendants (no fields)
+      return rows.filter((r) => {
+        if (!matchesFilters(r)) return false;
+        if (r.kind === "field") return false;
+        if (r.kind === "cat") return true;
+        if (r.kind === "jtbd") return expanded.has(`cat:${r.jtbd.category}`);
+        if (r.kind === "feature") return expanded.has(r.parentId);
+        if (r.kind === "entity") return expanded.has(r.parentId);
+        return false;
+      });
+    }
+    if (layer === "feature") {
+      // Features as top-level (deduped) with nested entities. Skip cats/JTBDs.
+      const seen = new Set<string>();
+      const allowedFeatureKey = new Set<string>();
+      const out: Row[] = [];
+      for (const r of rows) {
+        if (r.kind === "feature" && !r.isRef && matchesFilters(r)) {
+          if (seen.has(r.feature.id)) continue;
+          seen.add(r.feature.id);
+          allowedFeatureKey.add(r.rowKey);
+          out.push(r);
+          continue;
         }
+        if (
+          r.kind === "entity" &&
+          !r.isRef &&
+          matchesFilters(r) &&
+          allowedFeatureKey.has(r.parentId) &&
+          expanded.has(r.parentId)
+        ) {
+          out.push(r);
+        }
+      }
+      return out;
+    }
+    if (layer === "entity") {
+      // Entities as top-level (deduped) with nested fields.
+      const seen = new Set<string>();
+      const allowedEntityKey = new Set<string>();
+      const out: Row[] = [];
+      for (const r of rows) {
+        if (r.kind === "entity" && !r.isRef && matchesFilters(r)) {
+          if (seen.has(r.entity.id)) continue;
+          seen.add(r.entity.id);
+          allowedEntityKey.add(r.rowKey);
+          out.push(r);
+          continue;
+        }
+        if (
+          r.kind === "field" &&
+          allowedEntityKey.has(r.parentId) &&
+          expanded.has(r.parentId)
+        ) {
+          out.push(r);
+        }
+      }
+      return out;
+    }
+    // layer === "field" → flat view, render dedupe entity rows; FieldTable
+    // expands them. Reuse the dedupe logic so FieldTable still works.
+    const seenEnt = new Set<string>();
+    const flat: Row[] = [];
+    for (const r of rows) {
+      if (r.kind === "entity" && !r.isRef && matchesFilters(r)) {
+        if (seenEnt.has(r.entity.id)) continue;
+        seenEnt.add(r.entity.id);
         flat.push(r);
-        continue;
-      }
-      if (r.kind === "feature" && layer === "feature" && matchesFilters(r)) {
-        if (seen.has(r.feature.id)) continue;
-        seen.add(r.feature.id);
-        flat.push({ ...r, isRef: false });
-        continue;
-      }
-      if (
-        r.kind === "entity" &&
-        (layer === "entity" || layer === "field") &&
-        matchesFilters(r)
-      ) {
-        if (seen.has(r.entity.id)) continue;
-        seen.add(r.entity.id);
-        flat.push({ ...r, isRef: false });
-        continue;
       }
     }
     return flat;
@@ -222,7 +273,9 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         </span>
       </div>
 
-      {layer === "all" ? (
+      {layer === "field" ? (
+        <FieldTable rows={visibleRows} />
+      ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
           <table className="w-full border-collapse text-[13px]">
             <thead>
@@ -254,196 +307,9 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
             </tbody>
           </table>
         </div>
-      ) : layer === "jtbd" ? (
-        <JtbdTable rows={visibleRows} />
-      ) : layer === "feature" ? (
-        <FeatureTable rows={visibleRows} />
-      ) : layer === "entity" ? (
-        <EntityTable rows={visibleRows} />
-      ) : (
-        <FieldTable rows={visibleRows} />
       )}
 
       <Legend />
-    </div>
-  );
-}
-
-/* ================ Layer-specific tables ================ */
-
-function JtbdTable({ rows }: { rows: Row[] }) {
-  let rowNum = 0;
-  return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr>
-            <Th className="w-[44px] text-right">#</Th>
-            <Th className="w-[6%]">ID</Th>
-            <Th>Job-to-be-done</Th>
-            <Th className="w-[10%]">Persona</Th>
-            <Th className="w-[8%]">Frequency</Th>
-            <Th className="w-[12%]">Stays in ADO?</Th>
-            <Th>Migration impact</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            if (r.kind === "cat") {
-              return (
-                <tr key={r.id} className="border-t-2 border-ink/60 bg-bg-muted">
-                  <td
-                    colSpan={7}
-                    className="px-4 py-[9px] font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
-                  >
-                    {r.label}
-                  </td>
-                </tr>
-              );
-            }
-            if (r.kind !== "jtbd") return null;
-            const j = r.jtbd;
-            const num = ++rowNum;
-            return (
-              <tr key={r.id} className="bg-primary/[0.04]">
-                <NumTd>{num}</NumTd>
-                <Td className="font-mono text-[10.5px] text-ink-muted">
-                  {j.id}
-                </Td>
-                <Td>
-                  <span className="font-medium text-ink">{j.name}</span>
-                </Td>
-                <Td className="font-mono text-[11px] text-ink-soft">
-                  {j.persona}
-                </Td>
-                <Td className="font-mono text-[11px] text-ink-soft">
-                  {j.frequency}
-                </Td>
-                <Td>
-                  <StaysBadge value={j.staysInAdo} />
-                </Td>
-                <Td className="text-[12px] leading-snug text-ink-soft">
-                  {j.impact}
-                </Td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function FeatureTable({ rows }: { rows: Row[] }) {
-  let rowNum = 0;
-  return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr>
-            <Th className="w-[44px] text-right">#</Th>
-            <Th className="w-[6%]">ID</Th>
-            <Th>Feature</Th>
-            <Th className="w-[12%]">Stays in ADO?</Th>
-            <Th className="w-[8%]">Pattern</Th>
-            <Th className="w-[10%] text-right">Entities</Th>
-            <Th>Preservation strategy</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            if (r.kind !== "feature") return null;
-            const f = r.feature;
-            const num = ++rowNum;
-            return (
-              <tr key={r.rowKey} className="bg-warn/[0.04]">
-                <NumTd>{num}</NumTd>
-                <Td className="font-mono text-[10.5px] text-ink-muted">
-                  {f.id}
-                </Td>
-                <Td>
-                  <span className="font-medium text-ink">{f.name}</span>
-                </Td>
-                <Td>
-                  <StaysBadge value={f.staysInAdo} />
-                </Td>
-                <Td>
-                  <PatternBadge value={f.pattern} />
-                </Td>
-                <Td className="text-right font-mono text-[11.5px] text-ink-muted">
-                  {f.entityNodes.length}
-                </Td>
-                <Td className="text-[12px] italic leading-snug text-ink-soft">
-                  {f.preservationStrategy}
-                </Td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function EntityTable({ rows }: { rows: Row[] }) {
-  let rowNum = 0;
-  return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr>
-            <Th className="w-[44px] text-right">#</Th>
-            <Th className="w-[6%]">ID</Th>
-            <Th>ADO Entity</Th>
-            <Th className="w-[10%]">Service</Th>
-            <Th className="w-[10%]">Data preservation</Th>
-            <Th className="w-[11%]">Capability preservation</Th>
-            <Th className="w-[8%]">Pattern</Th>
-            <Th className="w-[12%]">Stays in ADO?</Th>
-            <Th className="w-[8%] text-right">Fields</Th>
-            <Th>Migration note</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            if (r.kind !== "entity") return null;
-            const e = r.entity;
-            const num = ++rowNum;
-            return (
-              <tr key={r.rowKey} className="bg-success/[0.04]">
-                <NumTd>{num}</NumTd>
-                <Td className="font-mono text-[10.5px] text-ink-muted">
-                  {e.id}
-                </Td>
-                <Td>
-                  <span className="font-medium text-ink">{e.name}</span>
-                </Td>
-                <Td className="font-mono text-[11px] text-ink-soft">
-                  {e.serviceLabel}
-                </Td>
-                <Td>
-                  <FidelityBadge value={e.dataPreservation} />
-                </Td>
-                <Td>
-                  <FidelityBadge value={e.capabilityPreservation} />
-                </Td>
-                <Td>
-                  <PatternBadge value={e.pattern} />
-                </Td>
-                <Td>
-                  <StaysBadge value={e.staysInAdo} />
-                </Td>
-                <Td className="text-right font-mono text-[11.5px] text-ink-muted">
-                  {e.fieldCount}
-                </Td>
-                <Td className="text-[12px] leading-snug text-ink-soft">
-                  {e.note}
-                </Td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </div>
   );
 }
@@ -615,6 +481,16 @@ function buildRows(groups: CategoryGroup[]): Row[] {
             entity: e,
             isRef: isEntityRef,
           });
+          if (isEntityRef) continue;
+          for (const fld of e.fields) {
+            out.push({
+              kind: "field",
+              id: fld.id,
+              rowKey: `fld:${j.id}:${f.id}:${e.id}:${fld.id}`,
+              parentId: eRowKey,
+              field: fld,
+            });
+          }
         }
       }
     }
@@ -725,38 +601,78 @@ function RowView({
     );
   }
 
-  // entity
+  if (row.kind === "entity") {
+    const isOpen = expanded.has(row.rowKey);
+    const hasFields = !row.isRef && row.entity.fields.length > 0;
+    return (
+      <tr className={row.isRef ? "bg-success/[0.02]" : "bg-success/[0.04]"}>
+        <NumTd>{rowNum}</NumTd>
+        <Td>
+          <IndentCell level={3}>
+            <ToggleButton
+              onClick={() => onToggle(row.rowKey)}
+              open={isOpen}
+              hasChildren={hasFields}
+              tone="success"
+            />
+            <LayerTag kind="entity" />
+            <span className={muted(row.isRef, "text-ink")}>
+              {row.entity.id} · {row.entity.name}
+              {row.isRef ? (
+                <span className="ml-2 font-mono text-[10.5px] text-ink-faint">
+                  (shared)
+                </span>
+              ) : null}
+              <span className="ml-2 rounded-full bg-bg-elevated px-1.5 py-[1px] font-mono text-[10px] text-ink-muted ring-1 ring-inset ring-border">
+                {row.entity.serviceLabel}
+              </span>
+            </span>
+          </IndentCell>
+        </Td>
+        <Td className={muted(row.isRef)}>
+          {row.isRef ? "Entity (ref)" : "Entity"}
+        </Td>
+        <Td>
+          <StaysBadge value={row.entity.staysInAdo} faded={row.isRef} />
+        </Td>
+        <Td>
+          <PatternBadge value={row.entity.pattern} faded={row.isRef} />
+        </Td>
+        <Td className="text-right font-mono text-[11.5px] text-ink-muted">
+          {row.isRef ? "—" : `${row.entity.fieldCount} fields`}
+        </Td>
+      </tr>
+    );
+  }
+
+  // field
+  const fld = row.field;
   return (
-    <tr className={row.isRef ? "bg-success/[0.02]" : "bg-success/[0.04]"}>
+    <tr className="bg-slate-50">
       <NumTd>{rowNum}</NumTd>
       <Td>
-        <IndentCell level={3}>
-          <ToggleButton open={false} hasChildren={false} tone="success" />
-          <LayerTag kind="entity" />
-          <span className={muted(row.isRef, "text-ink")}>
-            {row.entity.id} · {row.entity.name}
-            {row.isRef ? (
-              <span className="ml-2 font-mono text-[10.5px] text-ink-faint">
-                (shared)
-              </span>
-            ) : null}
-            <span className="ml-2 rounded-full bg-bg-elevated px-1.5 py-[1px] font-mono text-[10px] text-ink-muted ring-1 ring-inset ring-border">
-              {row.entity.serviceLabel}
+        <IndentCell level={4}>
+          <span className="inline-block w-[18px]" aria-hidden />
+          <LayerTag kind="field" />
+          <span className="text-ink">
+            {fld.name}
+            <span className="ml-2 font-mono text-[10px] text-ink-faint">
+              {fld.dataType}
             </span>
           </span>
         </IndentCell>
       </Td>
-      <Td className={muted(row.isRef)}>
-        {row.isRef ? "Entity (ref)" : "Entity"}
-      </Td>
+      <Td>Field</Td>
+      <Td>—</Td>
       <Td>
-        <StaysBadge value={row.entity.staysInAdo} faded={row.isRef} />
+        {fld.pattern === "na" ? (
+          <span className="font-mono text-[10px] text-ink-faint">N/A</span>
+        ) : (
+          <PatternBadge value={fld.pattern} />
+        )}
       </Td>
-      <Td>
-        <PatternBadge value={row.entity.pattern} faded={row.isRef} />
-      </Td>
-      <Td className="text-right font-mono text-[11.5px] text-ink-muted">
-        {row.isRef ? "—" : `${row.entity.fieldCount} fields`}
+      <Td className="text-right text-[11px] italic text-ink-soft">
+        → {fld.githubTarget}
       </Td>
     </tr>
   );
@@ -808,12 +724,18 @@ function IndentCell({
   level,
   children,
 }: {
-  level: 1 | 2 | 3;
+  level: 1 | 2 | 3 | 4;
   children: React.ReactNode;
 }) {
-  const pad = { 1: 0, 2: 40, 3: 80 }[level];
+  const pad = { 1: 0, 2: 40, 3: 80, 4: 120 }[level];
   const guideColor =
-    level === 2 ? "border-amber-300" : level === 3 ? "border-emerald-300" : "";
+    level === 2
+      ? "border-amber-300"
+      : level === 3
+        ? "border-emerald-300"
+        : level === 4
+          ? "border-slate-300"
+          : "";
   return (
     <div
       className={`relative flex items-center gap-1.5 ${
