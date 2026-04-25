@@ -96,6 +96,29 @@ const INSIGHT_CATEGORIES: Array<{
 // Coverage tiers measure how widely a framework JTBD is performed across the
 // 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
 // performed" — anything below that is long-tail and likely skippable.
+const INSIGHT_REPOS = {
+  reposTotal: 1847,
+  totalSizeGb: 412,
+  lfsSizeGb: 187,
+  specialHandlingRepos: 18,
+  topology: {
+    // Style = how a team organizes its code.
+    polyrepoTeams: 134, // many small repos per team
+    monorepoTeams: 8, // one big repo holding many projects
+    monorepoCodeSharePct: 32, // % of all code by size that lives in those monorepos
+  },
+  languages: [
+    { label: "TypeScript / JavaScript", teams: 47 },
+    { label: "Python", teams: 38 },
+    { label: "C# / .NET", teams: 29 },
+    { label: "Java", teams: 14 },
+    { label: "Go", teams: 8 },
+    { label: "Swift / Kotlin (mobile)", teams: 6 },
+  ],
+  actionSignal:
+    "Echo's monorepo (~14 GB, heavy on Git LFS) will be the slowest cutover. Schedule its window first and give it extra slack.",
+};
+
 const INSIGHT_COVERAGE = {
   totalJtbds: 118,
   thresholdPctOfTeams: 5,
@@ -158,6 +181,7 @@ export function KeyInsights() {
       </div>
       <CoveragePanel />
       <LeveragePanel />
+      <RepoFootprintPanel />
     </section>
   );
 }
@@ -641,6 +665,203 @@ function ApproachChip({ approach }: { approach: "move" | "stay" | "gap" }) {
   if (approach === "move") return <Chip tone="ok">Move</Chip>;
   if (approach === "stay") return <Chip tone="warn">Stay (hybrid)</Chip>;
   return <Chip tone="danger">Gap</Chip>;
+}
+
+/* -------------------------------------------------------------------------- */
+/* §07 — Program-wide repo footprint                                          */
+/* -------------------------------------------------------------------------- */
+
+function RepoFootprintPanel() {
+  const {
+    reposTotal,
+    totalSizeGb,
+    lfsSizeGb,
+    specialHandlingRepos,
+    topology,
+    languages,
+    actionSignal,
+  } = INSIGHT_REPOS;
+  const polyPct = Math.round(
+    (topology.polyrepoTeams /
+      (topology.polyrepoTeams + topology.monorepoTeams)) *
+      100,
+  );
+  const monoPct = 100 - polyPct;
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Repo footprint
+      </div>
+      <div className="mb-4 text-[12px] text-ink-muted">
+        How much code the program has to migrate, and which teams need extra
+        time at cutover. Repos are individual code projects; the migration tool
+        copies one at a time.
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <RepoStat
+          label="Repos"
+          value={reposTotal.toLocaleString()}
+          sub="individual code projects across all 142 teams"
+        />
+        <RepoStat
+          label="Total code size"
+          value={`${totalSizeGb} GB`}
+          sub={
+            <>
+              incl. <strong>{lfsSizeGb} GB</strong> in Git LFS — a tool teams
+              use to store large binary files (ML models, game assets, big
+              images) alongside code
+            </>
+          }
+        />
+        <RepoStat
+          tone="warn"
+          label="Repos needing extra time"
+          value={String(specialHandlingRepos)}
+          sub="oversized or LFS-heavy repos · longer cutover windows"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* TOPOLOGY */}
+        <div>
+          <div className="mb-1 text-[12.5px] font-semibold text-ink">
+            How teams organize their code
+          </div>
+          <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+            Most teams split their code across many small repos — easy to copy
+            independently. A few teams keep everything in one giant repo, which
+            takes longer.
+          </div>
+          <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
+            <div
+              className="flex items-center bg-success pl-2 text-[10.5px] font-semibold text-white"
+              style={{ width: `${polyPct}%` }}
+            >
+              {polyPct}%
+            </div>
+            <div
+              className="flex items-center bg-warn pl-2 text-[10.5px] font-semibold text-white"
+              style={{ width: `${monoPct}%` }}
+            >
+              {monoPct}%
+            </div>
+          </div>
+          <div className="space-y-1.5 text-[12px] text-ink-soft">
+            <div className="flex items-baseline gap-2">
+              <span className="h-2.5 w-2.5 flex-shrink-0 translate-y-[1px] rounded-sm bg-success" />
+              <span>
+                <strong className="font-semibold text-ink">Polyrepo</strong>{" "}
+                <span className="text-ink-muted">
+                  (many small repos per team — easier, faster):
+                </span>{" "}
+                <strong className="font-semibold text-ink">
+                  {topology.polyrepoTeams}
+                </strong>{" "}
+                teams
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="h-2.5 w-2.5 flex-shrink-0 translate-y-[1px] rounded-sm bg-warn" />
+              <span>
+                <strong className="font-semibold text-ink">Monorepo</strong>{" "}
+                <span className="text-ink-muted">
+                  (one giant repo holding many projects — slower, harder to
+                  split):
+                </span>{" "}
+                <strong className="font-semibold text-ink">
+                  {topology.monorepoTeams}
+                </strong>{" "}
+                teams
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 rounded-md border border-warn-soft bg-warn-soft px-3 py-2 text-[11.5px] leading-[1.5] text-warn-ink">
+            Even though only{" "}
+            <strong className="font-semibold">
+              {topology.monorepoTeams} of 142 teams
+            </strong>{" "}
+            use monorepos, those repos hold roughly{" "}
+            <strong className="font-semibold">
+              {topology.monorepoCodeSharePct}% of all the code by size
+            </strong>{" "}
+            — they&apos;re the long pole at cutover.
+          </div>
+        </div>
+
+        {/* LANGUAGES */}
+        <div>
+          <div className="mb-1 text-[12.5px] font-semibold text-ink">
+            What the code is written in
+          </div>
+          <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+            Counts of teams per primary language. Affects which build tooling
+            and security scanners need to be set up on GitHub.
+          </div>
+          <div className="space-y-1">
+            {languages.map((row) => (
+              <div
+                key={row.label}
+                className="grid grid-cols-[1fr_auto_50px] items-center gap-3 py-1 text-[12.5px]"
+              >
+                <div className="font-medium text-ink">{row.label}</div>
+                <div className="font-mono text-[11px] text-ink-muted">
+                  {row.teams} teams
+                </div>
+                <div className="h-[8px] overflow-hidden rounded-sm bg-bg-subtle">
+                  <div
+                    className="h-full rounded-sm bg-primary"
+                    style={{
+                      width: `${Math.round((row.teams / Math.max(...languages.map((l) => l.teams))) * 100)}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        {actionSignal}
+      </div>
+    </div>
+  );
+}
+
+function RepoStat({
+  label,
+  value,
+  sub,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  sub: React.ReactNode;
+  tone?: "default" | "warn";
+}) {
+  const accent = tone === "warn" ? "border-t-warn" : "border-t-primary";
+  const labelColor = tone === "warn" ? "text-warn-ink" : "text-primary";
+  return (
+    <div
+      className={`rounded-md border border-border bg-bg p-3 border-t-[3px] ${accent}`}
+    >
+      <div
+        className={`mb-1 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] ${labelColor}`}
+      >
+        {label}
+      </div>
+      <div className="text-[22px] font-bold leading-none tracking-[-0.02em] text-ink">
+        {value}
+      </div>
+      <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
+        {sub}
+      </div>
+    </div>
+  );
 }
 
 /* -------------------------------------------------------------------------- */

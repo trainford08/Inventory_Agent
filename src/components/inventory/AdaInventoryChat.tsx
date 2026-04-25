@@ -22,24 +22,19 @@ export function AdaInventoryChat() {
 function Header() {
   return (
     <div className="border-b border-border px-[22px] pb-[14px] pt-[18px]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-600 text-[14px] font-bold text-white shadow-[0_2px_10px_rgba(99,102,241,0.3)]">
-            A
-            <span className="absolute -bottom-[1px] -right-[1px] h-[10px] w-[10px] rounded-full border-2 border-bg-elevated bg-success" />
+      <div className="flex items-center gap-3">
+        <div className="relative flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-600 text-[14px] font-bold text-white shadow-[0_2px_10px_rgba(99,102,241,0.3)]">
+          A
+          <span className="absolute -bottom-[1px] -right-[1px] h-[10px] w-[10px] rounded-full border-2 border-bg-elevated bg-success" />
+        </div>
+        <div className="flex flex-col">
+          <div className="text-[14.5px] font-semibold tracking-[-0.005em]">
+            Ada
           </div>
-          <div className="flex flex-col">
-            <div className="text-[14.5px] font-semibold tracking-[-0.005em]">
-              Ada
-            </div>
-            <div className="text-[11px] text-ink-muted">
-              Migration review assistant · ask anything about your inventory
-            </div>
+          <div className="text-[11px] text-ink-muted">
+            Migration review assistant · ask anything about your inventory
           </div>
         </div>
-        <span className="rounded-full border border-warn bg-warn-soft px-2.5 py-[3px] font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-warn-ink">
-          Visual prototype
-        </span>
       </div>
     </div>
   );
