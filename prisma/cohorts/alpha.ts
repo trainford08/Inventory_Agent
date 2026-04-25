@@ -1,3 +1,5 @@
+import { jtbdOverridesFor } from "./jtbd-scoping";
+
 import {
   adoProject,
   anomaly,
@@ -97,7 +99,7 @@ export function alphaConfig(orgId: string): CohortShape {
         stageCount: 2,
       }),
     ],
-    jtbds: allJtbds(),
+    jtbds: allJtbds(jtbdOverridesFor("ALPHA")),
     customizations: [],
     risks: [],
     ownership: {

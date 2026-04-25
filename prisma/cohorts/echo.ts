@@ -1,3 +1,5 @@
+import { jtbdOverridesFor } from "./jtbd-scoping";
+
 import {
   adoProject,
   anomaly,
@@ -135,7 +137,7 @@ export function echoConfig(orgId: string): CohortShape {
         failsLast30d: 4,
       }),
     ],
-    jtbds: allJtbds(),
+    jtbds: allJtbds(jtbdOverridesFor("ECHO")),
     customizations: [
       {
         category: "Release",

@@ -1,3 +1,5 @@
+import { jtbdOverridesFor } from "./jtbd-scoping";
+
 import {
   adoProject,
   anomaly,
@@ -227,7 +229,7 @@ export function bravoConfig(orgId: string): CohortShape {
         failsLast30d: 1,
       }),
     ],
-    jtbds: allJtbds(),
+    jtbds: allJtbds(jtbdOverridesFor("BRAVO")),
     customizations: [
       {
         category: "Release",

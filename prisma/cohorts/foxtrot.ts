@@ -1,3 +1,5 @@
+import { jtbdOverridesFor } from "./jtbd-scoping";
+
 import {
   adoProject,
   anomaly,
@@ -108,7 +110,7 @@ export function foxtrotConfig(orgId: string): CohortShape {
         failsLast30d: 0,
       }),
     ],
-    jtbds: allJtbds(),
+    jtbds: allJtbds(jtbdOverridesFor("FOXTROT")),
     customizations: [],
     risks: [
       {

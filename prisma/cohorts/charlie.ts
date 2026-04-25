@@ -1,3 +1,5 @@
+import { jtbdOverridesFor } from "./jtbd-scoping";
+
 import {
   adoProject,
   anomaly,
@@ -483,7 +485,7 @@ export function charlieConfig(orgId: string): CohortShape {
         usesVariableGroups: true,
       }),
     ],
-    jtbds: allJtbds(),
+    jtbds: allJtbds(jtbdOverridesFor("CHARLIE")),
     customizations: [
       {
         category: "Pipelines",
