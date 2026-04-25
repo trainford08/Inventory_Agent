@@ -218,7 +218,8 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <Th className="w-[46%]">Item</Th>
+              <Th className="w-[44px] text-right">#</Th>
+              <Th>Item</Th>
               <Th className="w-[13%]">Layer</Th>
               <Th className="w-[13%]">Stays in ADO?</Th>
               <Th className="w-[9%]">Pattern</Th>
@@ -226,14 +227,21 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((r) => (
-              <RowView
-                key={rowKey(r)}
-                row={r}
-                expanded={expanded}
-                onToggle={toggle}
-              />
-            ))}
+            {(() => {
+              let rowNum = 0;
+              return visibleRows.map((r) => {
+                const num = r.kind === "cat" ? null : ++rowNum;
+                return (
+                  <RowView
+                    key={rowKey(r)}
+                    row={r}
+                    rowNum={num}
+                    expanded={expanded}
+                    onToggle={toggle}
+                  />
+                );
+              });
+            })()}
           </tbody>
         </table>
       </div>
@@ -303,10 +311,12 @@ function buildRows(groups: CategoryGroup[]): Row[] {
 
 function RowView({
   row,
+  rowNum,
   expanded,
   onToggle,
 }: {
   row: Row;
+  rowNum: number | null;
   expanded: Set<string>;
   onToggle: (id: string) => void;
 }) {
@@ -314,7 +324,7 @@ function RowView({
     const isOpen = expanded.has(row.id);
     return (
       <tr className="border-t-2 border-ink/60 bg-bg-muted">
-        <td colSpan={5} className="px-4 py-[9px]">
+        <td colSpan={6} className="px-4 py-[9px]">
           <button
             onClick={() => onToggle(row.id)}
             className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
@@ -332,6 +342,7 @@ function RowView({
     const featCount = row.jtbd.featureNodes.length;
     return (
       <tr className="bg-primary/[0.05]">
+        <NumTd>{rowNum}</NumTd>
         <Td>
           <IndentCell level={1}>
             <ToggleButton
@@ -363,6 +374,7 @@ function RowView({
     const entityCount = row.feature.entityNodes.length;
     return (
       <tr className={row.isRef ? "bg-warn/[0.02]" : "bg-warn/[0.04]"}>
+        <NumTd>{rowNum}</NumTd>
         <Td>
           <IndentCell level={2}>
             <ToggleButton
@@ -403,6 +415,7 @@ function RowView({
   // entity
   return (
     <tr className={row.isRef ? "bg-success/[0.02]" : "bg-success/[0.04]"}>
+      <NumTd>{rowNum}</NumTd>
       <Td>
         <IndentCell level={3}>
           <ToggleButton open={false} hasChildren={false} tone="success" />
@@ -451,6 +464,14 @@ function Th({
     >
       {children}
     </th>
+  );
+}
+
+function NumTd({ children }: { children: React.ReactNode }) {
+  return (
+    <td className="border-b border-border/60 px-2 py-[9px] text-right align-middle font-mono text-[11px] tabular-nums text-ink-faint">
+      {children}
+    </td>
   );
 }
 
