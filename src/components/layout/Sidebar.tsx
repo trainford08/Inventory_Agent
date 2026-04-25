@@ -91,6 +91,20 @@ export function Sidebar({
         >
           All teams
         </NavItem>
+        <NavItem
+          href="/inventory"
+          active={pathname === "/inventory" || pathname.endsWith("/inventory")}
+          icon={
+            <>
+              <path d="M3 3h7v7H3z" />
+              <path d="M14 3h7v7h-7z" />
+              <path d="M14 14h7v7h-7z" />
+              <path d="M3 14h7v7H3z" />
+            </>
+          }
+        >
+          Inventory
+        </NavItem>
       </NavGroup>
 
       <NavGroup label="This team">
@@ -119,23 +133,6 @@ export function Sidebar({
           }
         >
           Agent findings
-        </NavItem>
-        <NavItem
-          href={teamSlug ? `/teams/${teamSlug}/inventory` : undefined}
-          active={
-            !!activeTeamSlug &&
-            pathname.startsWith(`/teams/${activeTeamSlug}/inventory`)
-          }
-          icon={
-            <>
-              <path d="M3 3h7v7H3z" />
-              <path d="M14 3h7v7h-7z" />
-              <path d="M14 14h7v7h-7z" />
-              <path d="M3 14h7v7H3z" />
-            </>
-          }
-        >
-          Inventory
         </NavItem>
         <NavItem
           href={teamSlug ? `/teams/${teamSlug}/complete` : undefined}
