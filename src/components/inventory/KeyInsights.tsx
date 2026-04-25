@@ -96,6 +96,97 @@ const INSIGHT_CATEGORIES: Array<{
 // Coverage tiers measure how widely a framework JTBD is performed across the
 // 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
 // performed" — anything below that is long-tail and likely skippable.
+// Customization migration strategies from the framework.
+// S01 Protect (preserve as-is), S02 Translate (1:1 mapping to GitHub),
+// S03 Retire (out of scope on GitHub), S04 Substitute (swap to GitHub-native),
+// S05 Build glue (custom code), S06 Upstream (build centrally, reuse),
+// S07 Vendor consolidation.
+type CustomizationStrategy = "S01" | "S02" | "S03" | "S04" | "S05" | "S06";
+
+const INSIGHT_CUSTOMIZATIONS = {
+  // The 78 unique customization types in the program — each tied to a catalog
+  // code (C01–C29 from the framework) plus team-specific customizations that
+  // don't have catalog entries. This panel only surfaces cataloged codes used
+  // by ≥ 25% of teams (real S06 "build once, reuse" candidates).
+  highOverlapThresholdPct: 25,
+  topOverlap: [
+    {
+      code: "C01",
+      name: "Custom process templates",
+      teams: 128,
+      strategy: "S01" as CustomizationStrategy,
+      strategyLabel: "Protect",
+      note: "Near-universal. Worth a single centrally-maintained template that all teams adopt.",
+    },
+    {
+      code: "C02",
+      name: "Custom work item types",
+      teams: 117,
+      strategy: "S02" as CustomizationStrategy,
+      strategyLabel: "Translate",
+      note: "Translates 1:1 to GitHub Issue templates. Build the converter once.",
+    },
+    {
+      code: "C13",
+      name: "Service connection configuration",
+      teams: 109,
+      strategy: "S02" as CustomizationStrategy,
+      strategyLabel: "Translate",
+      note: "Standard pattern — central OIDC federation kit covers most teams.",
+    },
+    {
+      code: "C09",
+      name: "Shared YAML templates",
+      teams: 92,
+      strategy: "S02" as CustomizationStrategy,
+      strategyLabel: "Translate",
+      note: "Convert to reusable GitHub Actions workflows in a shared org repo.",
+    },
+    {
+      code: "C16",
+      name: "Custom required code reviewers",
+      teams: 87,
+      strategy: "S02" as CustomizationStrategy,
+      strategyLabel: "Translate",
+      note: "Maps to CODEOWNERS — publish a shared CODEOWNERS template repo.",
+    },
+    {
+      code: "C29",
+      name: "Custom approval & release gates",
+      teams: 71,
+      strategy: "S01" as CustomizationStrategy,
+      strategyLabel: "Protect",
+      note: "Stays in Pipelines (hybrid). Document the canonical gate set centrally.",
+    },
+    {
+      code: "C04",
+      name: "Custom dashboards & widgets",
+      teams: 68,
+      strategy: "S01" as CustomizationStrategy,
+      strategyLabel: "Protect",
+      note: "Stays in ADO. Curate a shared dashboard library teams clone from.",
+    },
+    {
+      code: "C18",
+      name: "Inline policy enforcement",
+      teams: 54,
+      strategy: "S04" as CustomizationStrategy,
+      strategyLabel: "Substitute",
+      note: "GitHub branch protection + rulesets cover most cases — publish a defaults bundle.",
+    },
+    {
+      code: "C22",
+      name: "Pipeline secret rotation hooks",
+      teams: 41,
+      strategy: "S05" as CustomizationStrategy,
+      strategyLabel: "Build glue",
+      note: "No off-the-shelf pattern. Strongest S06 candidate — build it once, ship it.",
+    },
+  ],
+  actionSignal:
+    "The top 5 cataloged customizations each appear in 60%+ of teams. Investing in a centrally-built migration kit for these — templates, scripts, CODEOWNERS bundles, OIDC federation patterns — pays back across the entire program. Without this, 142 teams each rebuild the same things from scratch.",
+};
+
 // "A1–A6" = the framework's per-integration playbooks for what happens to a
 // vendor at cutover. A1 Re-setup (same vendor, GitHub-side), A2 Substitute
 // (swap for a GitHub-native), A3 Work around (accept thinner GitHub support),
@@ -336,6 +427,7 @@ export function KeyInsights() {
       <IdentityPanel />
       <PipelinesPanel />
       <TestPlansPanel />
+      <CustomizationOverlapPanel />
       <VendorOverlapPanel />
     </section>
   );
@@ -386,7 +478,7 @@ function ArchetypePanel() {
             return (
               <tr
                 key={row.cohort}
-                className="border-b border-border-soft last:border-b-0"
+                className="border-b border-border-soft/60 last:border-b-0"
               >
                 <td className="px-3 py-2 font-semibold text-ink">
                   {row.cohort}
@@ -800,7 +892,7 @@ function LeverageTable({
             return (
               <tr
                 key={row.feature}
-                className="border-b border-border-soft last:border-b-0"
+                className="border-b border-border-soft/60 last:border-b-0"
               >
                 <td className="px-3 py-2 font-medium text-ink">
                   {row.feature}
@@ -902,23 +994,21 @@ function IdentityPanel() {
           to do during the cutover window.
         </div>
         <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
-          {patConcentration.map((row, i) => {
+          {patConcentration.map((row) => {
             const pct = (row.pats / patBased) * 100;
-            const shades = [
-              "bg-warn",
-              "bg-warn-soft",
-              "bg-warn-soft",
-              "bg-bg-muted",
-              "bg-bg-muted",
-              "bg-bg-muted",
+            const tones = [
+              "bg-warn text-white",
+              "bg-warn-soft text-warn-ink",
+              "bg-warn-soft text-warn-ink",
+              "bg-bg-muted text-ink",
+              "bg-bg-muted text-ink",
+              "bg-bg-muted text-ink",
             ];
             const sortedIdx = topPats.findIndex((p) => p.cohort === row.cohort);
             return (
               <div
                 key={row.cohort}
-                className={`flex items-center justify-start pl-2 text-[10px] font-semibold ${
-                  sortedIdx < 2 ? "text-white" : "text-warn-ink"
-                } ${shades[sortedIdx] ?? "bg-bg-muted"}`}
+                className={`flex items-center justify-start pl-2 text-[10px] font-semibold ${tones[sortedIdx] ?? "bg-bg-muted text-ink"}`}
                 style={{ width: `${pct}%` }}
                 title={`${row.cohort}: ${row.pats} PATs (${row.teams} teams)`}
               >
@@ -980,6 +1070,105 @@ function IdentityStat({
       </div>
       <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
         {sub}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* §02 — Customization overlap across teams (S06 candidates)                  */
+/* -------------------------------------------------------------------------- */
+
+const STRATEGY_TONE: Record<
+  CustomizationStrategy,
+  "ok" | "warn" | "danger" | "neutral"
+> = {
+  S01: "neutral",
+  S02: "ok",
+  S03: "neutral",
+  S04: "warn",
+  S05: "danger",
+  S06: "ok",
+};
+
+function CustomizationOverlapPanel() {
+  const { highOverlapThresholdPct, topOverlap, actionSignal } =
+    INSIGHT_CUSTOMIZATIONS;
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Customization overlap across teams
+      </div>
+      <div className="mb-2 text-[12px] leading-[1.55] text-ink-muted">
+        After scanning all 142 teams, the inventory agent groups customizations
+        by what they do and surfaces the patterns that appear across the most
+        teams. When the same customization shows up in many teams, the program
+        has a chance to{" "}
+        <strong className="font-semibold text-ink-soft">
+          build the migration once centrally and let every team adopt the shared
+          pattern
+        </strong>
+        .
+      </div>
+      <div className="mb-4 text-[11.5px] leading-[1.55] text-ink-muted">
+        Strategies: <strong className="text-ink-soft">S01 Protect</strong>{" "}
+        (preserve as-is in ADO),{" "}
+        <strong className="text-ink-soft">S02 Translate</strong> (1:1 mapping to
+        a GitHub equivalent),{" "}
+        <strong className="text-ink-soft">S04 Substitute</strong> (swap to a
+        GitHub-native feature), and{" "}
+        <strong className="text-ink-soft">S05 Build glue</strong> (no equivalent
+        exists — write custom code).
+      </div>
+
+      <table className="w-full border-collapse text-[12.5px]">
+        <thead>
+          <tr>
+            <ArchTh>Code</ArchTh>
+            <ArchTh>Customization</ArchTh>
+            <ArchTh className="text-right">% of teams</ArchTh>
+            <ArchTh className="text-right">Teams</ArchTh>
+            <ArchTh>Strategy</ArchTh>
+            <ArchTh>Recommendation</ArchTh>
+          </tr>
+        </thead>
+        <tbody>
+          {topOverlap.map((row) => {
+            const pct = Math.round((row.teams / 142) * 100);
+            const tone = STRATEGY_TONE[row.strategy];
+            return (
+              <tr
+                key={row.code}
+                className="border-b border-border-soft/60 last:border-b-0"
+              >
+                <td className="px-3 py-2 font-mono text-[11.5px] font-semibold text-primary">
+                  {row.code}
+                </td>
+                <td className="px-3 py-2 font-medium text-ink">{row.name}</td>
+                <td className="px-3 py-2 text-right font-mono text-[12px] text-ink-soft">
+                  {pct}%
+                </td>
+                <td className="px-3 py-2 text-right font-mono text-[11.5px] text-ink-muted">
+                  {row.teams}
+                </td>
+                <td className="px-3 py-2">
+                  <Chip tone={tone === "neutral" ? "ok" : tone}>
+                    {row.strategy} · {row.strategyLabel}
+                  </Chip>
+                </td>
+                <td className="px-3 py-2 text-[11.5px] italic text-ink-muted">
+                  {row.note}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
+        {actionSignal}
       </div>
     </div>
   );
@@ -1104,7 +1293,7 @@ function VendorOverlapPanel() {
               return (
                 <tr
                   key={row.extension}
-                  className="border-b border-border-soft last:border-b-0"
+                  className="border-b border-border-soft/60 last:border-b-0"
                 >
                   <td className="px-3 py-2 font-semibold text-ink">
                     {row.extension}
