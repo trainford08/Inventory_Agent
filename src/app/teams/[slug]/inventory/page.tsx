@@ -24,9 +24,11 @@ export default async function TeamInventoryPage({
 
   const { team, totals, groups, coverage } = inventory;
 
+  const constrained = "mx-auto w-full max-w-[1200px] px-[32px]";
+
   return (
-    <div className="w-full space-y-6 px-[32px] py-[28px]">
-      <header className="space-y-2">
+    <div className="space-y-6 py-[28px]">
+      <header className={`${constrained} space-y-2`}>
         <div className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
           Team profile · <span className="text-primary">{team.name}</span>
         </div>
@@ -42,7 +44,7 @@ export default async function TeamInventoryPage({
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className={`${constrained} grid grid-cols-2 gap-3 sm:grid-cols-4`}>
         <Stat
           label="JTBDs in scope"
           value={totals.jtbdsInScope}
@@ -65,7 +67,7 @@ export default async function TeamInventoryPage({
         />
       </div>
 
-      <div className="border-b border-border">
+      <div className={`${constrained} border-b border-border`}>
         <nav className="-mb-px flex gap-1">
           <Tab href={`/teams/${slug}/inventory`} active={tab === "profile"}>
             Profile
@@ -80,9 +82,13 @@ export default async function TeamInventoryPage({
       </div>
 
       {tab === "profile" ? (
-        <InventoryProfile groups={groups} />
+        <div className={constrained}>
+          <InventoryProfile groups={groups} />
+        </div>
       ) : (
-        <InventoryCoverage coverage={coverage} />
+        <div className="w-full px-[32px]">
+          <InventoryCoverage coverage={coverage} />
+        </div>
       )}
     </div>
   );

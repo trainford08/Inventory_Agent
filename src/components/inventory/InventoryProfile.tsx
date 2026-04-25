@@ -113,7 +113,7 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-        <table className="w-full min-w-[1100px] border-collapse text-[13px]">
+        <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
               <Th className="w-[46%]">Item</Th>
