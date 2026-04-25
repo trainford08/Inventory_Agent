@@ -230,45 +230,49 @@ export function InventoryProfile({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <ChipGroup
-          label="View"
-          value={layer}
-          onChange={(v) => setLayer(v as LayerFilter)}
-          options={[
-            { value: "all", label: "All layers" },
-            { value: "jtbd", label: "JTBDs only" },
-            { value: "feature", label: "Features only" },
-            { value: "entity", label: "Entities only" },
-            { value: "field", label: "Fields only" },
-            { value: "customization", label: "Customizations only" },
-          ]}
-        />
-        <ChipGroup
-          label="Destination"
-          value={destination}
-          onChange={(v) => setDestination(v as Destination)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "gh", label: "Moves to GitHub" },
-            { value: "ado", label: "Stays in ADO" },
-            { value: "both", label: "Hybrid" },
-          ]}
-        />
-        <ChipGroup
-          label="Pattern"
-          value={patternFilter}
-          onChange={(v) => setPatternFilter(v as PatternFilter)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "P1", label: "P1" },
-            { value: "P2", label: "P2" },
-            { value: "P3", label: "P3" },
-            { value: "P4", label: "P4" },
-            { value: "P5", label: "P5" },
-            { value: "P6", label: "P6" },
-          ]}
-        />
+      <div className="flex flex-col gap-2 rounded-xl border border-border bg-bg-elevated p-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <ChipGroup
+            label="View"
+            value={layer}
+            onChange={(v) => setLayer(v as LayerFilter)}
+            options={[
+              { value: "all", label: "All layers" },
+              { value: "jtbd", label: "JTBDs" },
+              { value: "feature", label: "Features" },
+              { value: "entity", label: "Entities" },
+              { value: "field", label: "Fields" },
+              { value: "customization", label: "Customizations" },
+            ]}
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <ChipGroup
+            label="Destination"
+            value={destination}
+            onChange={(v) => setDestination(v as Destination)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "gh", label: "→ GitHub" },
+              { value: "ado", label: "→ ADO" },
+              { value: "both", label: "Hybrid" },
+            ]}
+          />
+          <ChipGroup
+            label="Pattern"
+            value={patternFilter}
+            onChange={(v) => setPatternFilter(v as PatternFilter)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "P1", label: "P1" },
+              { value: "P2", label: "P2" },
+              { value: "P3", label: "P3" },
+              { value: "P4", label: "P4" },
+              { value: "P5", label: "P5" },
+              { value: "P6", label: "P6" },
+            ]}
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -982,27 +986,29 @@ function ChipGroup({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="mr-1 font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
+    <div className="flex items-center gap-2">
+      <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
         {label}
       </span>
-      {options.map((o) => {
-        const active = o.value === value;
-        return (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => onChange(o.value)}
-            className={`rounded-full border px-2.5 py-[3px] text-[11.5px] transition-colors ${
-              active
-                ? "border-ink bg-ink text-white"
-                : "border-border bg-bg-elevated text-ink-soft hover:text-ink"
-            }`}
-          >
-            {o.label}
-          </button>
-        );
-      })}
+      <div className="flex items-center gap-0.5 rounded-lg bg-bg-subtle p-[3px]">
+        {options.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => onChange(o.value)}
+              className={`rounded-md px-2.5 py-[4px] text-[12px] font-medium transition-colors ${
+                active
+                  ? "bg-bg-elevated text-ink shadow-[0_1px_2px_rgba(16,24,40,0.06)]"
+                  : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
