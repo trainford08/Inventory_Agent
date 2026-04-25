@@ -96,6 +96,24 @@ const INSIGHT_CATEGORIES: Array<{
 // Coverage tiers measure how widely a framework JTBD is performed across the
 // 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
 // performed" — anything below that is long-tail and likely skippable.
+const INSIGHT_PIPELINES = {
+  totalPipelines: 2341,
+  classicPipelines: 983,
+  yamlPipelines: 1358,
+  // Where the classic-pipeline burden concentrates by cohort.
+  // teams = number of teams in cohort, classic = classic pipelines they own.
+  cohortClassic: [
+    { cohort: "Bravo", teams: 47, classic: 290 },
+    { cohort: "Echo", teams: 13, classic: 220 },
+    { cohort: "Alpha", teams: 32, classic: 135 },
+    { cohort: "Charlie", teams: 24, classic: 140 },
+    { cohort: "Foxtrot", teams: 7, classic: 130 },
+    { cohort: "Delta", teams: 19, classic: 68 },
+  ],
+  actionSignal:
+    "Pipelines stays in ADO under the hybrid — this isn't a migration question. But Bravo and Echo cohorts together own 52% of the classic-pipeline estate, which is a separate modernization opportunity: classic UI pipelines are harder to maintain and would be the long pole if a future phase moves CI/CD to GitHub Actions.",
+};
+
 const INSIGHT_TESTPLANS = {
   // Of the 115 features in scope program-wide, this many depend on entities
   // E35–E43 in the framework (ADO Test Plans). The dependency splits into two
@@ -229,6 +247,7 @@ export function KeyInsights() {
       <LeveragePanel />
       <RepoFootprintPanel />
       <IdentityPanel />
+      <PipelinesPanel />
       <TestPlansPanel />
     </section>
   );
@@ -815,7 +834,7 @@ function IdentityPanel() {
                 style={{ width: `${pct}%` }}
                 title={`${row.cohort}: ${row.pats} PATs (${row.teams} teams)`}
               >
-                {pct >= 6 ? `${row.cohort.slice(0, 3)} ${row.pats}` : ""}
+                {pct >= 8 ? `${row.cohort} ${row.pats}` : ""}
               </div>
             );
           })}
@@ -1070,6 +1089,140 @@ function RepoStat({
       </div>
       <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
         {sub}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* §04 — Program-wide pipeline composition                                    */
+/* -------------------------------------------------------------------------- */
+
+function PipelinesPanel() {
+  const {
+    totalPipelines,
+    classicPipelines,
+    yamlPipelines,
+    cohortClassic,
+    actionSignal,
+  } = INSIGHT_PIPELINES;
+  const classicPct = Math.round((classicPipelines / totalPipelines) * 100);
+  const yamlPct = Math.round((yamlPipelines / totalPipelines) * 100);
+
+  // Sort cohorts by share of classic pipelines descending for the bar
+  const sortedCohorts = [...cohortClassic].sort(
+    (a, b) => b.classic - a.classic,
+  );
+  const top2 = sortedCohorts[0]!.classic + sortedCohorts[1]!.classic;
+  const top2Pct = Math.round((top2 / classicPipelines) * 100);
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Pipeline composition
+      </div>
+      <div className="mb-4 text-[12px] leading-[1.55] text-ink-muted">
+        How the program&apos;s <em>pipelines</em> — the automated build, test,
+        and deploy scripts that run on every commit — are split between the two
+        flavors ADO supports.{" "}
+        <strong className="font-semibold text-ink-soft">
+          Pipelines stay in ADO under the hybrid model
+        </strong>
+        , so this isn&apos;t a migration question — it&apos;s a separate
+        modernization signal: <em>classic pipelines</em> (configured in a
+        graphical drag-and-drop UI) are harder to maintain and harder to move
+        later than <em>YAML pipelines</em> (defined as text files in the repo,
+        portable across platforms).
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <RepoStat
+          label="Pipelines"
+          value={totalPipelines.toLocaleString()}
+          sub="automated build/test/deploy scripts across all 142 teams"
+        />
+        <IdentityStat
+          tone="warn"
+          label="Classic (UI-configured)"
+          value={`${classicPct}%`}
+          sub={
+            <>
+              <strong>{classicPipelines.toLocaleString()}</strong> of{" "}
+              {totalPipelines.toLocaleString()} pipelines · drag-and-drop UI
+              configuration · harder to version-control, harder to migrate if a
+              future phase moves CI/CD to GitHub Actions
+            </>
+          }
+        />
+        <IdentityStat
+          tone="success"
+          label="YAML (code-as-config)"
+          value={`${yamlPct}%`}
+          sub={
+            <>
+              <strong>{yamlPipelines.toLocaleString()}</strong> of{" "}
+              {totalPipelines.toLocaleString()} pipelines · defined as text in
+              the repo · portable, version-controlled, easier to maintain
+            </>
+          }
+        />
+      </div>
+
+      <div>
+        <div className="mb-1 text-[12.5px] font-semibold text-ink">
+          Where the classic-pipeline estate concentrates
+        </div>
+        <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+          Two cohorts own <strong>{top2Pct}%</strong> of the{" "}
+          {classicPipelines.toLocaleString()} classic pipelines. If the program
+          ever modernizes them in place (or moves CI/CD to GitHub Actions
+          later), these are the cohorts where most of the rebuild work would
+          live.
+        </div>
+        <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
+          {sortedCohorts.map((row, i) => {
+            const pct = (row.classic / classicPipelines) * 100;
+            const tones = [
+              "bg-warn text-white",
+              "bg-warn-soft text-warn-ink",
+              "bg-warn-soft text-warn-ink",
+              "bg-bg-muted text-ink",
+              "bg-bg-muted text-ink",
+              "bg-bg-muted text-ink",
+            ];
+            return (
+              <div
+                key={row.cohort}
+                className={`flex items-center justify-start pl-2 text-[10px] font-semibold ${tones[i] ?? "bg-bg-muted text-ink"}`}
+                style={{ width: `${pct}%` }}
+                title={`${row.cohort}: ${row.classic} classic pipelines (${row.teams} teams)`}
+              >
+                {pct >= 8 ? `${row.cohort} ${row.classic}` : ""}
+              </div>
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11.5px] text-ink-soft sm:grid-cols-3">
+          {sortedCohorts.map((row) => (
+            <div
+              key={row.cohort}
+              className="flex items-baseline justify-between gap-2"
+            >
+              <span>
+                <strong className="font-semibold text-ink">{row.cohort}</strong>{" "}
+                <span className="text-ink-muted">({row.teams} teams)</span>
+              </span>
+              <span className="font-mono text-[11px] text-ink-soft">
+                {row.classic} classic
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        {actionSignal}
       </div>
     </div>
   );
