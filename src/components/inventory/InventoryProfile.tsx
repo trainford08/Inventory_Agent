@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import type { Field } from "@/lib/inventory-fields";
-import type { CategoryGroup, FeatureNode, JtbdNode } from "@/server/inventory";
+import type {
+  CategoryGroup,
+  CustomizationsBlock,
+  FeatureNode,
+  JtbdNode,
+} from "@/server/inventory";
+import { CustomizationsTable } from "./CustomizationsTable";
 
 type Row =
   | { kind: "cat"; id: string; label: string; count: number }
@@ -38,9 +44,21 @@ type Row =
 
 type Destination = "all" | "ado" | "gh" | "both";
 type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
-type LayerFilter = "all" | "jtbd" | "feature" | "entity" | "field";
+type LayerFilter =
+  | "all"
+  | "jtbd"
+  | "feature"
+  | "entity"
+  | "field"
+  | "customization";
 
-export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
+export function InventoryProfile({
+  groups,
+  customizations,
+}: {
+  groups: CategoryGroup[];
+  customizations: CustomizationsBlock;
+}) {
   const rows = useMemo(() => buildRows(groups), [groups]);
 
   const [destination, setDestination] = useState<Destination>("all");
@@ -60,6 +78,9 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
   }, [rows]);
 
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
+
+  // Customizations section — collapsed by default in All-layers view.
+  const [customExpanded, setCustomExpanded] = useState(false);
 
   if (groups.length === 0) {
     return (
@@ -220,6 +241,7 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
             { value: "feature", label: "Features only" },
             { value: "entity", label: "Entities only" },
             { value: "field", label: "Fields only" },
+            { value: "customization", label: "Customizations only" },
           ]}
         />
         <ChipGroup
@@ -265,7 +287,9 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         </span>
       </div>
 
-      {layer === "field" ? (
+      {layer === "customization" ? (
+        <CustomizationsTable block={customizations} />
+      ) : layer === "field" ? (
         <FieldTable rows={visibleRows} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
@@ -300,6 +324,33 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
           </table>
         </div>
       )}
+
+      {layer === "all" && customizations.total > 0 ? (
+        <div className="rounded-xl border border-border bg-bg-elevated">
+          <button
+            type="button"
+            onClick={() => setCustomExpanded((v) => !v)}
+            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg-hover"
+          >
+            <span className="font-mono text-[10px] text-ink-muted">
+              {customExpanded ? "▼" : "▸"}
+            </span>
+            <span className="font-medium text-ink">Customizations</span>
+            <span className="font-mono text-[11px] text-ink-muted">
+              {customizations.total} · {customizations.cataloged} cataloged ·{" "}
+              {customizations.teamSpecific} team-specific
+            </span>
+            <span className="ml-auto text-[11px] text-ink-faint">
+              Sibling category — does not nest under JTBDs/Features
+            </span>
+          </button>
+          {customExpanded ? (
+            <div className="border-t border-border p-3">
+              <CustomizationsTable block={customizations} />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <Legend />
     </div>

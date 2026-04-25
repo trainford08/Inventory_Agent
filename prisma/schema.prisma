@@ -227,15 +227,54 @@ enum MigrationApproach {
   MIXED
 }
 
+// Reference catalog of common ADO customizations from the migration
+// framework. Teams reference these via Customization.catalogId; teams may
+// also have customizations not in the catalog (catalogId null + own name).
+model CustomizationCatalog {
+  id String @id @default(cuid())
+
+  catalogCode      String                   @unique // C01..C29
+  name             String
+  category         CustomizationCategory
+  commonality      CustomizationCommonality
+  parity           GithubParity
+  strategy         MigrationStrategy
+  hybridPlacement  MigrationApproach // STAYS = ADO, MOVES = GH, BOTH, MIXED = N/A
+  // jobsToBeDone is performed by jtbdPerformer. For customizations the
+  // performer is "Custom code" (the customization itself acts), distinct
+  // from JtbdEntry where the performer is a human persona.
+  jtbdPerformer    String                   @default("Custom code")
+  jobsToBeDone     String
+  githubEquivalent String
+  notes            String
+
+  instances Customization[]
+
+  @@index([category])
+}
+
 model Customization {
   id     String @id @default(cuid())
   team   Team   @relation(fields: [teamId], references: [id])
   teamId String
 
-  category          String
-  description       String
-  migrationApproach String?
-  status            CustomizationStatus @default(UNKNOWN)
+  // Catalog reference. Null = team-specific customization not in the catalog.
+  catalogEntry CustomizationCatalog? @relation(fields: [catalogId], references: [id])
+  catalogId    String?
+
+  // Display name. For cataloged rows this is usually the catalog name; for
+  // team-specific rows it's the bespoke label.
+  name            String
+  category        CustomizationCategory
+  description     String
+  parity          GithubParity?
+  strategy        MigrationStrategy?
+  hybridPlacement MigrationApproach?
+  notes           String?
+  status          CustomizationStatus   @default(UNKNOWN)
+
+  @@index([teamId])
+  @@index([catalogId])
 }
 
 enum CustomizationStatus {
@@ -243,6 +282,41 @@ enum CustomizationStatus {
   AGENT_HANDLED
   NEEDS_HUMAN
   RESOLVED
+}
+
+enum CustomizationCategory {
+  BOARDS
+  PIPELINES
+  REPOS
+  DASHBOARDS
+  EXTENSIONS
+  PROCESS
+  SECURITY
+}
+
+enum CustomizationCommonality {
+  MOST // > 50% of teams
+  SOME // 20–50% of teams
+  RARE // < 20% of teams
+}
+
+enum GithubParity {
+  MATCH
+  PARTIAL
+  GAP
+  BETTER
+}
+
+// Migration strategy codes from the framework: S01–S05 are per-customization
+// approaches; S06–S07 are program-level meta-strategies.
+enum MigrationStrategy {
+  S01_PROTECT_IN_PLACE
+  S02_TRANSLATE_TO_GITHUB
+  S03_RETIRE
+  S04_REBUILD_WITH_LOSS
+  S05_BUILD_GLUE
+  S06_UPSTREAM
+  S07_CONSOLIDATE_THIRD_PARTY
 }
 
 model Risk {

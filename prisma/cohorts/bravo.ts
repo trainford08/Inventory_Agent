@@ -3,6 +3,7 @@ import { jtbdOverridesFor } from "./jtbd-scoping";
 import {
   adoProject,
   anomaly,
+  customization,
   daysAgo,
   daysFromNow,
   extension,
@@ -230,19 +231,26 @@ export function bravoConfig(orgId: string): CohortShape {
       }),
     ],
     jtbds: allJtbds(jtbdOverridesFor("BRAVO")),
+    // Bravo = "typical healthy team" — standard catalog mix plus a couple of
+    // team-specific quirks the agent has detected.
     customizations: [
+      customization("C09", { status: "AGENT_HANDLED" }),
+      customization("C13", { status: "AGENT_HANDLED" }),
+      customization("C16", { status: "AGENT_HANDLED" }),
+      customization("C24", { status: "UNKNOWN" }),
+      // Team-specific (not in catalog)
       {
-        category: "Release",
+        name: "Custom semver tagger script",
+        category: "PIPELINES",
         description:
-          "Custom semver tagger script invoked from release pipeline",
-        migrationApproach: "rewrite-as-github-action",
+          "Custom semver tagger script invoked from release pipeline.",
         status: "UNKNOWN",
       },
       {
-        category: "Pipelines",
+        name: "Bravo keyvault variable group",
+        category: "PIPELINES",
         description:
-          "Shared variable group 'bravo-keyvault-secrets' referenced by 3 pipelines",
-        migrationApproach: "replace-with-gh-environment-secrets",
+          "Shared variable group 'bravo-keyvault-secrets' referenced by 3 pipelines.",
         status: "AGENT_HANDLED",
       },
     ],

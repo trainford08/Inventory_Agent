@@ -30,10 +30,10 @@ export function CustomizationsSection({ team }: { team: TeamProfile }) {
             </div>
             <div className="mt-1 flex flex-wrap gap-2 text-xs text-ink-muted">
               <span>{c.category}</span>
-              {c.migrationApproach ? (
+              {c.strategy ? (
                 <>
                   <span className="text-ink-faint">·</span>
-                  <span>Approach: {c.migrationApproach}</span>
+                  <span>Strategy: {c.strategy}</span>
                 </>
               ) : null}
             </div>

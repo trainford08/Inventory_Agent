@@ -51,6 +51,35 @@ export type InventoryCoverage = {
   orphanFeatures: FeatureNode[];
 };
 
+export type CustomizationRow = {
+  id: string;
+  catalogCode: string | null;
+  name: string;
+  category: string;
+  commonality: string | null;
+  parity: string | null;
+  strategy: string | null;
+  hybridPlacement: string | null;
+  status: string;
+  notes: string | null;
+  /** JTBD text for this customization. */
+  jobsToBeDone: string;
+  /**
+   * Performer of the JTBD. Always "Custom code" for customizations — distinct
+   * from JtbdEntry rows where the performer is a human persona.
+   */
+  jtbdPerformer: string;
+  /** Catalog-level description of the GitHub equivalent. Null for team-specific rows. */
+  githubEquivalent: string | null;
+};
+
+export type CustomizationsBlock = {
+  total: number;
+  cataloged: number;
+  teamSpecific: number;
+  byCategory: Array<{ category: string; rows: CustomizationRow[] }>;
+};
+
 export type TeamInventory = {
   team: { id: string; name: string; slug: string };
   totals: {
@@ -63,6 +92,7 @@ export type TeamInventory = {
   };
   groups: CategoryGroup[];
   coverage: InventoryCoverage;
+  customizations: CustomizationsBlock;
 };
 
 export const getTeamInventory = cache(
@@ -75,6 +105,20 @@ export const getTeamInventory = cache(
         slug: true,
         jtbds: {
           select: { jtbdCode: true, performed: true },
+        },
+        customizations: {
+          orderBy: { category: "asc" },
+          include: {
+            catalogEntry: {
+              select: {
+                catalogCode: true,
+                commonality: true,
+                jobsToBeDone: true,
+                jtbdPerformer: true,
+                githubEquivalent: true,
+              },
+            },
+          },
         },
       },
     });
@@ -191,6 +235,51 @@ export const getTeamInventory = cache(
       (eid) => sharedEntityCount(eid) > 1,
     ).length;
 
+    // Customizations: flatten + group by category, ordered to match the
+    // framework taxonomy. Cataloged rows expose their catalogCode + commonality;
+    // team-specific rows leave those null.
+    const customRows: CustomizationRow[] = team.customizations.map((c) => ({
+      id: c.id,
+      catalogCode: c.catalogEntry?.catalogCode ?? null,
+      name: c.name,
+      category: c.category,
+      commonality: c.catalogEntry?.commonality ?? null,
+      parity: c.parity,
+      strategy: c.strategy,
+      hybridPlacement: c.hybridPlacement,
+      status: c.status,
+      notes: c.notes,
+      // For cataloged rows the JTBD comes from the catalog. For team-specific
+      // rows, the team's `description` is the JTBD text. Performer is always
+      // "Custom code" — that's what defines a customization.
+      jobsToBeDone: c.catalogEntry?.jobsToBeDone ?? c.description,
+      jtbdPerformer: c.catalogEntry?.jtbdPerformer ?? "Custom code",
+      githubEquivalent: c.catalogEntry?.githubEquivalent ?? null,
+    }));
+
+    const CATEGORY_ORDER = [
+      "BOARDS",
+      "PIPELINES",
+      "REPOS",
+      "DASHBOARDS",
+      "EXTENSIONS",
+      "PROCESS",
+      "SECURITY",
+    ];
+    const customByCategoryMap = new Map<string, CustomizationRow[]>();
+    for (const row of customRows) {
+      if (!customByCategoryMap.has(row.category)) {
+        customByCategoryMap.set(row.category, []);
+      }
+      customByCategoryMap.get(row.category)!.push(row);
+    }
+    const customByCategory = CATEGORY_ORDER.filter((cat) =>
+      customByCategoryMap.has(cat),
+    ).map((category) => ({
+      category,
+      rows: customByCategoryMap.get(category)!,
+    }));
+
     return {
       team: { id: team.id, name: team.name, slug: team.slug },
       totals: {
@@ -207,6 +296,12 @@ export const getTeamInventory = cache(
         features: featuresList,
         cells,
         orphanFeatures,
+      },
+      customizations: {
+        total: customRows.length,
+        cataloged: customRows.filter((r) => r.catalogCode).length,
+        teamSpecific: customRows.filter((r) => !r.catalogCode).length,
+        byCategory: customByCategory,
       },
     };
   },

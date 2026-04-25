@@ -1,6 +1,7 @@
 import type { Prisma } from "../../src/generated/prisma/client";
 import type { SeedEvidence, SeedFinding } from "../findings-generator";
 import { CANONICAL_JTBDS } from "./canonical-jtbds";
+import { CATALOG_BY_CODE } from "./customization-catalog";
 
 const CANONICAL_BY_CODE = new Map(CANONICAL_JTBDS.map((j) => [j.code, j]));
 
@@ -136,6 +137,52 @@ export function allJtbds(
   > = {},
 ): Prisma.JtbdEntryCreateWithoutTeamInput[] {
   return CANONICAL_JTBDS.map((c) => jtbd(c.code, overrides[c.code] ?? {}));
+}
+
+/**
+ * Reference a catalog customization (C01–C29) for a team. The catalog supplies
+ * name, category, parity, strategy, hybridPlacement; per-team overrides are
+ * applied last.
+ */
+export function customization(
+  catalogCode: string,
+  opts: Partial<Prisma.CustomizationCreateWithoutTeamInput> = {},
+): Prisma.CustomizationCreateWithoutTeamInput {
+  const cat = CATALOG_BY_CODE.get(catalogCode);
+  if (!cat) {
+    throw new Error(
+      `Unknown customization catalog code: ${catalogCode}. Valid codes: C01–C29.`,
+    );
+  }
+  return {
+    catalogEntry: { connect: { catalogCode } },
+    name: cat.name,
+    category: cat.category,
+    description: cat.jobsToBeDone,
+    parity: cat.parity,
+    strategy: cat.strategy,
+    hybridPlacement: cat.hybridPlacement,
+    notes: cat.notes,
+    status: "UNKNOWN",
+    ...opts,
+  };
+}
+
+/**
+ * Build a team-specific (non-cataloged) customization. Use when a team has
+ * a customization that doesn't match any of the 29 framework entries.
+ */
+export function teamCustomization(
+  input: {
+    name: string;
+    category: Prisma.CustomizationCreateWithoutTeamInput["category"];
+    description: string;
+  } & Partial<Prisma.CustomizationCreateWithoutTeamInput>,
+): Prisma.CustomizationCreateWithoutTeamInput {
+  return {
+    status: "UNKNOWN",
+    ...input,
+  };
 }
 
 export function member(

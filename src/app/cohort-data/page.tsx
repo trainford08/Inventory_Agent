@@ -247,12 +247,12 @@ function TeamBlock({ team }: { team: Team }) {
       {team.customizations.length > 0 ? (
         <Section title={`Customizations (${team.customizations.length})`}>
           <Table
-            headers={["Category", "Description", "Status", "Approach"]}
+            headers={["Name", "Category", "Status", "Strategy"]}
             rows={team.customizations.map((c) => [
+              c.name,
               c.category,
-              c.description,
               c.status,
-              c.migrationApproach ?? "—",
+              c.strategy ?? "—",
             ])}
           />
         </Section>

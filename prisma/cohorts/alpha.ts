@@ -3,6 +3,7 @@ import { jtbdOverridesFor } from "./jtbd-scoping";
 import {
   adoProject,
   anomaly,
+  customization,
   daysAgo,
   daysFromNow,
   extension,
@@ -100,7 +101,11 @@ export function alphaConfig(orgId: string): CohortShape {
       }),
     ],
     jtbds: allJtbds(jtbdOverridesFor("ALPHA")),
-    customizations: [],
+    // Alpha = "the easy yes" — minimal customization surface, mostly baseline.
+    customizations: [
+      customization("C02", { status: "AGENT_HANDLED" }),
+      customization("C16", { status: "AGENT_HANDLED" }),
+    ],
     risks: [],
     ownership: {
       primaryOwnerEmail: "alex.chen@contoso.com",

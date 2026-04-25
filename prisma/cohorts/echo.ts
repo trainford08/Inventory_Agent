@@ -3,6 +3,7 @@ import { jtbdOverridesFor } from "./jtbd-scoping";
 import {
   adoProject,
   anomaly,
+  customization,
   daysAgo,
   daysFromNow,
   extension,
@@ -138,19 +139,24 @@ export function echoConfig(orgId: string): CohortShape {
       }),
     ],
     jtbds: allJtbds(jtbdOverridesFor("ECHO")),
+    // Echo = "champion still has work" — partial inventory; some catalog
+    // items the agent flagged but couldn't fully classify.
     customizations: [
+      customization("C13", { status: "NEEDS_HUMAN" }),
+      customization("C29", { status: "NEEDS_HUMAN" }),
+      // Team-specific (not in catalog)
       {
-        category: "Release",
+        name: "Mobile release gate (mechanism unknown)",
+        category: "PIPELINES",
         description:
           "Mobile release gate — agent detected a gating step but could not identify the underlying mechanism (App Center? Internal?).",
-        migrationApproach: null,
         status: "NEEDS_HUMAN",
       },
       {
-        category: "Pipelines",
+        name: "iOS signing cert storage",
+        category: "PIPELINES",
         description:
           "iOS signing cert storage — inferred Azure Key Vault but Champion needs to confirm access pattern.",
-        migrationApproach: null,
         status: "NEEDS_HUMAN",
       },
     ],

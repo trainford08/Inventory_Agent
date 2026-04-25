@@ -233,6 +233,7 @@ async function wipe() {
   await prisma.workflow.deleteMany();
   await prisma.jtbdEntry.deleteMany();
   await prisma.customization.deleteMany();
+  await prisma.customizationCatalog.deleteMany();
   await prisma.risk.deleteMany();
   await prisma.ownership.deleteMany();
   await prisma.codebase.deleteMany();
@@ -246,6 +247,17 @@ async function wipe() {
   await prisma.org.deleteMany();
 }
 
+async function seedCustomizationCatalog() {
+  const { CUSTOMIZATION_CATALOG } =
+    await import("./cohorts/customization-catalog");
+  for (const entry of CUSTOMIZATION_CATALOG) {
+    await prisma.customizationCatalog.create({ data: entry });
+  }
+  console.log(
+    `  Seeded customization catalog (${CUSTOMIZATION_CATALOG.length} entries)`,
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
@@ -254,6 +266,8 @@ async function main() {
   console.log("Seeding Migration Hub (realistic discovery run)...");
 
   await wipe();
+
+  await seedCustomizationCatalog();
 
   const contoso = await prisma.org.create({
     data: { name: "Contoso", adoOrgSlug: "contoso-dev" },

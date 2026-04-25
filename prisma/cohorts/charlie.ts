@@ -3,6 +3,7 @@ import { jtbdOverridesFor } from "./jtbd-scoping";
 import {
   adoProject,
   anomaly,
+  customization,
   daysAgo,
   daysFromNow,
   ev,
@@ -486,47 +487,49 @@ export function charlieConfig(orgId: string): CohortShape {
       }),
     ],
     jtbds: allJtbds(jtbdOverridesFor("CHARLIE")),
+    // Charlie = "the interesting one" — legacy + regulated, heaviest
+    // customization surface. Several catalog refs + many team-specific.
     customizations: [
+      customization("C04", { status: "NEEDS_HUMAN" }),
+      customization("C10", { status: "NEEDS_HUMAN" }),
+      customization("C12", { status: "NEEDS_HUMAN" }),
+      customization("C18", { status: "NEEDS_HUMAN" }),
+      customization("C21", { status: "NEEDS_HUMAN" }),
+      customization("C29", { status: "AGENT_HANDLED" }),
+      // Team-specific (not in catalog)
       {
-        category: "Pipelines",
+        name: "On-prem PowerShell signing task",
+        category: "PIPELINES",
         description:
           "Custom PowerShell signing task invokes on-prem signing service via agent token.",
-        migrationApproach: null,
         status: "NEEDS_HUMAN",
       },
       {
-        category: "Release",
+        name: "Legacy build-number scheme",
+        category: "PIPELINES",
         description:
           "Legacy build-number scheme (yy.mm.dd.build) — agent mapped to GitHub Actions run number expression.",
-        migrationApproach: "rewrite-as-github-action",
         status: "AGENT_HANDLED",
       },
       {
-        category: "Pipelines",
+        name: "Classic pipeline YAML conversion gaps",
+        category: "PIPELINES",
         description:
           "Classic pipeline YAML conversion has 3 unsupported task types; manual remediation required.",
-        migrationApproach: null,
         status: "NEEDS_HUMAN",
       },
       {
-        category: "Release",
+        name: "ServiceNow approval gate",
+        category: "PIPELINES",
         description:
           "ServiceNow approval gate on prod release — no direct GH Actions equivalent.",
-        migrationApproach: null,
         status: "NEEDS_HUMAN",
       },
       {
-        category: "Pipelines",
-        description:
-          "Self-hosted agent pool in private VLAN — required for signing service connectivity.",
-        migrationApproach: "github-self-hosted-runners",
-        status: "NEEDS_HUMAN",
-      },
-      {
-        category: "Pipelines",
+        name: "FileTransform@1 usage across pipelines",
+        category: "PIPELINES",
         description:
           "FileTransform@1 usage across 4 pipelines — maps to envsubst or a GH action replacement.",
-        migrationApproach: "rewrite-as-github-action",
         status: "AGENT_HANDLED",
       },
     ],

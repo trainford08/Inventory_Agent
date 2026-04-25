@@ -3,6 +3,7 @@ import { jtbdOverridesFor } from "./jtbd-scoping";
 import {
   adoProject,
   anomaly,
+  customization,
   daysAgo,
   daysFromNow,
   ev,
@@ -595,40 +596,48 @@ export function deltaConfig(orgId: string): CohortShape {
       }),
     ],
     jtbds: allJtbds(jtbdOverridesFor("DELTA")),
+    // Delta = "the heavyweight" — large monorepo, complex deploy graph.
+    // Catalog mix biased toward Pipelines + Repos.
     customizations: [
+      customization("C09", { status: "AGENT_HANDLED" }),
+      customization("C13", { status: "AGENT_HANDLED" }),
+      customization("C14", { status: "AGENT_HANDLED" }),
+      customization("C22", { status: "NEEDS_HUMAN" }),
+      customization("C29", { status: "NEEDS_HUMAN" }),
+      // Team-specific (not in catalog)
       {
-        category: "Pipelines",
+        name: "LFS batching script",
+        category: "PIPELINES",
         description:
           "LFS batching script for delta-data-lfs — pushes LFS objects in chunks to avoid rate-limiting.",
-        migrationApproach: "reusable-workflow",
         status: "AGENT_HANDLED",
       },
       {
-        category: "Deploy",
+        name: "Canary deploy orchestrator",
+        category: "PIPELINES",
         description:
           "Canary deploy orchestrator coordinates staged rollouts across 4 services.",
-        migrationApproach: "rewrite-as-github-action",
         status: "AGENT_HANDLED",
       },
       {
-        category: "Pipelines",
+        name: "Monorepo change detection",
+        category: "PIPELINES",
         description:
           "Monorepo change detection script — selective rebuild based on changed paths.",
-        migrationApproach: "rewrite-as-github-action",
         status: "AGENT_HANDLED",
       },
       {
-        category: "Pipelines",
+        name: "Cross-region deploy dependency graph",
+        category: "PIPELINES",
         description:
           "Cross-region deploy dependency graph — ordering enforced via deployment environments.",
-        migrationApproach: "github-environments",
         status: "NEEDS_HUMAN",
       },
       {
-        category: "Deploy",
+        name: "Schema compatibility gate",
+        category: "PIPELINES",
         description:
           "Schema compatibility gate — blocks canary if proto changes break consumer.",
-        migrationApproach: null,
         status: "NEEDS_HUMAN",
       },
     ],

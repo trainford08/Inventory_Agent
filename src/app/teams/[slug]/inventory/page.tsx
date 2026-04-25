@@ -22,7 +22,7 @@ export default async function TeamInventoryPage({
   const inventory = await getTeamInventory(slug);
   if (!inventory) notFound();
 
-  const { team, totals, groups, coverage } = inventory;
+  const { team, totals, groups, coverage, customizations } = inventory;
 
   const constrained = "mx-auto w-full max-w-[1200px] px-[32px]";
 
@@ -83,7 +83,7 @@ export default async function TeamInventoryPage({
 
       {tab === "profile" ? (
         <div className={constrained}>
-          <InventoryProfile groups={groups} />
+          <InventoryProfile groups={groups} customizations={customizations} />
         </div>
       ) : (
         <div className="w-full px-[32px]">
