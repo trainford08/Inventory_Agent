@@ -67,8 +67,10 @@ export function Sidebar({
 
       <NavGroup label="Program">
         <NavItem
-          href="/inventory"
-          active={pathname === "/inventory"}
+          active={
+            pathname === "/inventory" ||
+            pathname === "/inventory/program-overview"
+          }
           icon={
             <>
               <path d="M3 3h7v7H3z" />
@@ -230,7 +232,9 @@ function NavItem({
   const className = `mb-px flex items-center gap-[10px] rounded-md px-[10px] py-[8px] text-[13.5px] font-medium transition-colors ${
     active
       ? "bg-sidebar-active font-semibold text-primary"
-      : "cursor-pointer text-ink-soft hover:bg-sidebar-hover hover:text-ink"
+      : href
+        ? "cursor-pointer text-ink-soft hover:bg-sidebar-hover hover:text-ink"
+        : "text-ink-soft"
   }`;
 
   const content = (
