@@ -41,9 +41,12 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
-    // Expand category headers & JTBDs by default so structure is visible.
-    for (const r of rows)
+    // Expand cats + JTBDs + non-ref features by default so the full nested
+    // structure (jtbd → feature → entity) is visible from the start.
+    for (const r of rows) {
       if (r.kind === "cat" || r.kind === "jtbd") set.add(r.id);
+      else if (r.kind === "feature" && !r.isRef) set.add(r.rowKey);
+    }
     return set;
   }, [rows]);
 
@@ -808,9 +811,16 @@ function IndentCell({
   level: 1 | 2 | 3;
   children: React.ReactNode;
 }) {
-  const pad = { 1: 0, 2: 22, 3: 44 }[level];
+  const pad = { 1: 0, 2: 40, 3: 80 }[level];
+  const guideColor =
+    level === 2 ? "border-amber-300" : level === 3 ? "border-emerald-300" : "";
   return (
-    <div className="flex items-center gap-1.5" style={{ paddingLeft: pad }}>
+    <div
+      className={`relative flex items-center gap-1.5 ${
+        level > 1 ? `border-l-2 ${guideColor}` : ""
+      }`}
+      style={{ paddingLeft: pad, marginLeft: level > 1 ? 8 : 0 }}
+    >
       {children}
     </div>
   );
