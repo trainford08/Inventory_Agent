@@ -25,7 +25,7 @@ export default async function TeamInventoryPage({
   const { team, totals, groups, coverage } = inventory;
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-6 px-[32px] py-[28px]">
+    <div className="w-full space-y-6 px-[32px] py-[28px]">
       <header className="space-y-2">
         <div className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
           Team profile · <span className="text-primary">{team.name}</span>
