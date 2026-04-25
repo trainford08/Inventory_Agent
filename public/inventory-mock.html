@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory Listings — Program-level Mock</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.08);
+    --primary-mid: rgba(91, 95, 207, 0.15);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+    --info: #0284c7;
+    --info-soft: #e0f2fe;
+    --info-ink: #0369a1;
+    --purple: #8b5cf6;
+    --purple-soft: #ede9fe;
+    --purple-ink: #6d28d9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 1500px; margin: 0 auto; }
+
+  .mock-banner {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  .mock-banner strong { color: var(--ink); }
+
+  /* Hero */
+  .crumb {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+  .lede {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 720px;
+    margin-bottom: 28px;
+  }
+
+  /* Header layout — matches TeamHero pattern (items-start) */
+  .hero-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+  }
+  .hero-text { min-width: 0; flex: 1; }
+  .lede { margin-bottom: 0; }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    text-decoration: none;
+    border: 1px solid var(--primary);
+    transition: background 0.15s;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .cta-btn:hover { background: #4a4eb8; }
+
+  /* Big-number strip */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elev);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .stat {
+    padding: 22px 24px;
+    border-right: 1px solid var(--border);
+  }
+  .stat:last-child { border-right: none; }
+  .stat-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+  }
+  .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .stat-value .unit {
+    font-size: 14px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .stat-sub {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .stat-sub strong { color: var(--ink-soft); font-weight: 600; }
+
+  /* Two-column program insight section */
+  .insights {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+  }
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .panel-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .panel-sub {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    margin-bottom: 18px;
+  }
+
+  /* Hybrid mix stacked bar */
+  .hybrid-bar {
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+  }
+  .hb-seg { height: 100%; display: flex; align-items: center; padding-left: 10px; color: white; font-size: 11.5px; font-weight: 600; }
+  .hb-seg.gh   { background: var(--primary); }
+  .hb-seg.ado  { background: var(--warn); }
+  .hb-seg.both { background: var(--success); }
+  .hb-seg.na   { background: var(--ink-muted); }
+  .hybrid-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 18px;
+  }
+  .hl-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .hl-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; transform: translateY(1px); }
+  .hl-swatch.gh   { background: var(--primary); }
+  .hl-swatch.ado  { background: var(--warn); }
+  .hl-swatch.both { background: var(--success); }
+  .hl-swatch.na   { background: var(--ink-muted); }
+  .hl-name { color: var(--ink); font-weight: 500; }
+  .hl-detail { color: var(--ink-muted); font-size: 11.5px; }
+  .hl-count { font-family: "Geist Mono", monospace; color: var(--ink); font-weight: 600; margin-left: auto; }
+
+  /* Friction list */
+  .friction-list { display: flex; flex-direction: column; gap: 10px; }
+  .friction-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+  }
+  .fr-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: "Geist Mono", monospace;
+  }
+  .fr-icon.warn { background: var(--warn-soft); color: var(--warn-ink); }
+  .fr-icon.danger { background: var(--danger-soft); color: var(--danger-ink); }
+  .fr-icon.info { background: var(--primary-soft); color: var(--primary); }
+  .fr-text { font-size: 13px; color: var(--ink); line-height: 1.4; }
+  .fr-text strong { font-weight: 600; }
+  .fr-text .sub { display: block; font-size: 11.5px; color: var(--ink-muted); font-weight: 400; margin-top: 1px; }
+  .fr-num {
+    font-family: "Geist Mono", monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  /* Parity strip */
+  .parity-section {
+    margin-top: 28px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .parity-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 90px;
+    align-items: center;
+    gap: 14px;
+    padding: 7px 0;
+    font-size: 13px;
+  }
+  .parity-label { color: var(--ink); font-weight: 500; }
+  .parity-track {
+    background: var(--bg-subtle);
+    height: 18px;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .parity-fill { height: 100%; border-radius: 4px; }
+  .parity-fill.match    { background: var(--success); }
+  .parity-fill.partial  { background: var(--warn); }
+  .parity-fill.gap      { background: var(--danger); }
+  .parity-fill.better   { background: var(--primary); }
+  .parity-meta {
+    font-family: "Geist Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+  .parity-meta em { font-style: normal; color: var(--ink-muted); font-size: 11px; }
+
+  /* Approach breakdown */
+  .approach-section {
+    margin-top: 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .approach-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .approach-card {
+    padding: 14px 14px 12px;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--ink-faint);
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .approach-card.s01 { border-top-color: var(--purple); }
+  .approach-card.s02 { border-top-color: var(--success); }
+  .approach-card.s03 { border-top-color: var(--ink-faint); }
+  .approach-card.s04 { border-top-color: var(--warn); }
+  .approach-card.s05 { border-top-color: var(--danger); }
+  .ac-code {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .approach-card.s01 .ac-code { color: var(--purple-ink); }
+  .approach-card.s02 .ac-code { color: var(--success-ink); }
+  .approach-card.s04 .ac-code { color: var(--warn-ink); }
+  .approach-card.s05 .ac-code { color: var(--danger-ink); }
+  .ac-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .ac-count {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .ac-count .pct { font-size: 12px; color: var(--ink-muted); font-weight: 500; margin-left: 4px; }
+  .ac-desc {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .approach-meta {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+  .approach-meta strong { color: var(--ink-soft); font-weight: 600; }
+
+  /* Team picker cards — prominent CTAs */
+  .picker-section {
+    margin-top: 36px;
+  }
+  .picker-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .picker-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .picker-sub {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .team-card {
+    display: block;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+    position: relative;
+  }
+  .team-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(91, 95, 207, 0.12);
+    transform: translateY(-1px);
+  }
+  .tc-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .tc-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .tc-name-block {
+    flex: 1;
+    min-width: 0;
+  }
+  .tc-name {
+    font-size: 15.5px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .tc-tagline {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+  .tc-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    transition: background 0.12s, transform 0.12s;
+    flex-shrink: 0;
+  }
+  .team-card:hover .tc-arrow {
+    background: var(--primary);
+    color: white;
+    transform: translateX(3px);
+  }
+  .tc-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border-top: 1px solid var(--border-soft);
+    padding-top: 12px;
+  }
+  .tc-stat {
+    border-right: 1px solid var(--border-soft);
+    padding-right: 10px;
+  }
+  .tc-stat:last-child { border-right: none; padding-right: 0; padding-left: 10px; }
+  .tc-stat:nth-child(2) { padding-left: 10px; }
+  .tc-stat-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    margin-bottom: 3px;
+  }
+  .tc-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .tc-health {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+  .tc-health .meta-pair { display: flex; gap: 14px; }
+  .tc-health .meta-pair span strong { color: var(--ink-soft); font-weight: 600; }
+
+  /* Row-level CTA chevron */
+  .row-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: 12px;
+    transition: color 0.12s, gap 0.12s;
+  }
+  .row-cta::after { content: "→"; font-size: 14px; transition: transform 0.12s; }
+  tr.tr-link { cursor: pointer; }
+  tr.tr-link:hover td { background: var(--primary-soft); }
+  tr.tr-link:hover .team-name { color: var(--primary); }
+  tr.tr-link:hover .row-cta { color: var(--primary); font-weight: 600; gap: 9px; }
+  tr.tr-link:hover .row-cta::after { transform: translateX(2px); }
+
+  /* Divider before table */
+  .divider {
+    margin: 36px 0 14px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .divider-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .divider-sub { font-family: "Geist Mono", monospace; font-size: 11px; color: var(--ink-muted); }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  th {
+    background: var(--bg-subtle);
+    border-bottom: 1.5px solid var(--border);
+    padding: 10px 16px;
+    text-align: left;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+  }
+  td { padding: 10px 16px; border-bottom: 1px solid var(--border-soft); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+  .num { font-family: "Geist Mono", monospace; text-align: right; }
+  .team-name { font-weight: 600; color: var(--ink); }
+  .tagline { font-family: "Geist Mono", monospace; font-size: 11px; color: var(--ink-muted); margin-left: 8px; }
+  .swatch { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-right: 8px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill.ok    { background: var(--success-soft); color: var(--success-ink); }
+  .pill.risk  { background: var(--warn-soft); color: var(--warn-ink); }
+  .pill.block { background: var(--danger-soft); color: var(--danger-ink); }
+
+  @media (max-width: 1100px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .stat { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .insights { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mock-banner">
+    <strong>Mock — not wired up.</strong> Numbers are illustrative. The intent: a Program PM should glance at this page and know the shape of the migration across all teams.
+  </div>
+
+  <!-- HERO -->
+  <div class="crumb">Program · Inventory</div>
+  <h1>Team migration inventories</h1>
+  <p class="lede" style="margin-bottom: 16px;">
+    What every team does on Azure DevOps, mapped onto GitHub. Use this page to gauge the overall complexity of the program before drilling into a single team.
+  </p>
+  <a class="cta-btn" href="#teams-table">View all teams</a>
+  <div style="height: 28px;"></div>
+
+  <!-- BIG NUMBERS -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-label">Teams</div>
+      <div class="stat-value">6</div>
+      <div class="stat-sub">across <strong>4 cohorts</strong> · 1 unassigned</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Jobs covered</div>
+      <div class="stat-value">94 <span class="unit">/ 118</span></div>
+      <div class="stat-sub"><strong>80%</strong> of framework</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Features in scope</div>
+      <div class="stat-value">61</div>
+      <div class="stat-sub">avg <strong>38</strong> per team</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Customizations</div>
+      <div class="stat-value">142</div>
+      <div class="stat-sub"><strong>23</strong> need decisions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Integrations</div>
+      <div class="stat-value">28 <span class="unit">vendors</span></div>
+      <div class="stat-sub"><strong>4</strong> with no GitHub equivalent</div>
+    </div>
+  </div>
+
+  <!-- PROGRAM INSIGHT: HYBRID MIX + FRICTION -->
+  <div class="insights">
+    <div class="panel">
+      <div class="panel-title">Where the work lives</div>
+      <div class="panel-sub">Across all 61 features, how many move to GitHub vs. stay in ADO.</div>
+
+      <div class="hybrid-bar">
+        <div class="hb-seg gh"   style="width: 54%;">54%</div>
+        <div class="hb-seg ado"  style="width: 30%;">30%</div>
+        <div class="hb-seg both" style="width: 10%;">10%</div>
+        <div class="hb-seg na"   style="width: 6%;">6%</div>
+      </div>
+      <div class="hybrid-legend">
+        <div class="hl-item">
+          <span class="hl-swatch gh"></span>
+          <span class="hl-name">Lives in GitHub</span>
+          <span class="hl-count">33</span>
+        </div>
+        <div class="hl-item">
+          <span class="hl-swatch ado"></span>
+          <span class="hl-name">Stays in ADO</span>
+          <span class="hl-count">18</span>
+        </div>
+        <div class="hl-item">
+          <span class="hl-swatch both"></span>
+          <span class="hl-name">Spans both</span>
+          <span class="hl-count">6</span>
+        </div>
+        <div class="hl-item">
+          <span class="hl-swatch na"></span>
+          <span class="hl-name">Platform-agnostic</span>
+          <span class="hl-count">4</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Where the friction is</div>
+      <div class="panel-sub">Items that need explicit decisions before any cutover.</div>
+
+      <div class="friction-list">
+        <div class="friction-row">
+          <div class="fr-icon danger">!</div>
+          <div class="fr-text">
+            <strong>Customizations with no GitHub equivalent</strong>
+            <span class="sub">Concentrated in Bravo and Echo — likely hybrid candidates</span>
+          </div>
+          <div class="fr-num">7</div>
+        </div>
+        <div class="friction-row">
+          <div class="fr-icon warn">~</div>
+          <div class="fr-text">
+            <strong>Integrations needing re-setup</strong>
+            <span class="sub">Jira, Datadog, Snyk, Okta SCIM — re-auth at cutover</span>
+          </div>
+          <div class="fr-num">12</div>
+        </div>
+        <div class="friction-row">
+          <div class="fr-icon info">i</div>
+          <div class="fr-text">
+            <strong>Teams with high customization load</strong>
+            <span class="sub">Bravo (38), Echo (29), Charlie (24)</span>
+          </div>
+          <div class="fr-num">3</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARITY DISTRIBUTION -->
+  <div class="parity-section">
+    <div class="panel-title">GitHub parity across all features in scope</div>
+    <div class="panel-sub">How cleanly the 61 features in scope land on GitHub today.</div>
+
+    <div class="parity-row">
+      <div class="parity-label">Match</div>
+      <div class="parity-track"><div class="parity-fill match" style="width: 62%;"></div></div>
+      <div class="parity-meta">38 <em>· 62%</em></div>
+    </div>
+    <div class="parity-row">
+      <div class="parity-label">Better</div>
+      <div class="parity-track"><div class="parity-fill better" style="width: 16%;"></div></div>
+      <div class="parity-meta">10 <em>· 16%</em></div>
+    </div>
+    <div class="parity-row">
+      <div class="parity-label">Partial</div>
+      <div class="parity-track"><div class="parity-fill partial" style="width: 15%;"></div></div>
+      <div class="parity-meta">9 <em>· 15%</em></div>
+    </div>
+    <div class="parity-row">
+      <div class="parity-label">Gap</div>
+      <div class="parity-track"><div class="parity-fill gap" style="width: 7%;"></div></div>
+      <div class="parity-meta">4 <em>· 7%</em></div>
+    </div>
+  </div>
+
+  <!-- MIGRATION APPROACH MIX -->
+  <div class="approach-section">
+    <div class="panel-title">Migration approach mix</div>
+    <div class="panel-sub">How the 142 customizations across all teams will be handled. Drawn from the 5 per-customization strategies in the framework.</div>
+
+    <div class="approach-grid">
+      <div class="approach-card s01">
+        <div class="ac-code">S01 · PROTECT</div>
+        <div class="ac-name">Protect in place</div>
+        <div class="ac-count">52 <span class="pct">37%</span></div>
+        <div class="ac-desc">Stays in ADO via the hybrid. Zero migration effort.</div>
+      </div>
+      <div class="approach-card s02">
+        <div class="ac-code">S02 · TRANSLATE</div>
+        <div class="ac-name">Translate to GitHub</div>
+        <div class="ac-count">61 <span class="pct">43%</span></div>
+        <div class="ac-desc">Mechanical rebuild against GitHub primitives.</div>
+      </div>
+      <div class="approach-card s03">
+        <div class="ac-code">S03 · RETIRE</div>
+        <div class="ac-name">Retire in discovery</div>
+        <div class="ac-count">14 <span class="pct">10%</span></div>
+        <div class="ac-desc">Fossils. Permission to delete.</div>
+      </div>
+      <div class="approach-card s04">
+        <div class="ac-code">S04 · ACCEPT LOSS</div>
+        <div class="ac-name">Rebuild, thinner</div>
+        <div class="ac-count">8 <span class="pct">6%</span></div>
+        <div class="ac-desc">GitHub equivalent exists but with reduced fidelity.</div>
+      </div>
+      <div class="approach-card s05">
+        <div class="ac-code">S05 · BUILD GLUE</div>
+        <div class="ac-name">Custom code required</div>
+        <div class="ac-count">7 <span class="pct">4%</span></div>
+        <div class="ac-desc">No GitHub equivalent. Most expensive per unit.</div>
+      </div>
+    </div>
+
+    <div class="approach-meta">
+      <strong>Meta-strategies in play:</strong>
+      <span>3 customizations are candidates for <strong>S06 · Upstream</strong> (build once centrally) ·
+      5 are candidates for <strong>S07 · Consolidate</strong> (move to existing third-party like Jira)</span>
+    </div>
+  </div>
+
+  <!-- TEAMS TABLE -->
+  <div class="divider" id="teams-table">
+    <div class="divider-title">All teams</div>
+    <div class="divider-sub">6 teams · click any row to open</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:22%">Team</th>
+        <th style="width:9%">Cohort</th>
+        <th style="width:7%">Wave</th>
+        <th style="width:10%">Health</th>
+        <th style="width:7%; text-align:right">Engineers</th>
+        <th style="width:8%; text-align:right">Features</th>
+        <th style="width:10%; text-align:right">Customizations</th>
+        <th style="width:9%; text-align:right">Integrations</th>
+        <th style="width:8%; text-align:right">% reviewed</th>
+        <th style="width:10%; text-align:right">View</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="tr-link">        <td><span class="swatch" style="background:linear-gradient(135deg,#5b5fcf,#8b5cf6)"></span><span class="team-name">Alpha</span><span class="tagline">web-platform</span></td>
+        <td>Alpha</td>
+        <td class="num">W01</td>
+        <td><span class="pill ok"><span class="dot"></span>On track</span></td>
+        <td class="num">42</td>
+        <td class="num">38</td>
+        <td class="num">18</td>
+        <td class="num">6</td>
+        <td class="num">68%</td>
+        <td class="num"><span class="row-cta">View</span></td>
+      </tr>
+      <tr class="tr-link">        <td><span class="swatch" style="background:linear-gradient(135deg,#06b6d4,#0ea5e9)"></span><span class="team-name">Bravo</span><span class="tagline">mobile-apps</span></td>
+        <td>Bravo</td>
+        <td class="num">W02</td>
+        <td><span class="pill risk"><span class="dot"></span>At risk</span></td>
+        <td class="num">28</td>
+        <td class="num">31</td>
+        <td class="num">38</td>
+        <td class="num">9</td>
+        <td class="num">31%</td>
+        <td class="num"><span class="row-cta">View</span></td>
+      </tr>
+      <tr class="tr-link">        <td><span class="swatch" style="background:linear-gradient(135deg,#f59e0b,#ef4444)"></span><span class="team-name">Charlie</span><span class="tagline">data-platform</span></td>
+        <td>Charlie</td>
+        <td class="num">W02</td>
+        <td><span class="pill ok"><span class="dot"></span>On track</span></td>
+        <td class="num">35</td>
+        <td class="num">42</td>
+        <td class="num">24</td>
+        <td class="num">5</td>
+        <td class="num">82%</td>
+        <td class="num"><span class="row-cta">View</span></td>
+      </tr>
+      <tr class="tr-link">        <td><span class="swatch" style="background:linear-gradient(135deg,#1f4d3a,#3a6b4d)"></span><span class="team-name">Delta</span><span class="tagline">infra-tools</span></td>
+        <td>Delta</td>
+        <td class="num">W03</td>
+        <td><span class="pill ok"><span class="dot"></span>On track</span></td>
+        <td class="num">19</td>
+        <td class="num">29</td>
+        <td class="num">12</td>
+        <td class="num">3</td>
+        <td class="num">54%</td>
+        <td class="num"><span class="row-cta">View</span></td>
+      </tr>
+      <tr class="tr-link">        <td><span class="swatch" style="background:linear-gradient(135deg,#dc2626,#ef4444)"></span><span class="team-name">Echo</span><span class="tagline">payments</span></td>
+        <td>Echo</td>
+        <td class="num">W04</td>
+        <td><span class="pill block"><span class="dot"></span>Blocked</span></td>
+        <td class="num">52</td>
+        <td class="num">47</td>
+        <td class="num">29</td>
+        <td class="num">8</td>
+        <td class="num">22%</td>
+        <td class="num"><span class="row-cta">View</span></td>
+      </tr>
+      <tr class="tr-link">        <td><span class="swatch" style="background:linear-gradient(135deg,#71717a,#a1a1aa)"></span><span class="team-name">Foxtrot</span><span class="tagline">qa-platform</span></td>
+        <td>Foxtrot</td>
+        <td class="num">W04</td>
+        <td><span class="pill ok"><span class="dot"></span>On track</span></td>
+        <td class="num">14</td>
+        <td class="num">22</td>
+        <td class="num">21</td>
+        <td class="num">4</td>
+        <td class="num">61%</td>
+        <td class="num"><span class="row-cta">View</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>
