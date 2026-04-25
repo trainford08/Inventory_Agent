@@ -17,7 +17,6 @@ const INSIGHT_ARCHETYPE = [
     posture: "Easy mover",
     strategy: "S02 Translate (54%)",
     parity: "Match (66%)",
-    verdict: { label: "Confirmed", tone: "ok" as const },
   },
   {
     cohort: "Bravo",
@@ -27,7 +26,6 @@ const INSIGHT_ARCHETYPE = [
     posture: "Mixed",
     strategy: "S01 Protect (44%)",
     parity: "Partial (38%)",
-    verdict: { label: "Worse than expected", tone: "warn" as const },
   },
   {
     cohort: "Charlie",
@@ -37,7 +35,6 @@ const INSIGHT_ARCHETYPE = [
     posture: "Easy mover",
     strategy: "S02 Translate (48%)",
     parity: "Match (61%)",
-    verdict: { label: "Easier than expected", tone: "warn" as const },
   },
   {
     cohort: "Delta",
@@ -47,7 +44,6 @@ const INSIGHT_ARCHETYPE = [
     posture: "Mixed",
     strategy: "S02 Translate (55%)",
     parity: "Match (58%)",
-    verdict: { label: "Easier than expected", tone: "ok" as const },
   },
   {
     cohort: "Echo",
@@ -57,7 +53,6 @@ const INSIGHT_ARCHETYPE = [
     posture: "Deep hybrid",
     strategy: "S05 Build glue (28%)",
     parity: "Gap (22%)",
-    verdict: { label: "Confirmed (deeply)", tone: "danger" as const },
   },
   {
     cohort: "Foxtrot",
@@ -67,7 +62,6 @@ const INSIGHT_ARCHETYPE = [
     posture: "Mixed",
     strategy: "S01 Protect (38%)",
     parity: "Partial (33%)",
-    verdict: { label: "No clear archetype", tone: "warn" as const },
   },
 ];
 
@@ -122,23 +116,23 @@ function ArchetypePanel() {
         Cohort archetypes
       </div>
       <div className="mb-3 text-[12px] text-ink-muted">
-        Did discovery confirm each cohort&apos;s archetype across the{" "}
+        How each cohort clusters across the{" "}
         <strong className="font-semibold text-ink-soft">
           {ARCHETYPE_TOTAL_TEAMS}
         </strong>{" "}
-        teams scanned? <em>Posture match</em> = % of teams in the cohort that
-        landed as the expected posture.
+        teams scanned. The agent classifies every team&apos;s posture and
+        surfaces the cohort-level archetype that emerges. <em>Match</em> = share
+        of teams in the cohort that landed as the dominant posture.
       </div>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
           <tr>
             <ArchTh>Cohort</ArchTh>
-            <ArchTh>Tagline (assumed)</ArchTh>
+            <ArchTh>Profile</ArchTh>
             <ArchTh className="text-right">Teams</ArchTh>
-            <ArchTh>Posture match</ArchTh>
+            <ArchTh>Dominant posture</ArchTh>
             <ArchTh>Most common strategy</ArchTh>
             <ArchTh>Most common parity</ArchTh>
-            <ArchTh>Confirms?</ArchTh>
           </tr>
         </thead>
         <tbody>
@@ -173,9 +167,6 @@ function ArchetypePanel() {
                 </td>
                 <td className="px-3 py-2 text-ink-soft">{row.strategy}</td>
                 <td className="px-3 py-2 text-ink-soft">{row.parity}</td>
-                <td className="px-3 py-2">
-                  <Chip tone={row.verdict.tone}>{row.verdict.label}</Chip>
-                </td>
               </tr>
             );
           })}
