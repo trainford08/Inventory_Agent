@@ -11,11 +11,14 @@ import {
   type Feature,
   type Jtbd,
 } from "@/lib/inventory-framework";
+import { FIELDS_BY_ENTITY, type Field } from "@/lib/inventory-fields";
 import { prisma } from "./db";
 
 export type EntityNode = Entity & {
   /** How many features in scope reference this entity. >1 means shared (M:N). */
   sharedAcrossFeatures: number;
+  /** Fields belonging to this entity (from the framework field inventory). */
+  fields: Field[];
 };
 
 export type FeatureNode = Feature & {
@@ -108,7 +111,11 @@ export const getTeamInventory = cache(
     const buildEntityNode = (eid: string): EntityNode | null => {
       const e = ENTITY_BY_ID[eid];
       if (!e) return null;
-      return { ...e, sharedAcrossFeatures: sharedEntityCount(eid) };
+      return {
+        ...e,
+        sharedAcrossFeatures: sharedEntityCount(eid),
+        fields: FIELDS_BY_ENTITY[eid] ?? [],
+      };
     };
 
     const buildFeatureNode = (fid: string): FeatureNode | null => {

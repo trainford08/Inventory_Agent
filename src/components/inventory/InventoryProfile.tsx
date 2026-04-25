@@ -30,7 +30,7 @@ type Row =
 
 type Destination = "all" | "ado" | "gh" | "both";
 type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
-type LayerFilter = "all" | "jtbd" | "feature" | "entity";
+type LayerFilter = "all" | "jtbd" | "feature" | "entity" | "field";
 
 export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
   const rows = useMemo(() => buildRows(groups), [groups]);
@@ -139,7 +139,11 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         flat.push({ ...r, isRef: false });
         continue;
       }
-      if (r.kind === "entity" && layer === "entity" && matchesFilters(r)) {
+      if (
+        r.kind === "entity" &&
+        (layer === "entity" || layer === "field") &&
+        matchesFilters(r)
+      ) {
         if (seen.has(r.entity.id)) continue;
         seen.add(r.entity.id);
         flat.push({ ...r, isRef: false });
@@ -161,6 +165,7 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
             { value: "jtbd", label: "JTBDs only" },
             { value: "feature", label: "Features only" },
             { value: "entity", label: "Entities only" },
+            { value: "field", label: "Fields only" },
           ]}
         />
         <ChipGroup
@@ -250,8 +255,10 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         <JtbdTable rows={visibleRows} />
       ) : layer === "feature" ? (
         <FeatureTable rows={visibleRows} />
-      ) : (
+      ) : layer === "entity" ? (
         <EntityTable rows={visibleRows} />
+      ) : (
+        <FieldTable rows={visibleRows} />
       )}
 
       <Legend />
@@ -431,6 +438,100 @@ function EntityTable({ rows }: { rows: Row[] }) {
                 </Td>
               </tr>
             );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function FieldTable({ rows }: { rows: Row[] }) {
+  let rowNum = 0;
+  const totalFields = rows.reduce(
+    (n, r) => (r.kind === "entity" ? n + r.entity.fields.length : n),
+    0,
+  );
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+      <div className="border-b border-border bg-bg-muted px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
+        {totalFields} fields across{" "}
+        {rows.filter((r) => r.kind === "entity").length} entities
+      </div>
+      <table className="w-full border-collapse text-[12.5px]">
+        <thead>
+          <tr>
+            <Th className="w-[44px] text-right">#</Th>
+            <Th className="w-[7%]">Field ID</Th>
+            <Th className="w-[10%]">Entity</Th>
+            <Th>ADO Field</Th>
+            <Th className="w-[9%]">Data type</Th>
+            <Th>GitHub target</Th>
+            <Th className="w-[6%]">Pattern</Th>
+            <Th className="w-[8%]">Preservation</Th>
+            <Th>Strategy</Th>
+            <Th>Notes</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            if (r.kind !== "entity") return null;
+            const e = r.entity;
+            const entityHeader = (
+              <tr key={`hdr-${e.id}`} className="bg-bg-muted">
+                <td
+                  colSpan={10}
+                  className="px-4 py-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-soft"
+                >
+                  {e.id} · {e.name} <span className="text-ink-faint">·</span>{" "}
+                  <span className="text-ink-muted">{e.serviceLabel}</span>{" "}
+                  <span className="ml-2 text-ink-faint">
+                    ({e.fields.length} fields)
+                  </span>
+                </td>
+              </tr>
+            );
+            const fieldRows = e.fields.map((fld) => {
+              const num = ++rowNum;
+              return (
+                <tr key={fld.id} className="bg-success/[0.03]">
+                  <NumTd>{num}</NumTd>
+                  <Td className="font-mono text-[10px] text-ink-muted">
+                    {fld.id}
+                  </Td>
+                  <Td className="font-mono text-[10.5px] text-ink-soft">
+                    {fld.entityId}
+                  </Td>
+                  <Td>
+                    <span className="font-medium text-ink">{fld.name}</span>
+                  </Td>
+                  <Td className="font-mono text-[10.5px] text-ink-soft">
+                    {fld.dataType}
+                  </Td>
+                  <Td className="text-[11.5px] italic text-ink-soft">
+                    {fld.githubTarget}
+                  </Td>
+                  <Td>
+                    {fld.pattern === "na" ? (
+                      <span className="font-mono text-[10px] text-ink-faint">
+                        N/A
+                      </span>
+                    ) : (
+                      <PatternBadge value={fld.pattern} />
+                    )}
+                  </Td>
+                  <Td>
+                    <FidelityBadge value={fld.dataPreservation} />
+                  </Td>
+                  <Td className="text-[11.5px] italic leading-snug text-ink-soft">
+                    {fld.strategy}
+                  </Td>
+                  <Td className="text-[11.5px] leading-snug text-ink-soft">
+                    {fld.notes}
+                  </Td>
+                </tr>
+              );
+            });
+            return [entityHeader, ...fieldRows];
           })}
         </tbody>
       </table>
