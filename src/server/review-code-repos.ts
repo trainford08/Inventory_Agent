@@ -246,15 +246,14 @@ export async function getCodeReposChunk(
     repos.slice(0, DEMO_PREACCEPTED_REPO_COUNT).map((r) => r.id),
   );
   // Attributes that the reviewer has already confirmed on the currently-
-  // in-progress repo. Six of the eight attrs start accepted; LFS and
-  // submodules remain pending so the Champion can see active cards.
+  // in-progress repo. Four of the eight attrs start accepted; the other
+  // four (LFS, submodules, branch protection, visibility) remain pending
+  // so the Champion lands on an even split — 4 reviewed, 4 active.
   const DEMO_CURRENT_REPO_PREACCEPTED_ATTRS = new Set([
+    "name",
     "primaryOwner",
     "defaultBranch",
     "visibility",
-    "contributorCount",
-    "branchProtected",
-    "hasSubmodules",
   ]);
   const currentRepo =
     (requestedRepoId && repos.find((r) => r.id === requestedRepoId)) ||
