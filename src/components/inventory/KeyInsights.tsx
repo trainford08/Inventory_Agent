@@ -22,10 +22,10 @@ const INSIGHT_ARCHETYPE = [
     cohort: "Bravo",
     tagline: "The typical healthy team",
     teamsScanned: 47,
-    postureMatch: 38,
-    posture: "Mixed",
-    strategy: "S01 Protect (44%)",
-    parity: "Partial (38%)",
+    postureMatch: 68,
+    posture: "Easy mover",
+    strategy: "S02 Translate (52%)",
+    parity: "Match (62%)",
   },
   {
     cohort: "Charlie",
@@ -58,10 +58,10 @@ const INSIGHT_ARCHETYPE = [
     cohort: "Foxtrot",
     tagline: "The edge case",
     teamsScanned: 7,
-    postureMatch: 43,
-    posture: "Mixed",
-    strategy: "S01 Protect (38%)",
-    parity: "Partial (33%)",
+    postureMatch: 71,
+    posture: "Deep hybrid",
+    strategy: "S01 Protect (52%)",
+    parity: "Partial (41%)",
   },
 ];
 
@@ -77,7 +77,7 @@ const INSIGHT_DISCOVERY = {
   anomalies: 1037,
   staleTeams: 24,
   concentration:
-    "Bravo cohort holds 312 of the 1,037 anomalies; 11 teams in that cohort haven't been reviewed in 30+ days — rollups above are most fragile where Bravo lives.",
+    "Echo holds 387 of the 1,037 anomalies (37%) at ~30 per team — 4× the program average — reflecting how deeply customized its regulated workflows are. Foxtrot adds ~24 per team. 12 of the 24 stale-inventory teams sit in those two cohorts, so the rollups above are most fragile where Echo and Foxtrot live.",
 };
 
 const INSIGHT_CATEGORIES: Array<{
@@ -281,15 +281,15 @@ const INSIGHT_PIPELINES = {
   // Where the classic-pipeline burden concentrates by cohort.
   // teams = number of teams in cohort, classic = classic pipelines they own.
   cohortClassic: [
-    { cohort: "Bravo", teams: 47, classic: 290 },
-    { cohort: "Echo", teams: 13, classic: 220 },
-    { cohort: "Alpha", teams: 32, classic: 135 },
-    { cohort: "Charlie", teams: 24, classic: 140 },
-    { cohort: "Foxtrot", teams: 7, classic: 130 },
-    { cohort: "Delta", teams: 19, classic: 68 },
+    { cohort: "Echo", teams: 13, classic: 318 },
+    { cohort: "Foxtrot", teams: 7, classic: 200 },
+    { cohort: "Bravo", teams: 47, classic: 178 },
+    { cohort: "Charlie", teams: 24, classic: 132 },
+    { cohort: "Alpha", teams: 32, classic: 95 },
+    { cohort: "Delta", teams: 19, classic: 60 },
   ],
   actionSignal:
-    "Pipelines stay in ADO under the hybrid — nothing here needs to move for the GitHub migration. But if the program wants to invest in a separate ADO-internal cleanup (converting Classic UI pipelines to YAML), Bravo and Echo cohorts together hold 52% of the work. The payoff: pipelines become version-controlled and peer-reviewed in PRs, audits get easier, and any future phase that does move CI/CD to GitHub Actions starts from a far easier base — Classic pipelines need full rebuilds, YAML mostly translates.",
+    "Pipelines stay in ADO under the hybrid — nothing here needs to move for the GitHub migration. The cleanup story is per-team rate, not absolute count: Echo (~24 classic per team) and Foxtrot (~29 per team) run 6×+ the rate of healthier cohorts like Bravo (~4/team). Together those two cohorts hold 53% of the program's Classic pipelines despite being only 14% of the teams. If the program invests in a separate ADO-internal cleanup (converting Classic to YAML), Echo and Foxtrot are where the work lives. The payoff: pipelines become version-controlled and peer-reviewed in PRs, audits get easier, and any future phase that does move CI/CD to GitHub Actions starts from a far easier base.",
 };
 
 const INSIGHT_TESTPLANS = {
@@ -327,15 +327,15 @@ const INSIGHT_IDENTITY = {
   // Where the manual rotation work concentrates (top cohorts by PAT count).
   // teams = number of teams in the cohort, pats = PAT-based connections.
   patConcentration: [
-    { cohort: "Bravo", teams: 47, pats: 312 },
-    { cohort: "Echo", teams: 13, pats: 248 },
-    { cohort: "Charlie", teams: 24, pats: 132 },
-    { cohort: "Alpha", teams: 32, pats: 68 },
-    { cohort: "Delta", teams: 19, pats: 35 },
-    { cohort: "Foxtrot", teams: 7, pats: 15 },
+    { cohort: "Echo", teams: 13, pats: 397 },
+    { cohort: "Bravo", teams: 47, pats: 220 },
+    { cohort: "Charlie", teams: 24, pats: 89 },
+    { cohort: "Foxtrot", teams: 7, pats: 51 },
+    { cohort: "Alpha", teams: 32, pats: 38 },
+    { cohort: "Delta", teams: 19, pats: 15 },
   ],
   actionSignal:
-    "Bravo and Echo cohorts together hold 69% of the PAT rotations. Start ramping those teams to OIDC pre-cutover so they don't bottleneck the wave.",
+    "Echo holds 49% of all PAT rotations and runs at ~30 per team — 4× the program-wide average — because its regulated workflows hard-code static credentials. Foxtrot's QA tooling pushes its per-team rate above average too. Bravo's 27% absolute share looks high, but at ~5 PATs per team it's actually below program average — a sign of operational maturity, not migration risk. Focus the OIDC ramp on Echo and Foxtrot pre-cutover.",
 };
 
 const INSIGHT_REPOS = {
@@ -993,45 +993,38 @@ function IdentityPanel() {
           teams whose engineers will have the most token-by-token rotation work
           to do during the cutover window.
         </div>
-        <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
-          {patConcentration.map((row) => {
-            const pct = (row.pats / patBased) * 100;
-            const tones = [
-              "bg-warn text-white",
-              "bg-warn-soft text-warn-ink",
-              "bg-warn-soft text-warn-ink",
-              "bg-bg-muted text-ink",
-              "bg-bg-muted text-ink",
-              "bg-bg-muted text-ink",
-            ];
-            const sortedIdx = topPats.findIndex((p) => p.cohort === row.cohort);
+        <div className="space-y-1">
+          {topPats.map((row, i) => {
+            const pct = Math.round((row.pats / patBased) * 100);
+            const isTop = i < 2;
             return (
               <div
                 key={row.cohort}
-                className={`flex items-center justify-start pl-2 text-[10px] font-semibold ${tones[sortedIdx] ?? "bg-bg-muted text-ink"}`}
-                style={{ width: `${pct}%` }}
-                title={`${row.cohort}: ${row.pats} PATs (${row.teams} teams)`}
+                className="grid grid-cols-[160px_1fr_120px] items-center gap-3 py-1 text-[12.5px]"
               >
-                {pct >= 8 ? `${row.cohort} ${row.pats}` : ""}
+                <div className="flex items-baseline gap-2">
+                  <strong className="font-semibold text-ink">
+                    {row.cohort}
+                  </strong>
+                  <span className="font-mono text-[10.5px] text-ink-muted">
+                    ({row.teams} teams)
+                  </span>
+                </div>
+                <div className="h-[14px] overflow-hidden rounded-sm bg-bg-subtle">
+                  <div
+                    className={`h-full rounded-sm ${isTop ? "bg-warn" : "bg-bg-muted"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="text-right font-mono text-[11.5px] text-ink-soft">
+                  <strong className="font-semibold text-ink">{pct}%</strong>{" "}
+                  <span className="text-[10.5px] text-ink-muted">
+                    · {row.pats} PATs
+                  </span>
+                </div>
               </div>
             );
           })}
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11.5px] text-ink-soft sm:grid-cols-3">
-          {patConcentration.map((row) => (
-            <div
-              key={row.cohort}
-              className="flex items-baseline justify-between gap-2"
-            >
-              <span>
-                <strong className="font-semibold text-ink">{row.cohort}</strong>{" "}
-                <span className="text-ink-muted">({row.teams} teams)</span>
-              </span>
-              <span className="font-mono text-[11px] text-ink-soft">
-                {row.pats} PATs
-              </span>
-            </div>
-          ))}
         </div>
       </div>
 
@@ -1611,44 +1604,38 @@ function PipelinesPanel() {
           moves CI/CD to GitHub Actions in a later phase, these are the cohorts
           where most of the work would land.
         </div>
-        <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
+        <div className="space-y-1">
           {sortedCohorts.map((row, i) => {
-            const pct = (row.classic / classicPipelines) * 100;
-            const tones = [
-              "bg-warn text-white",
-              "bg-warn-soft text-warn-ink",
-              "bg-warn-soft text-warn-ink",
-              "bg-bg-muted text-ink",
-              "bg-bg-muted text-ink",
-              "bg-bg-muted text-ink",
-            ];
+            const pct = Math.round((row.classic / classicPipelines) * 100);
+            const isTop = i < 2;
             return (
               <div
                 key={row.cohort}
-                className={`flex items-center justify-start pl-2 text-[10px] font-semibold ${tones[i] ?? "bg-bg-muted text-ink"}`}
-                style={{ width: `${pct}%` }}
-                title={`${row.cohort}: ${row.classic} classic pipelines (${row.teams} teams)`}
+                className="grid grid-cols-[160px_1fr_120px] items-center gap-3 py-1 text-[12.5px]"
               >
-                {pct >= 8 ? `${row.cohort} ${row.classic}` : ""}
+                <div className="flex items-baseline gap-2">
+                  <strong className="font-semibold text-ink">
+                    {row.cohort}
+                  </strong>
+                  <span className="font-mono text-[10.5px] text-ink-muted">
+                    ({row.teams} teams)
+                  </span>
+                </div>
+                <div className="h-[14px] overflow-hidden rounded-sm bg-bg-subtle">
+                  <div
+                    className={`h-full rounded-sm ${isTop ? "bg-warn" : "bg-bg-muted"}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <div className="text-right font-mono text-[11.5px] text-ink-soft">
+                  <strong className="font-semibold text-ink">{pct}%</strong>{" "}
+                  <span className="text-[10.5px] text-ink-muted">
+                    · {row.classic} classic
+                  </span>
+                </div>
               </div>
             );
           })}
-        </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11.5px] text-ink-soft sm:grid-cols-3">
-          {sortedCohorts.map((row) => (
-            <div
-              key={row.cohort}
-              className="flex items-baseline justify-between gap-2"
-            >
-              <span>
-                <strong className="font-semibold text-ink">{row.cohort}</strong>{" "}
-                <span className="text-ink-muted">({row.teams} teams)</span>
-              </span>
-              <span className="font-mono text-[11px] text-ink-soft">
-                {row.classic} classic
-              </span>
-            </div>
-          ))}
         </div>
       </div>
 

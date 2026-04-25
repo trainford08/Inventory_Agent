@@ -214,7 +214,7 @@ export default async function InventoryProgramOverviewPage() {
                   icon="!"
                   num={ROLLUP.friction.customizationTypesNoEquivalent}
                   title="Customization types with no GitHub equivalent"
-                  detail={`${ROLLUP.friction.customizationTypesNoEquivalentInstances} instances across ${TEAMS_SCANNED} teams — likely hybrid candidates`}
+                  detail={`${ROLLUP.friction.customizationTypesNoEquivalentInstances} instances across ${TEAMS_SCANNED} teams — concentrated in Echo and Foxtrot, where regulated and QA workflows have the deepest customization`}
                 />
                 <FrictionRow
                   tone="warn"
@@ -228,7 +228,7 @@ export default async function InventoryProgramOverviewPage() {
                   icon="i"
                   num={ROLLUP.friction.highCustomizationTeams}
                   title="Teams with high customization load"
-                  detail="20+ instances each, mostly in Bravo & Echo cohorts"
+                  detail="20+ instances each — concentrated in Echo and Foxtrot, not the typical-healthy Bravo cohort which sits at the program average"
                 />
               </div>
             </Panel>
