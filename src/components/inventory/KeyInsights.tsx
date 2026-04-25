@@ -96,6 +96,34 @@ const INSIGHT_CATEGORIES: Array<{
 // Coverage tiers measure how widely a framework JTBD is performed across the
 // 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
 // performed" — anything below that is long-tail and likely skippable.
+const INSIGHT_TESTPLANS = {
+  // Of the 115 features in scope program-wide, this many depend on entities
+  // E35–E43 in the framework (ADO Test Plans). The dependency splits into two
+  // halves: automated test workflows (movable to GitHub Actions) vs manual
+  // workflows (no GitHub equivalent — anchored to ADO under the hybrid).
+  dependentFeaturesOfFramework: 24,
+  featuresAutomatedPortion: 11, // movable to GitHub Actions
+  featuresManualPortion: 13, // anchored — exploratory, manual UAT, shared steps
+  totalFeaturesInScope: 115,
+  teamsAnyDependent: 92,
+  teamsManualAnchored: 71, // have manual-test workflows that can't translate
+  teamsAutomatedOnly: 21, // dependency is purely automated runs — could move
+  teamsDeeplyDependent: 18, // ≥ 5 dependent features AND mostly manual
+  // Cohort-level dependency: pct = % of teams in that cohort with at least
+  // one Test-Plans-dependent feature. anchorMix flags whether the cohort's
+  // dependency is mostly manual ("anchored") or mostly automated ("movable").
+  cohorts: [
+    { cohort: "Foxtrot", teams: 7, pctDependent: 100, anchored: true },
+    { cohort: "Echo", teams: 13, pctDependent: 92, anchored: true },
+    { cohort: "Charlie", teams: 24, pctDependent: 79, anchored: true },
+    { cohort: "Bravo", teams: 47, pctDependent: 68, anchored: false },
+    { cohort: "Alpha", teams: 32, pctDependent: 41, anchored: false },
+    { cohort: "Delta", teams: 19, pctDependent: 26, anchored: false },
+  ],
+  actionSignal:
+    "Foxtrot, Echo, and Charlie cohorts are anchored to ADO Test Plans by their manual workflows (exploratory sessions, regulated UAT, traceability) — plan their hybrid runtime as multi-year. Bravo, Alpha, and Delta are mostly automated; their teams could move Test Plans dependency to GitHub Actions if they choose.",
+};
+
 const INSIGHT_IDENTITY = {
   totalConnections: 1847,
   oidcFederated: 1037,
@@ -201,6 +229,7 @@ export function KeyInsights() {
       <LeveragePanel />
       <RepoFootprintPanel />
       <IdentityPanel />
+      <TestPlansPanel />
     </section>
   );
 }
@@ -1041,6 +1070,154 @@ function RepoStat({
       </div>
       <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
         {sub}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* §05 — Test Plans dependency                                                */
+/* -------------------------------------------------------------------------- */
+
+function TestPlansPanel() {
+  const {
+    dependentFeaturesOfFramework,
+    featuresAutomatedPortion,
+    featuresManualPortion,
+    totalFeaturesInScope,
+    teamsAnyDependent,
+    teamsManualAnchored,
+    teamsAutomatedOnly,
+    cohorts,
+    actionSignal,
+  } = INSIGHT_TESTPLANS;
+  const featurePct = Math.round(
+    (dependentFeaturesOfFramework / totalFeaturesInScope) * 100,
+  );
+  const anyTeamPct = Math.round((teamsAnyDependent / 142) * 100);
+  const anchoredPct = Math.round(
+    (teamsManualAnchored / teamsAnyDependent) * 100,
+  );
+  const movablePct = Math.round((teamsAutomatedOnly / teamsAnyDependent) * 100);
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Test Plans dependency
+      </div>
+      <div className="mb-4 text-[12px] leading-[1.55] text-ink-muted">
+        How much of the program depends on <em>ADO Test Plans</em> — the
+        built-in QA tool teams use to author test cases, run them, track
+        pass/fail, and tie results back to work items. The dependency splits
+        into two halves:{" "}
+        <strong className="font-semibold text-ink-soft">automated tests</strong>{" "}
+        (these <em>can</em> move to GitHub Actions cleanly — matrix runs +
+        Checks API replicate the workflow), and{" "}
+        <strong className="font-semibold text-ink-soft">
+          manual workflows
+        </strong>{" "}
+        — manual test cases, exploratory sessions, shared steps, traceability.{" "}
+        <strong className="font-semibold text-ink-soft">
+          The manual half has no GitHub equivalent
+        </strong>{" "}
+        and is what actually anchors a team to the hybrid model.
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <RepoStat
+          label="Test-Plans-dependent features"
+          value={`${featurePct}%`}
+          sub={
+            <>
+              <strong>{dependentFeaturesOfFramework}</strong> of{" "}
+              {totalFeaturesInScope} features in scope ·{" "}
+              <strong>{featuresAutomatedPortion}</strong> automated (movable),{" "}
+              <strong>{featuresManualPortion}</strong> manual (no GitHub
+              equivalent)
+            </>
+          }
+        />
+        <IdentityStat
+          tone="warn"
+          label="Anchored teams (manual workflows)"
+          value={`${anchoredPct}%`}
+          sub={
+            <>
+              <strong>{teamsManualAnchored}</strong> of the {teamsAnyDependent}{" "}
+              teams that touch Test Plans · these have manual test cases,
+              exploratory sessions, or compliance-grade traceability that GitHub
+              can&apos;t replace
+            </>
+          }
+        />
+        <IdentityStat
+          tone="success"
+          label="Movable teams (automated only)"
+          value={`${movablePct}%`}
+          sub={
+            <>
+              <strong>{teamsAutomatedOnly}</strong> of the {teamsAnyDependent}{" "}
+              teams that touch Test Plans · dependency is purely automated test
+              runs, could move to GitHub Actions
+            </>
+          }
+        />
+      </div>
+
+      <div>
+        <div className="mb-1 text-[12.5px] font-semibold text-ink">
+          Where the dependency concentrates
+        </div>
+        <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+          Per-cohort: % of teams that touch Test Plans. The{" "}
+          <span className="font-semibold text-warn-ink">amber-flagged</span>{" "}
+          cohorts are <strong>manual-anchored</strong> — their dependency is
+          mostly manual workflows, so even at low team-count percentages those
+          teams stay in the hybrid. The other cohorts are mostly automated and
+          could shift to GitHub Actions.
+        </div>
+        <div className="space-y-1">
+          {cohorts.map((row) => (
+            <div
+              key={row.cohort}
+              className="grid grid-cols-[110px_1fr_140px] items-center gap-3 py-1 text-[12.5px]"
+            >
+              <div className="flex items-baseline gap-2 font-medium text-ink">
+                <span>{row.cohort}</span>
+                <span className="font-mono text-[10.5px] text-ink-muted">
+                  ({row.teams} teams)
+                </span>
+              </div>
+              <div className="h-[16px] overflow-hidden rounded-sm bg-bg-subtle">
+                <div
+                  className={`h-full rounded-sm ${
+                    row.anchored ? "bg-warn" : "bg-success"
+                  }`}
+                  style={{ width: `${row.pctDependent}%` }}
+                />
+              </div>
+              <div className="flex items-baseline justify-end gap-2 text-right">
+                <span className="font-mono text-[11.5px] text-ink-soft">
+                  <strong className="font-semibold text-ink">
+                    {row.pctDependent}%
+                  </strong>
+                </span>
+                <span
+                  className={`font-mono text-[9.5px] font-semibold uppercase tracking-[0.06em] ${
+                    row.anchored ? "text-warn-ink" : "text-success-ink"
+                  }`}
+                >
+                  {row.anchored ? "Anchored" : "Movable"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        {actionSignal}
       </div>
     </div>
   );
