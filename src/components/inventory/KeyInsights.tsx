@@ -680,8 +680,10 @@ function MiniStat({
         {label}
       </div>
       <div className="text-[20px] font-bold leading-none tracking-[-0.02em] text-ink">
-        {value}{" "}
-        <span className="text-[11px] font-medium text-ink-muted">· {pct}%</span>
+        {pct}%{" "}
+        <span className="text-[11px] font-medium text-ink-muted">
+          · {value.toLocaleString()}
+        </span>
       </div>
     </div>
   );

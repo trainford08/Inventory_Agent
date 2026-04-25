@@ -246,24 +246,28 @@ export default async function InventoryProgramOverviewPage() {
 
             <ParityRow
               label="Match"
+              desc="Direct 1:1 equivalent on GitHub. No behavior change."
               fill="bg-success"
               pct={parityPct(ROLLUP.parity.match)}
               count={ROLLUP.parity.match}
             />
             <ParityRow
               label="Better"
+              desc="GitHub equivalent is an upgrade — more native or less to maintain."
               fill="bg-primary"
               pct={parityPct(ROLLUP.parity.better)}
               count={ROLLUP.parity.better}
             />
             <ParityRow
               label="Partial"
+              desc="Most of the feature lands; some functionality is lost."
               fill="bg-warn"
               pct={parityPct(ROLLUP.parity.partial)}
               count={ROLLUP.parity.partial}
             />
             <ParityRow
               label="Gap"
+              desc="No GitHub equivalent. Substitute, build glue, or accept the loss."
               fill="bg-danger"
               pct={parityPct(ROLLUP.parity.gap)}
               count={ROLLUP.parity.gap}
@@ -483,26 +487,33 @@ function FrictionRow({
 
 function ParityRow({
   label,
+  desc,
   fill,
   pct,
   count,
 }: {
   label: string;
+  desc: string;
   fill: string;
   pct: number;
   count: number;
 }) {
   return (
-    <div className="grid grid-cols-[110px_1fr_90px] items-center gap-3.5 py-1.5 text-[13px]">
-      <div className="font-medium text-ink">{label}</div>
-      <div className="h-[18px] overflow-hidden rounded bg-bg-subtle">
-        <div
-          className={`h-full rounded ${fill}`}
-          style={{ width: `${pct}%` }}
-        />
+    <div className="py-2">
+      <div className="grid grid-cols-[110px_1fr_90px] items-center gap-3.5 text-[13px]">
+        <div className="font-medium text-ink">{label}</div>
+        <div className="h-[18px] overflow-hidden rounded bg-bg-subtle">
+          <div
+            className={`h-full rounded ${fill}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <div className="text-right font-mono text-[12px] text-ink-soft">
+          {count} <span className="text-[11px] text-ink-muted">· {pct}%</span>
+        </div>
       </div>
-      <div className="text-right font-mono text-[12px] text-ink-soft">
-        {count} <span className="text-[11px] text-ink-muted">· {pct}%</span>
+      <div className="ml-[110px] mt-1 pl-3.5 text-[11.5px] leading-[1.4] text-ink-muted">
+        {desc}
       </div>
     </div>
   );
