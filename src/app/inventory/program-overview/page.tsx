@@ -1,30 +1,40 @@
 import { KeyInsights } from "@/components/inventory/KeyInsights";
-import { listTeams } from "@/server/teams";
 
 export const dynamic = "force-dynamic";
 
-// Illustrative program-level rollups. Replace with computed values once the
-// customization catalog and feature inventory are seeded across all cohorts.
+// Illustrative program-level rollups, sized for ~142 teams scanned across
+// 6 cohorts. Replace with computed values once the customization catalog and
+// feature inventory are seeded across all cohorts.
+const TEAMS_SCANNED = 142;
+const COHORTS_SCANNED = 6;
+const AVG_FEATURES_PER_TEAM = 38;
+
 const ROLLUP = {
-  jobsCovered: 94,
+  jobsCovered: 117,
   jobsTotal: 118,
-  featuresInScope: 61,
-  customizations: 142,
-  customizationsNeedingDecision: 23,
-  vendors: 28,
-  vendorsNoEquivalent: 4,
-  hybrid: { gh: 33, ado: 18, both: 6, na: 4 },
+  featuresInScope: 115,
+  customizations: 2788,
+  customizationTypes: 78,
+  customizationsNeedingDecisionTypes: 14,
+  vendors: 58,
+  vendorsNoEquivalent: 9,
+  hybrid: { gh: 62, ado: 34, both: 12, na: 7 },
   friction: {
-    customizationsNoEquivalent: 7,
-    integrationsResetup: 12,
-    highCustomizationTeams: 3,
+    // Counts are # of unique customization types (decision surface),
+    // with instance counts in the detail strings.
+    customizationTypesNoEquivalent: 8,
+    customizationTypesNoEquivalentInstances: 142,
+    integrationsResetup: 18,
+    integrationsResetupVendors: "Jira, Datadog, Snyk, Okta SCIM",
+    highCustomizationTeams: 27,
   },
-  parity: { match: 38, better: 10, partial: 9, gap: 4 },
-  approach: { s01: 52, s02: 61, s03: 14, s04: 8, s05: 7, s06: 3, s07: 5 },
+  parity: { match: 71, better: 19, partial: 17, gap: 8 },
+  // Customization types categorized by strategy (sums to 78 unique types).
+  // Instance distribution lives in the panel sub-line.
+  approach: { s01: 12, s02: 26, s03: 8, s04: 10, s05: 12, s06: 5, s07: 5 },
 };
 
 export default async function InventoryProgramOverviewPage() {
-  const teams = await listTeams();
   const totalFeatures =
     ROLLUP.hybrid.gh +
     ROLLUP.hybrid.ado +
@@ -65,10 +75,10 @@ export default async function InventoryProgramOverviewPage() {
       <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-bg-elevated md:grid-cols-5">
         <Stat
           label="Teams"
-          value={String(teams.length)}
+          value={String(TEAMS_SCANNED)}
           sub={
             <>
-              across <strong>4 cohorts</strong>
+              across <strong>{COHORTS_SCANNED} cohorts</strong>
             </>
           }
         />
@@ -96,21 +106,24 @@ export default async function InventoryProgramOverviewPage() {
           value={String(ROLLUP.featuresInScope)}
           sub={
             <>
-              avg{" "}
-              <strong>
-                {Math.round(ROLLUP.featuresInScope / teams.length)}
-              </strong>{" "}
-              per team
+              avg <strong>{AVG_FEATURES_PER_TEAM}</strong> per team
             </>
           }
         />
         <Stat
           label="Customizations"
-          value={String(ROLLUP.customizations)}
+          value={
+            <>
+              {ROLLUP.customizationTypes}{" "}
+              <span className="text-[14px] font-medium text-ink-muted">
+                unique types
+              </span>
+            </>
+          }
           sub={
             <>
-              <strong>{ROLLUP.customizationsNeedingDecision}</strong> need
-              decisions
+              <strong>{ROLLUP.customizationsNeedingDecisionTypes}</strong> need
+              decisions · {ROLLUP.customizations.toLocaleString()} instances
             </>
           }
         />
@@ -193,23 +206,23 @@ export default async function InventoryProgramOverviewPage() {
             <FrictionRow
               tone="danger"
               icon="!"
-              num={ROLLUP.friction.customizationsNoEquivalent}
-              title="Customizations with no GitHub equivalent"
-              detail="Concentrated in Bravo and Echo — likely hybrid candidates"
+              num={ROLLUP.friction.customizationTypesNoEquivalent}
+              title="Customization types with no GitHub equivalent"
+              detail={`${ROLLUP.friction.customizationTypesNoEquivalentInstances} instances across ${TEAMS_SCANNED} teams — likely hybrid candidates`}
             />
             <FrictionRow
               tone="warn"
               icon="~"
               num={ROLLUP.friction.integrationsResetup}
               title="Integrations needing re-setup"
-              detail="Jira, Datadog, Snyk, Okta SCIM — re-auth at cutover"
+              detail={`${ROLLUP.friction.integrationsResetupVendors} — re-auth at cutover`}
             />
             <FrictionRow
               tone="info"
               icon="i"
               num={ROLLUP.friction.highCustomizationTeams}
               title="Teams with high customization load"
-              detail="Bravo (38), Echo (29), Charlie (24)"
+              detail="20+ instances each, mostly in Bravo & Echo cohorts"
             />
           </div>
         </Panel>
@@ -257,9 +270,10 @@ export default async function InventoryProgramOverviewPage() {
           Migration approach mix
         </div>
         <div className="mb-4 text-[12.5px] text-ink-muted">
-          How the {ROLLUP.customizations} customizations across all teams will
-          be handled. Drawn from the 5 per-customization strategies in the
-          framework.
+          How the {ROLLUP.customizationTypes} unique customization types will be
+          handled — the per-type decision determines treatment for all{" "}
+          {ROLLUP.customizations.toLocaleString()} instances. Drawn from the 5
+          per-customization strategies in the framework.
         </div>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
@@ -315,11 +329,12 @@ export default async function InventoryProgramOverviewPage() {
             Meta-strategies in play:
           </strong>
           <span>
-            {ROLLUP.approach.s06} customizations are candidates for{" "}
+            {ROLLUP.approach.s06} types are candidates for{" "}
             <strong className="font-semibold text-ink-soft">
               S06 · Upstream
             </strong>{" "}
-            (build once centrally) · {ROLLUP.approach.s07} are candidates for{" "}
+            (build once centrally) · {ROLLUP.approach.s07} types are candidates
+            for{" "}
             <strong className="font-semibold text-ink-soft">
               S07 · Consolidate
             </strong>{" "}

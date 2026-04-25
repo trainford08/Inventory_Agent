@@ -62,8 +62,8 @@ const INSIGHT_ARCHETYPE = [
   {
     cohort: "Foxtrot",
     tagline: "The edge case",
-    teamsScanned: 8,
-    postureMatch: 50,
+    teamsScanned: 7,
+    postureMatch: 43,
     posture: "Mixed",
     strategy: "S01 Protect (38%)",
     parity: "Partial (33%)",
@@ -77,13 +77,13 @@ const ARCHETYPE_TOTAL_TEAMS = INSIGHT_ARCHETYPE.reduce(
 );
 
 const INSIGHT_DISCOVERY = {
-  total: 645,
-  auto: 371,
-  needsInput: 224,
-  anomalies: 50,
-  staleTeams: 2,
+  total: 14820,
+  auto: 8595,
+  needsInput: 5188,
+  anomalies: 1037,
+  staleTeams: 24,
   concentration:
-    "Echo holds 22 of the 50 anomalies and hasn't been reviewed in 31 days — rollups above are most fragile where Echo lives.",
+    "Bravo cohort holds 312 of the 1,037 anomalies; 11 teams in that cohort haven't been reviewed in 30+ days — rollups above are most fragile where Bravo lives.",
 };
 
 const INSIGHT_CATEGORIES: Array<{
@@ -91,26 +91,17 @@ const INSIGHT_CATEGORIES: Array<{
   count: number;
   pct: number;
 }> = [
-  { label: "Pipelines", count: 45, pct: 32 },
-  { label: "Boards", count: 36, pct: 25 },
-  { label: "Repos", count: 22, pct: 15 },
-  { label: "Process", count: 17, pct: 12 },
-  { label: "Dashboards", count: 13, pct: 9 },
-  { label: "Extensions", count: 9, pct: 6 },
+  { label: "Pipelines", count: 896, pct: 32 },
+  { label: "Boards", count: 712, pct: 25 },
+  { label: "Repos", count: 420, pct: 15 },
+  { label: "Process", count: 340, pct: 12 },
+  { label: "Dashboards", count: 252, pct: 9 },
+  { label: "Extensions", count: 168, pct: 6 },
 ];
 
 export function KeyInsights() {
   return (
     <section className="space-y-3">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-[18px] font-bold leading-[1.2] tracking-[-0.02em] text-ink">
-          Key insights
-        </h2>
-        <div className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-ink-muted">
-          Program-wide · {ARCHETYPE_TOTAL_TEAMS} teams scanned
-        </div>
-      </div>
-
       <ArchetypePanel />
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <DiscoveryPanel />
@@ -343,7 +334,8 @@ function CategoryPanel() {
         Customization category mix
       </div>
       <div className="mb-4 text-[12px] text-ink-muted">
-        Where the program&apos;s {total} customizations cluster.
+        Where the program&apos;s {total.toLocaleString()} customization
+        instances cluster — across 78 unique types.
       </div>
 
       <div className="space-y-1">
