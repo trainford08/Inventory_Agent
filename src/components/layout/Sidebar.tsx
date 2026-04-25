@@ -67,31 +67,6 @@ export function Sidebar({
 
       <NavGroup label="Program">
         <NavItem
-          href="/dashboard"
-          active={pathname === "/dashboard"}
-          icon={
-            <>
-              <rect x="3" y="3" width="7" height="7" />
-              <rect x="14" y="3" width="7" height="7" />
-              <rect x="14" y="14" width="7" height="7" />
-              <rect x="3" y="14" width="7" height="7" />
-            </>
-          }
-        >
-          Dashboard
-        </NavItem>
-        <NavItem
-          active={false}
-          icon={
-            <>
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-            </>
-          }
-        >
-          All teams
-        </NavItem>
-        <NavItem
           href="/inventory"
           active={pathname === "/inventory"}
           icon={
