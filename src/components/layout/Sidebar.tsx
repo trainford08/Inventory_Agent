@@ -94,38 +94,40 @@ export function Sidebar({
 
       <NavGroup label="This team">
         <NavItem
-          href={teamSlug ? `/teams/${teamSlug}/findings` : undefined}
           active={
-            !!activeTeamSlug && pathname === `/teams/${activeTeamSlug}/findings`
+            !!activeTeamSlug &&
+            (pathname === `/teams/${activeTeamSlug}/findings` ||
+              pathname === `/teams/${activeTeamSlug}/complete` ||
+              pathname.startsWith(`/teams/${activeTeamSlug}/review`))
           }
           icon={
             <>
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
             </>
           }
         >
-          Agent findings
+          Team Profile
         </NavItem>
-        <NavItem
-          href={teamSlug ? `/teams/${teamSlug}/complete` : undefined}
+        <PlainSubNavItem
+          href={teamSlug ? `/teams/${teamSlug}/findings` : "#"}
+          active={
+            !!activeTeamSlug && pathname === `/teams/${activeTeamSlug}/findings`
+          }
+          label="Agent findings"
+        />
+        <PlainSubNavItem
+          href={teamSlug ? `/teams/${teamSlug}/complete` : "#"}
           active={
             !!activeTeamSlug && pathname === `/teams/${activeTeamSlug}/complete`
           }
-          icon={
-            <>
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M9 12l2 2 4-4" />
-            </>
-          }
+          label="Complete profile"
           trailing={
             showReviewSections && totalItems > 0
               ? `${totalReviewed}/${totalItems}`
               : undefined
           }
-        >
-          Complete profile
-        </NavItem>
+        />
         {showReviewSections
           ? PROFILE_SUBSECTIONS.map((s) => {
               const progress = sectionProgress.find(
@@ -273,10 +275,12 @@ function PlainSubNavItem({
   href,
   active,
   label,
+  trailing,
 }: {
   href: string;
   active: boolean;
   label: string;
+  trailing?: string;
 }) {
   const className = `mb-px flex items-center gap-[10px] rounded-md py-[6px] pl-[34px] pr-[10px] text-[12.5px] transition-colors ${
     active
@@ -293,6 +297,11 @@ function PlainSubNavItem({
         }`}
       />
       <span className="flex-1 truncate">{label}</span>
+      {trailing ? (
+        <span className="font-mono text-[10.5px] text-ink-muted">
+          {trailing}
+        </span>
+      ) : null}
     </Link>
   );
 }
