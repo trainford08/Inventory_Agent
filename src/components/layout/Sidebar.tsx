@@ -108,7 +108,7 @@ export function Sidebar({
         <PlainSubNavItem
           href="/inventory/program-overview"
           active={pathname === "/inventory/program-overview"}
-          label="Overview"
+          label="Inventory overview"
         />
         <PlainSubNavItem
           href="/inventory"
@@ -128,7 +128,7 @@ export function Sidebar({
             </>
           }
         >
-          Overview
+          Team overview
         </NavItem>
         <NavItem
           href={teamSlug ? `/teams/${teamSlug}/findings` : undefined}
