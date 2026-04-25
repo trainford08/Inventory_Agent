@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GitHub parity — visual options</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.10);
+    --primary-ink: #4a4eb8;
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  .mock-banner {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  h2 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    margin-bottom: 4px;
+  }
+  .opt-tag {
+    display: inline-flex;
+    margin-bottom: 10px;
+    padding: 3px 10px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  .opt-note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    max-width: 720px;
+  }
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin-bottom: 36px;
+  }
+  .panel-head {
+    margin-bottom: 14px;
+  }
+  .panel-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .panel-sub {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+  }
+  .label-mono {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ============ Option 1 — Big-number cards ============ */
+  .o1-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .o1-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    border-top: 3px solid;
+    background: var(--bg);
+  }
+  .o1-card.match { border-top-color: var(--success); }
+  .o1-card.better { border-top-color: var(--primary); }
+  .o1-card.partial { border-top-color: var(--warn); }
+  .o1-card.gap { border-top-color: var(--danger); }
+  .o1-card .pct {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .o1-card .count {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 4px;
+  }
+  .o1-card .name {
+    margin-top: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .o1-card .desc {
+    margin-top: 2px;
+    font-size: 11.5px;
+    line-height: 1.4;
+    color: var(--ink-muted);
+  }
+
+  /* ============ Option 2 — Single stacked bar with legend ============ */
+  .o2-bar {
+    display: flex;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .o2-bar > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .o2-bar .match { background: var(--success); }
+  .o2-bar .better { background: var(--primary); }
+  .o2-bar .partial { background: var(--warn); }
+  .o2-bar .gap { background: var(--danger); }
+  .o2-legend {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px 24px;
+  }
+  .o2-leg-item {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .o2-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    align-self: center;
+  }
+  .o2-swatch.match { background: var(--success); }
+  .o2-swatch.better { background: var(--primary); }
+  .o2-swatch.partial { background: var(--warn); }
+  .o2-swatch.gap { background: var(--danger); }
+  .o2-leg-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .o2-leg-desc {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    margin-top: 1px;
+  }
+  .o2-leg-num {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    text-align: right;
+  }
+  .o2-leg-num span {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+
+  /* ============ Option 3 — Two-up: Lands cleanly vs Needs work ============ */
+  .o3-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .o3-half {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    background: var(--bg);
+  }
+  .o3-half.good { border-top: 3px solid var(--success); }
+  .o3-half.bad { border-top: 3px solid var(--warn); }
+  .o3-half-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .o3-half-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .o3-half-num {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .o3-half-num span {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  .o3-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto;
+    align-items: baseline;
+    gap: 10px;
+    padding: 6px 0;
+    border-top: 1px solid var(--border-soft);
+    font-size: 12px;
+  }
+  .o3-row:first-of-type { border-top: 0; }
+  .o3-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    align-self: center;
+    margin-top: 2px;
+  }
+  .o3-dot.match { background: var(--success); }
+  .o3-dot.better { background: var(--primary); }
+  .o3-dot.partial { background: var(--warn); }
+  .o3-dot.gap { background: var(--danger); }
+  .o3-name { font-weight: 600; color: var(--ink); }
+  .o3-desc { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
+  .o3-num {
+    font-family: "Geist Mono", monospace;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .o3-num strong { color: var(--ink); font-weight: 700; }
+
+  /* ============ Option 4 — Headline takeaway + compact rows ============ */
+  .o4-hero {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--success-soft);
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .o4-hero .pct {
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--success-ink);
+  }
+  .o4-hero .lede {
+    font-size: 12.5px;
+    color: var(--success-ink);
+    line-height: 1.45;
+  }
+  .o4-hero .lede strong { font-weight: 700; }
+  .o4-rows {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .o4-pill {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-left: 3px solid;
+    border-radius: 6px;
+    background: var(--bg);
+  }
+  .o4-pill.match { border-left-color: var(--success); }
+  .o4-pill.better { border-left-color: var(--primary); }
+  .o4-pill.partial { border-left-color: var(--warn); }
+  .o4-pill.gap { border-left-color: var(--danger); }
+  .o4-pill .name { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .o4-pill .num {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .o4-pill .num span {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+  .o4-pill .desc {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mock-banner">
+    <strong>4 visual options</strong> — same content, four layouts. Pick whichever clicks; we can also blend (e.g. Option 4's hero takeaway over Option 2's bar).
+  </div>
+
+  <!-- ============ Option 1 ============ -->
+  <span class="opt-tag">Option 1 · Big-number cards</span>
+  <div class="opt-note">Four equal cards. Percentage is the hero in each, count is small. Description sits below the name. Reads fast left-to-right and gives every category equal visual weight.</div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">GitHub parity across all features in scope</div>
+      <div class="panel-sub">How cleanly the 115 features in scope land on GitHub today.</div>
+    </div>
+    <div class="o1-grid">
+      <div class="o1-card match">
+        <div class="pct">62%</div>
+        <div class="count">71 features</div>
+        <div class="name">Match</div>
+        <div class="desc">Direct 1:1 equivalent on GitHub. No behavior change.</div>
+      </div>
+      <div class="o1-card better">
+        <div class="pct">17%</div>
+        <div class="count">19 features</div>
+        <div class="name">Better</div>
+        <div class="desc">GitHub equivalent is an upgrade — more native or less to maintain.</div>
+      </div>
+      <div class="o1-card partial">
+        <div class="pct">15%</div>
+        <div class="count">17 features</div>
+        <div class="name">Partial</div>
+        <div class="desc">Most of the feature lands; some functionality is lost.</div>
+      </div>
+      <div class="o1-card gap">
+        <div class="pct">7%</div>
+        <div class="count">8 features</div>
+        <div class="name">Gap</div>
+        <div class="desc">No GitHub equivalent. Substitute, build glue, or accept the loss.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Option 2 ============ -->
+  <span class="opt-tag">Option 2 · Stacked bar + legend</span>
+  <div class="opt-note">One 100%-stacked bar shows the program shape at a glance. Legend below carries the meaning. Best when the headline is "most lands cleanly" — the bar instantly communicates that.</div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">GitHub parity across all features in scope</div>
+      <div class="panel-sub">How cleanly the 115 features in scope land on GitHub today.</div>
+    </div>
+    <div class="o2-bar">
+      <div class="match" style="flex: 62">62%</div>
+      <div class="better" style="flex: 17">17%</div>
+      <div class="partial" style="flex: 15">15%</div>
+      <div class="gap" style="flex: 7">7%</div>
+    </div>
+    <div class="o2-legend">
+      <div class="o2-leg-item">
+        <span class="o2-swatch match"></span>
+        <div>
+          <div class="o2-leg-name">Match</div>
+          <div class="o2-leg-desc">Direct 1:1 equivalent on GitHub. No behavior change.</div>
+        </div>
+        <div class="o2-leg-num">62%<span>71</span></div>
+      </div>
+      <div class="o2-leg-item">
+        <span class="o2-swatch better"></span>
+        <div>
+          <div class="o2-leg-name">Better</div>
+          <div class="o2-leg-desc">GitHub equivalent is an upgrade — more native or less to maintain.</div>
+        </div>
+        <div class="o2-leg-num">17%<span>19</span></div>
+      </div>
+      <div class="o2-leg-item">
+        <span class="o2-swatch partial"></span>
+        <div>
+          <div class="o2-leg-name">Partial</div>
+          <div class="o2-leg-desc">Most of the feature lands; some functionality is lost.</div>
+        </div>
+        <div class="o2-leg-num">15%<span>17</span></div>
+      </div>
+      <div class="o2-leg-item">
+        <span class="o2-swatch gap"></span>
+        <div>
+          <div class="o2-leg-name">Gap</div>
+          <div class="o2-leg-desc">No GitHub equivalent. Substitute, build glue, or accept the loss.</div>
+        </div>
+        <div class="o2-leg-num">7%<span>8</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Option 3 ============ -->
+  <span class="opt-tag">Option 3 · Two-up split — lands cleanly vs needs work</span>
+  <div class="opt-note">Groups the four classifications into the decision they imply: <em>lands cleanly</em> (Match + Better, 79%) vs <em>needs work</em> (Partial + Gap, 21%). Adds an editorial layer the raw bar can&rsquo;t.</div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">GitHub parity across all features in scope</div>
+      <div class="panel-sub">How cleanly the 115 features in scope land on GitHub today.</div>
+    </div>
+    <div class="o3-split">
+      <div class="o3-half good">
+        <div class="o3-half-head">
+          <div class="o3-half-label">Lands cleanly</div>
+          <div class="o3-half-num">79%<span>90 of 115</span></div>
+        </div>
+        <div class="o3-row">
+          <span class="o3-dot match"></span>
+          <div>
+            <div class="o3-name">Match</div>
+            <div class="o3-desc">Direct 1:1 equivalent. No behavior change.</div>
+          </div>
+          <div class="o3-num"><strong>62%</strong> · 71</div>
+        </div>
+        <div class="o3-row">
+          <span class="o3-dot better"></span>
+          <div>
+            <div class="o3-name">Better</div>
+            <div class="o3-desc">GitHub is an upgrade — more native or less to maintain.</div>
+          </div>
+          <div class="o3-num"><strong>17%</strong> · 19</div>
+        </div>
+      </div>
+      <div class="o3-half bad">
+        <div class="o3-half-head">
+          <div class="o3-half-label">Needs work</div>
+          <div class="o3-half-num">21%<span>25 of 115</span></div>
+        </div>
+        <div class="o3-row">
+          <span class="o3-dot partial"></span>
+          <div>
+            <div class="o3-name">Partial</div>
+            <div class="o3-desc">Most of the feature lands; some functionality is lost.</div>
+          </div>
+          <div class="o3-num"><strong>15%</strong> · 17</div>
+        </div>
+        <div class="o3-row">
+          <span class="o3-dot gap"></span>
+          <div>
+            <div class="o3-name">Gap</div>
+            <div class="o3-desc">No equivalent. Substitute, build glue, or accept loss.</div>
+          </div>
+          <div class="o3-num"><strong>7%</strong> · 8</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Option 4 ============ -->
+  <span class="opt-tag">Option 4 · Headline takeaway + compact pills</span>
+  <div class="opt-note">Lead with the punchline ("79% lands cleanly") in a tinted hero, then four compact pills underneath. Useful when this panel needs to pull weight in a long page — the takeaway is unmissable.</div>
+  <div class="panel">
+    <div class="panel-head">
+      <div class="panel-title">GitHub parity across all features in scope</div>
+      <div class="panel-sub">How cleanly the 115 features in scope land on GitHub today.</div>
+    </div>
+    <div class="o4-hero">
+      <div class="pct">79%</div>
+      <div class="lede">
+        of features in scope <strong>land cleanly</strong> on GitHub (Match + Better).
+        The remaining <strong>21%</strong> need substitution, glue, or acceptance.
+      </div>
+    </div>
+    <div class="o4-rows">
+      <div class="o4-pill match">
+        <div class="name">Match</div>
+        <div class="num">62%<span>71</span></div>
+        <div class="desc">Direct 1:1 equivalent. No behavior change.</div>
+      </div>
+      <div class="o4-pill better">
+        <div class="name">Better</div>
+        <div class="num">17%<span>19</span></div>
+        <div class="desc">GitHub is an upgrade — more native or less to maintain.</div>
+      </div>
+      <div class="o4-pill partial">
+        <div class="name">Partial</div>
+        <div class="num">15%<span>17</span></div>
+        <div class="desc">Most lands; some functionality is lost.</div>
+      </div>
+      <div class="o4-pill gap">
+        <div class="name">Gap</div>
+        <div class="num">7%<span>8</span></div>
+        <div class="desc">No equivalent. Substitute, build glue, or accept loss.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

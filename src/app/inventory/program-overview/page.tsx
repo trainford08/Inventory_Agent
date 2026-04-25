@@ -244,34 +244,55 @@ export default async function InventoryProgramOverviewPage() {
               GitHub today.
             </div>
 
-            <ParityRow
-              label="Match"
-              desc="Direct 1:1 equivalent on GitHub. No behavior change."
-              fill="bg-success"
-              pct={parityPct(ROLLUP.parity.match)}
-              count={ROLLUP.parity.match}
-            />
-            <ParityRow
-              label="Better"
-              desc="GitHub equivalent is an upgrade — more native or less to maintain."
-              fill="bg-primary"
-              pct={parityPct(ROLLUP.parity.better)}
-              count={ROLLUP.parity.better}
-            />
-            <ParityRow
-              label="Partial"
-              desc="Most of the feature lands; some functionality is lost."
-              fill="bg-warn"
-              pct={parityPct(ROLLUP.parity.partial)}
-              count={ROLLUP.parity.partial}
-            />
-            <ParityRow
-              label="Gap"
-              desc="No GitHub equivalent. Substitute, build glue, or accept the loss."
-              fill="bg-danger"
-              pct={parityPct(ROLLUP.parity.gap)}
-              count={ROLLUP.parity.gap}
-            />
+            <div className="mb-4 flex h-7 overflow-hidden rounded-md">
+              <ParitySegment
+                fill="bg-success"
+                pct={parityPct(ROLLUP.parity.match)}
+              />
+              <ParitySegment
+                fill="bg-primary"
+                pct={parityPct(ROLLUP.parity.better)}
+              />
+              <ParitySegment
+                fill="bg-warn"
+                pct={parityPct(ROLLUP.parity.partial)}
+              />
+              <ParitySegment
+                fill="bg-danger"
+                pct={parityPct(ROLLUP.parity.gap)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+              <ParityLegendItem
+                swatch="bg-success"
+                name="Match"
+                desc="Direct 1:1 equivalent on GitHub. No behavior change."
+                pct={parityPct(ROLLUP.parity.match)}
+                count={ROLLUP.parity.match}
+              />
+              <ParityLegendItem
+                swatch="bg-primary"
+                name="Better"
+                desc="GitHub equivalent is an upgrade — more native or less to maintain."
+                pct={parityPct(ROLLUP.parity.better)}
+                count={ROLLUP.parity.better}
+              />
+              <ParityLegendItem
+                swatch="bg-warn"
+                name="Partial"
+                desc="Most of the feature lands; some functionality is lost."
+                pct={parityPct(ROLLUP.parity.partial)}
+                count={ROLLUP.parity.partial}
+              />
+              <ParityLegendItem
+                swatch="bg-danger"
+                name="Gap"
+                desc="No GitHub equivalent. Substitute, build glue, or accept the loss."
+                pct={parityPct(ROLLUP.parity.gap)}
+                count={ROLLUP.parity.gap}
+              />
+            </div>
           </div>
 
           {/* MIGRATION APPROACH MIX */}
@@ -485,35 +506,49 @@ function FrictionRow({
   );
 }
 
-function ParityRow({
-  label,
+function ParitySegment({ fill, pct }: { fill: string; pct: number }) {
+  if (pct <= 0) return null;
+  return (
+    <div
+      className={`flex items-center justify-center font-mono text-[11px] font-semibold text-white ${fill}`}
+      style={{ width: `${pct}%` }}
+    >
+      {pct >= 8 ? `${pct}%` : ""}
+    </div>
+  );
+}
+
+function ParityLegendItem({
+  swatch,
+  name,
   desc,
-  fill,
   pct,
   count,
 }: {
-  label: string;
+  swatch: string;
+  name: string;
   desc: string;
-  fill: string;
   pct: number;
   count: number;
 }) {
   return (
-    <div className="py-2">
-      <div className="grid grid-cols-[110px_1fr_90px] items-center gap-3.5 text-[13px]">
-        <div className="font-medium text-ink">{label}</div>
-        <div className="h-[18px] overflow-hidden rounded bg-bg-subtle">
-          <div
-            className={`h-full rounded ${fill}`}
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-        <div className="text-right font-mono text-[12px] text-ink-soft">
-          {count} <span className="text-[11px] text-ink-muted">· {pct}%</span>
+    <div className="grid grid-cols-[14px_1fr_auto] items-baseline gap-x-3">
+      <span
+        className={`mt-[5px] h-[12px] w-[12px] self-start rounded-sm ${swatch}`}
+      />
+      <div>
+        <div className="text-[13px] font-semibold text-ink">{name}</div>
+        <div className="mt-[1px] text-[11.5px] leading-[1.45] text-ink-muted">
+          {desc}
         </div>
       </div>
-      <div className="ml-[110px] mt-1 pl-3.5 text-[11.5px] leading-[1.4] text-ink-muted">
-        {desc}
+      <div className="text-right">
+        <span className="text-[15px] font-bold tracking-[-0.01em] text-ink">
+          {pct}%
+        </span>
+        <span className="ml-1.5 font-mono text-[10.5px] text-ink-muted">
+          · {count}
+        </span>
       </div>
     </div>
   );
