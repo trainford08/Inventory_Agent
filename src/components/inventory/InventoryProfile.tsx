@@ -250,22 +250,14 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
       </div>
 
       <div className="flex items-center gap-2">
-        {layer === "all" ? (
-          <>
-            <button
-              onClick={expandAll}
-              className="rounded-md border border-border bg-bg-elevated px-3 py-1 font-mono text-[11px] text-ink-muted hover:text-ink"
-            >
-              Expand all
-            </button>
-            <button
-              onClick={collapseAll}
-              className="rounded-md border border-border bg-bg-elevated px-3 py-1 font-mono text-[11px] text-ink-muted hover:text-ink"
-            >
-              Collapse all
-            </button>
-          </>
-        ) : null}
+        <ExpandToggle
+          isExpanded={isMostlyExpanded(rows, expanded, layer)}
+          onClick={() =>
+            isMostlyExpanded(rows, expanded, layer)
+              ? collapseAll()
+              : expandAll()
+          }
+        />
         <span className="ml-auto font-mono text-[11px] text-ink-muted">
           {rows.filter((r) => r.kind === "jtbd").length} JTBDs ·{" "}
           {rows.filter((r) => r.kind === "feature").length} features ·{" "}
@@ -869,6 +861,62 @@ function Legend() {
       </span>
     </div>
   );
+}
+
+function ExpandToggle({
+  isExpanded,
+  onClick,
+}: {
+  isExpanded: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-elevated px-3 py-[3px] font-mono text-[11px] text-ink-soft hover:text-ink"
+      aria-pressed={isExpanded}
+    >
+      <span className="text-[10px]">{isExpanded ? "▼" : "▶"}</span>
+      {isExpanded ? "Collapse all" : "Expand all"}
+    </button>
+  );
+}
+
+function isMostlyExpanded(
+  rows: Row[],
+  expanded: Set<string>,
+  layer: LayerFilter,
+): boolean {
+  // Look at the rows that *could* be toggled in the current layer view.
+  // If majority are expanded, treat as "expanded" (so click collapses).
+  let total = 0;
+  let openCount = 0;
+  for (const r of rows) {
+    if (r.kind === "cat") {
+      if (layer === "all" || layer === "jtbd") {
+        total++;
+        if (expanded.has(r.id)) openCount++;
+      }
+    } else if (r.kind === "jtbd") {
+      if (layer === "all" || layer === "jtbd") {
+        total++;
+        if (expanded.has(r.id)) openCount++;
+      }
+    } else if (r.kind === "feature" && !r.isRef) {
+      if (layer === "all" || layer === "jtbd" || layer === "feature") {
+        total++;
+        if (expanded.has(r.rowKey)) openCount++;
+      }
+    } else if (r.kind === "entity" && !r.isRef) {
+      if (layer === "entity") {
+        total++;
+        if (expanded.has(r.rowKey)) openCount++;
+      }
+    }
+  }
+  if (total === 0) return false;
+  return openCount > total / 2;
 }
 
 function ChipGroup({
