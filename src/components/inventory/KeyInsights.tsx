@@ -96,6 +96,93 @@ const INSIGHT_CATEGORIES: Array<{
 // Coverage tiers measure how widely a framework JTBD is performed across the
 // 142-team scan. Threshold is ≥ 5% of teams (≈ 7 teams) for "commonly
 // performed" — anything below that is long-tail and likely skippable.
+// "A1–A6" = the framework's per-integration playbooks for what happens to a
+// vendor at cutover. A1 Re-setup (same vendor, GitHub-side), A2 Substitute
+// (swap for a GitHub-native), A3 Work around (accept thinner GitHub support),
+// A4 Build glue (custom code to bridge), A5 Accept loss, A6 Request roadmap.
+type VendorApproach = "A1" | "A2" | "A3" | "A4" | "A5" | "A6";
+
+const INSIGHT_VENDORS = {
+  totalUniqueVendors: 58,
+  highOverlapThresholdPct: 25, // ≥ 25% of teams = "high overlap"
+  highOverlapCount: 7,
+  singleOrRareCount: 32, // used by < 5% of teams
+  topVendors: [
+    {
+      extension: "Slack ADO",
+      vendor: "Slack",
+      teams: 104,
+      approach: "A1" as VendorApproach,
+      note: "Same Slack-GitHub app exists; just re-authorize.",
+    },
+    {
+      extension: "SonarCloud",
+      vendor: "SonarSource",
+      teams: 92,
+      approach: "A1" as VendorApproach,
+      note: "First-class GitHub support. Direct re-setup.",
+    },
+    {
+      extension: "Snyk Security",
+      vendor: "Snyk",
+      teams: 78,
+      approach: "A1" as VendorApproach,
+      note: "Native GitHub app available.",
+    },
+    {
+      extension: "Jira Sync",
+      vendor: "Atlassian",
+      teams: 63,
+      approach: "A3" as VendorApproach,
+      note: "GitHub side is thinner than ADO — accept reduced sync.",
+    },
+    {
+      extension: "Datadog CI",
+      vendor: "Datadog",
+      teams: 58,
+      approach: "A1" as VendorApproach,
+      note: "GitHub Actions integration ships out of the box.",
+    },
+    {
+      extension: "PagerDuty",
+      vendor: "PagerDuty",
+      teams: 47,
+      approach: "A1" as VendorApproach,
+      note: "GitHub-native incident integration.",
+    },
+    {
+      extension: "ServiceNow DevOps",
+      vendor: "ServiceNow",
+      teams: 31,
+      approach: "A4" as VendorApproach,
+      note: "Custom webhook glue needed; no first-party GitHub bridge.",
+    },
+    {
+      extension: "Veracode",
+      vendor: "Veracode",
+      teams: 28,
+      approach: "A1" as VendorApproach,
+      note: "GitHub-native scanning available.",
+    },
+    {
+      extension: "Black Duck",
+      vendor: "Synopsys",
+      teams: 22,
+      approach: "A2" as VendorApproach,
+      note: "Many teams substituting for GitHub-native Dependabot.",
+    },
+    {
+      extension: "Mend (WhiteSource)",
+      vendor: "Mend",
+      teams: 19,
+      approach: "A2" as VendorApproach,
+      note: "Same — Dependabot covers most use cases.",
+    },
+  ],
+  actionSignal:
+    "Top 3 vendors (Slack, SonarCloud, Snyk) sit on 50%+ of teams each. Negotiate enterprise GitHub-side licenses for these as a single program-wide deal — cheaper and faster than 142 teams re-procuring individually. Black Duck and Mend overlap with GitHub-native Dependabot — worth a program-level decision on whether to consolidate.",
+};
+
 const INSIGHT_PIPELINES = {
   totalPipelines: 2341,
   classicPipelines: 983,
@@ -249,6 +336,7 @@ export function KeyInsights() {
       <IdentityPanel />
       <PipelinesPanel />
       <TestPlansPanel />
+      <VendorOverlapPanel />
     </section>
   );
 }
@@ -858,7 +946,7 @@ function IdentityPanel() {
       </div>
 
       <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
-        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
         {actionSignal}
       </div>
     </div>
@@ -892,6 +980,160 @@ function IdentityStat({
       </div>
       <div className="mt-1 text-[11.5px] leading-tight text-ink-muted">
         {sub}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* §03 — Extension & vendor overlap (S07 candidates)                          */
+/* -------------------------------------------------------------------------- */
+
+const APPROACH_META: Record<
+  VendorApproach,
+  { label: string; tone: "ok" | "warn" | "danger"; explainer: string }
+> = {
+  A1: {
+    label: "Re-setup",
+    tone: "ok",
+    explainer: "same vendor, just re-authorize on GitHub side",
+  },
+  A2: {
+    label: "Substitute",
+    tone: "warn",
+    explainer: "swap for a GitHub-native equivalent",
+  },
+  A3: {
+    label: "Work around",
+    tone: "warn",
+    explainer: "GitHub-side integration is thinner — accept the gap",
+  },
+  A4: {
+    label: "Build glue",
+    tone: "danger",
+    explainer: "custom code/webhook needed; no first-party GitHub support",
+  },
+  A5: {
+    label: "Accept loss",
+    tone: "danger",
+    explainer: "no equivalent — the capability goes away",
+  },
+  A6: {
+    label: "Request roadmap",
+    tone: "warn",
+    explainer: "vendor doesn't support GitHub yet — escalate",
+  },
+};
+
+function VendorOverlapPanel() {
+  const {
+    totalUniqueVendors,
+    highOverlapThresholdPct,
+    highOverlapCount,
+    singleOrRareCount,
+    topVendors,
+    actionSignal,
+  } = INSIGHT_VENDORS;
+
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Extension &amp; vendor overlap
+      </div>
+      <div className="mb-4 text-[12px] leading-[1.55] text-ink-muted">
+        Where the program has <em>vendor leverage</em>. Extensions are
+        third-party add-ons teams install in ADO to extend its functionality
+        (security scanners, observability, chat, project sync). When many teams
+        rely on the same vendor, the program can negotiate a single enterprise
+        contract on GitHub instead of 142 teams re-procuring individually —
+        cheaper, faster, and a chance to standardize migration approach across
+        teams. Each row&apos;s <em>migration approach</em> is the
+        framework&apos;s playbook for what happens to that vendor when its teams
+        move to GitHub.
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+        <RepoStat
+          label="Unique vendors / extensions"
+          value={String(totalUniqueVendors)}
+          sub="across all 142 teams · third-party add-ons installed in ADO"
+        />
+        <IdentityStat
+          tone="success"
+          label="High-overlap (consolidation candidates)"
+          value={String(highOverlapCount)}
+          sub={`used by ≥ ${highOverlapThresholdPct}% of teams · cross-team leverage on enterprise contracts and migration support`}
+        />
+        <IdentityStat
+          tone="warn"
+          label="Single-team or rare"
+          value={String(singleOrRareCount)}
+          sub="used by < 5% of teams · low leverage; case-by-case migration call"
+        />
+      </div>
+
+      <div>
+        <div className="mb-1 text-[12.5px] font-semibold text-ink">
+          Top vendors by team usage
+        </div>
+        <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+          Approaches: <strong className="text-success-ink">A1 Re-setup</strong>{" "}
+          (same vendor, just re-authorize),{" "}
+          <strong className="text-warn-ink">A2 Substitute</strong> (swap to
+          GitHub-native),{" "}
+          <strong className="text-warn-ink">A3 Work around</strong> (thinner
+          GitHub support),{" "}
+          <strong className="text-danger-ink">A4 Build glue</strong> (custom
+          code).
+        </div>
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr>
+              <ArchTh>Extension</ArchTh>
+              <ArchTh>Vendor</ArchTh>
+              <ArchTh className="text-right">% of teams</ArchTh>
+              <ArchTh className="text-right">Teams</ArchTh>
+              <ArchTh>Approach</ArchTh>
+              <ArchTh>Why</ArchTh>
+            </tr>
+          </thead>
+          <tbody>
+            {topVendors.map((row) => {
+              const pct = Math.round((row.teams / 142) * 100);
+              const meta = APPROACH_META[row.approach];
+              return (
+                <tr
+                  key={row.extension}
+                  className="border-b border-border-soft last:border-b-0"
+                >
+                  <td className="px-3 py-2 font-semibold text-ink">
+                    {row.extension}
+                  </td>
+                  <td className="px-3 py-2 text-ink-soft">{row.vendor}</td>
+                  <td className="px-3 py-2 text-right font-mono text-[12px] text-ink-soft">
+                    {pct}%
+                  </td>
+                  <td className="px-3 py-2 text-right font-mono text-[11.5px] text-ink-muted">
+                    {row.teams}
+                  </td>
+                  <td className="px-3 py-2">
+                    <Chip tone={meta.tone}>
+                      {row.approach} · {meta.label}
+                    </Chip>
+                  </td>
+                  <td className="px-3 py-2 text-[11.5px] italic text-ink-muted">
+                    {row.note}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
+        {actionSignal}
       </div>
     </div>
   );
@@ -1055,7 +1297,7 @@ function RepoFootprintPanel() {
       </div>
 
       <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
-        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
         {actionSignal}
       </div>
     </div>
@@ -1222,7 +1464,7 @@ function PipelinesPanel() {
       </div>
 
       <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
-        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
         {actionSignal}
       </div>
     </div>
@@ -1370,7 +1612,7 @@ function TestPlansPanel() {
       </div>
 
       <div className="mt-4 rounded-lg border border-border-soft bg-bg p-3 text-[12.5px] leading-[1.5] text-ink-soft">
-        <strong className="font-semibold text-ink">What to do:</strong>{" "}
+        <strong className="font-semibold text-ink">Recommendation:</strong>{" "}
         {actionSignal}
       </div>
     </div>
