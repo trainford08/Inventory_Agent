@@ -7,7 +7,7 @@
 
 export function AdaInventoryChat() {
   return (
-    <aside className="flex min-h-full flex-col border-l border-border bg-bg-elevated">
+    <aside className="sticky top-0 flex h-screen flex-col border-l border-border bg-bg-elevated">
       <Header />
       <Transcript />
       <MicBar />
