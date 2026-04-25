@@ -1,27 +1,7 @@
-import Link from "next/link";
+import { KeyInsights } from "@/components/inventory/KeyInsights";
 import { listTeams } from "@/server/teams";
 
 export const dynamic = "force-dynamic";
-
-const COHORT_LABEL: Record<string, string> = {
-  ALPHA: "Alpha",
-  BRAVO: "Bravo",
-  CHARLIE: "Charlie",
-  DELTA: "Delta",
-  ECHO: "Echo",
-  FOXTROT: "Foxtrot",
-  UNASSIGNED: "Unassigned",
-};
-
-const SWATCH: Record<string, string> = {
-  ALPHA: "linear-gradient(135deg,#5b5fcf,#8b5cf6)",
-  BRAVO: "linear-gradient(135deg,#06b6d4,#0ea5e9)",
-  CHARLIE: "linear-gradient(135deg,#f59e0b,#ef4444)",
-  DELTA: "linear-gradient(135deg,#1f4d3a,#3a6b4d)",
-  ECHO: "linear-gradient(135deg,#dc2626,#ef4444)",
-  FOXTROT: "linear-gradient(135deg,#71717a,#a1a1aa)",
-  UNASSIGNED: "linear-gradient(135deg,#a1a1aa,#d4d4d8)",
-};
 
 // Illustrative program-level rollups. Replace with computed values once the
 // customization catalog and feature inventory are seeded across all cohorts.
@@ -79,12 +59,7 @@ export default async function InventoryProgramOverviewPage() {
         to gauge the overall complexity of the program before drilling into a
         single team.
       </p>
-      <Link
-        href="#teams-table"
-        className="mb-7 inline-flex items-center gap-1.5 rounded-md border border-primary bg-primary px-[14px] py-[8px] text-[13px] font-medium text-white transition-colors hover:bg-primary-hover"
-      >
-        View all teams
-      </Link>
+      <div className="mb-7" />
 
       {/* BIG NUMBERS */}
       <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-border bg-bg-elevated md:grid-cols-5">
@@ -353,86 +328,9 @@ export default async function InventoryProgramOverviewPage() {
         </div>
       </div>
 
-      {/* TEAMS TABLE */}
-      <div
-        id="teams-table"
-        className="mb-3.5 mt-9 flex items-baseline justify-between border-b border-border pb-2.5"
-      >
-        <div className="text-[14px] font-semibold text-ink">All teams</div>
-        <div className="font-mono text-[11px] text-ink-muted">
-          {teams.length} teams · click any row to open
-        </div>
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border bg-bg-elevated">
-        <table className="w-full border-collapse text-[13px]">
-          <thead>
-            <tr>
-              <Th className="w-[24%]">Team</Th>
-              <Th className="w-[9%]">Cohort</Th>
-              <Th className="w-[7%]">Wave</Th>
-              <Th className="w-[10%]">Health</Th>
-              <Th className="w-[8%] text-right">Engineers</Th>
-              <Th className="w-[10%] text-right">% reviewed</Th>
-              <Th className="w-[8%] text-right">View</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {teams.map((t) => (
-              <tr
-                key={t.id}
-                className="group cursor-pointer border-b border-border-subtle transition-colors last:border-b-0 hover:bg-primary-soft"
-              >
-                <td className="px-4 py-2.5">
-                  <Link
-                    href={`/teams/${t.slug}/inventory`}
-                    className="flex items-center gap-2"
-                  >
-                    <span
-                      className="inline-block h-[16px] w-[16px] flex-shrink-0 rounded"
-                      style={{
-                        background: SWATCH[t.cohort] ?? SWATCH.UNASSIGNED,
-                      }}
-                    />
-                    <span className="font-semibold tracking-[-0.005em] text-ink group-hover:text-primary">
-                      {t.name}
-                    </span>
-                    {t.tagline ? (
-                      <span className="ml-2 font-mono text-[11px] text-ink-muted">
-                        {t.tagline}
-                      </span>
-                    ) : null}
-                  </Link>
-                </td>
-                <td className="px-4 py-2.5">
-                  {COHORT_LABEL[t.cohort] ?? t.cohort}
-                </td>
-                <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                  {t.wave !== null
-                    ? `W${String(t.wave).padStart(2, "0")}`
-                    : "—"}
-                </td>
-                <td className="px-4 py-2.5">
-                  <HealthPill status={t.healthStatus} />
-                </td>
-                <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                  {t.engineerCount ?? "—"}
-                </td>
-                <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                  {t.completionPercent}%
-                </td>
-                <td className="px-4 py-2.5 text-right">
-                  <Link
-                    href={`/teams/${t.slug}/inventory`}
-                    className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-muted transition-colors group-hover:text-primary"
-                  >
-                    View <span aria-hidden>→</span>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* KEY INSIGHTS */}
+      <div className="mt-9">
+        <KeyInsights />
       </div>
     </div>
   );
@@ -620,41 +518,5 @@ function ApproachCard({
       </div>
       <div className="text-[11.5px] leading-tight text-ink-muted">{desc}</div>
     </div>
-  );
-}
-
-function Th({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <th
-      className={`border-b-[1.5px] border-border bg-bg-subtle px-4 py-[10px] text-left font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-muted ${className ?? ""}`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function HealthPill({ status }: { status: string | null }) {
-  if (!status)
-    return <span className="font-mono text-[11px] text-ink-faint">—</span>;
-  const map: Record<string, { label: string; cls: string }> = {
-    ON_TRACK: { label: "On track", cls: "bg-success-soft text-success-ink" },
-    AT_RISK: { label: "At risk", cls: "bg-warn-soft text-warn-ink" },
-    BLOCKED: { label: "Blocked", cls: "bg-danger-soft text-danger-ink" },
-    DONE: { label: "Done", cls: "bg-bg-muted text-ink-muted" },
-  };
-  const m = map[status] ?? { label: status, cls: "bg-bg-muted text-ink-muted" };
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-[2px] font-mono text-[10px] font-semibold uppercase tracking-[0.04em] ${m.cls}`}
-    >
-      <span className="h-[5px] w-[5px] rounded-full bg-current" />
-      {m.label}
-    </span>
   );
 }

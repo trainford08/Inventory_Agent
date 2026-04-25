@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory-grounded insights — 12 mocks</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.08);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+    --info: #0284c7;
+    --info-soft: #e0f2fe;
+    --purple: #8b5cf6;
+    --purple-soft: #ede9fe;
+    --purple-ink: #6d28d9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 1500px; margin: 0 auto; }
+  .mock-banner {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  .mock-banner strong { color: var(--ink); }
+
+  /* TOC */
+  .toc {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 36px;
+  }
+  .toc-title {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+  }
+  .toc-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 18px; }
+  .toc-list a {
+    display: block;
+    padding: 4px 0;
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .toc-list a:hover { color: var(--primary); }
+  .toc-list a span.num {
+    display: inline-block;
+    width: 22px;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  /* Section frame */
+  .section {
+    margin-top: 56px;
+    padding-top: 36px;
+    border-top: 2px solid var(--ink);
+  }
+  .section:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 4px 12px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .section-lede {
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: 760px;
+    margin-bottom: 18px;
+  }
+  .section-source {
+    display: inline-block;
+    margin-bottom: 22px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    background: var(--bg-subtle);
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .section-source strong { color: var(--ink-soft); }
+
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .panel + .panel { margin-top: 12px; }
+  .panel-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .panel-sub { font-size: 12px; color: var(--ink-muted); margin-top: 2px; margin-bottom: 14px; }
+
+  /* Shared bar + table primitives */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  .bar-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 90px;
+    align-items: center;
+    gap: 12px;
+    padding: 5px 0;
+    font-size: 12.5px;
+  }
+  .bar-row .name { color: var(--ink); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .bar-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .bar-track {
+    height: 18px;
+    background: var(--bg-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+  }
+  .bar-seg { height: 100%; }
+  .bar-num { text-align: right; font-family: "Geist Mono", monospace; font-size: 11.5px; color: var(--ink-soft); }
+  .bar-num em { font-style: normal; color: var(--ink-muted); font-size: 10.5px; }
+
+  table.std { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.std th {
+    background: var(--bg-subtle);
+    padding: 8px 12px;
+    text-align: left;
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  table.std td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  table.std tr:last-child td { border-bottom: none; }
+  table.std td.num { text-align: right; font-family: "Geist Mono", monospace; }
+
+  .chip {
+    display: inline-flex; align-items: center;
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .chip.ok    { background: var(--success-soft); color: var(--success-ink); }
+  .chip.warn  { background: var(--warn-soft); color: var(--warn-ink); }
+  .chip.danger{ background: var(--danger-soft); color: var(--danger-ink); }
+  .chip.info  { background: var(--primary-soft); color: var(--primary); }
+  .chip.neutral{ background: var(--bg-subtle); color: var(--ink-muted); }
+  .chip.purple{ background: var(--purple-soft); color: var(--purple-ink); }
+
+  .swatch-team { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; display: inline-block; vertical-align: middle; margin-right: 6px; }
+
+  /* Heatmap */
+  .heat-grid {
+    display: grid;
+    grid-template-columns: 130px repeat(6, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 11.5px;
+  }
+  .heat-cell {
+    background: var(--bg-elev);
+    padding: 8px 10px;
+    text-align: center;
+    font-family: "Geist Mono", monospace;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .heat-cell.head {
+    background: var(--bg-subtle);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+  .heat-cell.row-label {
+    text-align: left;
+    background: var(--bg-subtle);
+    font-family: var(--font-sans);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .heat-cell.h0 { background: #f5f5f5; color: var(--ink-faint); }
+  .heat-cell.h1 { background: #ede9fe; color: #6d28d9; }
+  .heat-cell.h2 { background: #c7bff8; color: #4c1d95; }
+  .heat-cell.h3 { background: #8b5cf6; color: white; }
+  .heat-cell.h4 { background: #5b3a8a; color: white; }
+
+  /* Posture cards (section 1) */
+  .posture-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .posture-card {
+    padding: 14px 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    border-top: 3px solid;
+  }
+  .posture-card.easy { border-top-color: var(--success); }
+  .posture-card.mixed { border-top-color: var(--warn); }
+  .posture-card.deep { border-top-color: var(--danger); }
+  .posture-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
+  }
+  .posture-name { font-weight: 700; font-size: 14px; color: var(--ink); }
+  .posture-tag {
+    margin-left: auto;
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .posture-card.easy  .posture-tag { background: var(--success-soft); color: var(--success-ink); }
+  .posture-card.mixed .posture-tag { background: var(--warn-soft); color: var(--warn-ink); }
+  .posture-card.deep  .posture-tag { background: var(--danger-soft); color: var(--danger-ink); }
+  .posture-mini {
+    display: flex; height: 6px; border-radius: 2px; overflow: hidden;
+    margin: 6px 0 8px;
+  }
+  .posture-mini > div { height: 100%; }
+  .posture-stats {
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    display: flex;
+    gap: 12px;
+  }
+  .posture-stats strong { color: var(--ink); font-weight: 600; }
+
+  /* Findings status row (section 10) */
+  .find-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 110px 60px 60px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    font-size: 12.5px;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+  .find-row:last-child { border-bottom: none; }
+  .find-row .name { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+  .find-track {
+    height: 14px;
+    background: var(--bg-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+    display: flex;
+    border: 1px solid var(--border-soft);
+  }
+  .find-seg.auto    { background: var(--success); }
+  .find-seg.needs   { background: var(--warn); }
+  .find-seg.anomaly { background: var(--danger); }
+  .find-num { font-family: "Geist Mono", monospace; font-size: 11.5px; text-align: right; color: var(--ink-soft); }
+  .find-age { font-family: "Geist Mono", monospace; font-size: 11px; color: var(--ink-muted); text-align: right; }
+  .find-age.stale { color: var(--danger-ink); font-weight: 600; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px dashed var(--border);
+    font-size: 11.5px; color: var(--ink-soft);
+  }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .legend-item .sw { width: 9px; height: 9px; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mock-banner">
+    <strong>Mock — 12 inventory-grounded insight sections.</strong> Each is derivable purely from data the inventory agent collects (no estimation, no cost data, no post-cutover signals). Numbers are illustrative.
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Sections</div>
+    <div class="toc-list">
+      <a href="#s1"><span class="num">01</span>Per-team hybrid posture</a>
+      <a href="#s7"><span class="num">07</span>Repo profile per team</a>
+      <a href="#s2"><span class="num">02</span>Customization overlap (S06)</a>
+      <a href="#s8"><span class="num">08</span>JTBD coverage gaps</a>
+      <a href="#s3"><span class="num">03</span>Extension / vendor overlap (S07)</a>
+      <a href="#s9"><span class="num">09</span>Customization category profile</a>
+      <a href="#s4"><span class="num">04</span>Classic vs YAML pipeline mix</a>
+      <a href="#s10"><span class="num">10</span>Discovery state per team</a>
+      <a href="#s5"><span class="num">05</span>Test Plans depth</a>
+      <a href="#s11"><span class="num">11</span>Cohort archetype quantification</a>
+      <a href="#s6"><span class="num">06</span>Identity migration surface</a>
+      <a href="#s12"><span class="num">12</span>Shared-feature heatmap</a>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       1. Hybrid posture (aggregate)
+       ========================================================= -->
+  <div class="section" id="s1">
+    <div class="section-tag">01 · Posture</div>
+    <h2>Hybrid posture distribution</h2>
+    <p class="section-lede">How the program's six teams sort into <strong>easy mover</strong> / <strong>mixed</strong> / <strong>deep hybrid</strong>. Tells the PL how much of the program migrates cleanly vs. stays in the hybrid long-term.</p>
+    <div class="section-source">Source · per-team feature mix bucketed by share of <code>staysInAdo</code> values</div>
+
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="panel" style="border-top:3px solid var(--success);padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--success-ink);margin-bottom:6px">EASY MOVER</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">2 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">teams</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">≥ 60% of features move to GitHub</div>
+      </div>
+      <div class="panel" style="border-top:3px solid var(--warn);padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--warn-ink);margin-bottom:6px">MIXED</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">3 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">teams</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">40–60% moves, balanced split</div>
+      </div>
+      <div class="panel" style="border-top:3px solid var(--danger);padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--danger-ink);margin-bottom:6px">DEEP HYBRID</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">1 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">team</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">≥ 50% of features stay in ADO</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Program-wide feature placement</div>
+      <div class="panel-sub">All 178 features in scope across all teams.</div>
+      <div style="height:28px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--border);margin-bottom:12px">
+        <div style="background:var(--primary);width:54%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">54% · 96</div>
+        <div style="background:var(--warn);width:32%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">32% · 57</div>
+        <div style="background:var(--success);width:9%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">9% · 16</div>
+        <div style="background:var(--ink-muted);width:5%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">5%</div>
+      </div>
+      <div class="legend" style="border-top:none;padding-top:0;margin-top:0">
+        <div class="legend-item"><span class="sw" style="background:var(--primary)"></span>Lives in GitHub (96)</div>
+        <div class="legend-item"><span class="sw" style="background:var(--warn)"></span>Stays in ADO (57)</div>
+        <div class="legend-item"><span class="sw" style="background:var(--success)"></span>Spans both (16)</div>
+        <div class="legend-item"><span class="sw" style="background:var(--ink-muted)"></span>Platform-agnostic (9)</div>
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Concentration:</strong>&nbsp;Echo alone owns 26 of the 57 ADO-stays features.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       2. Customization overlap (S06 candidates)
+       ========================================================= -->
+  <div class="section" id="s2">
+    <div class="section-tag">02 · S06 candidates</div>
+    <h2>Customization overlap across teams</h2>
+    <p class="section-lede">Catalog codes (C01–C29) appearing in <strong>≥ 3 teams</strong>. These are real S06 "build once, reuse" candidates — direct join on <code>Customization.catalogId</code>.</p>
+    <div class="section-source">Source · <strong>Customization.catalogId</strong> grouped by code</div>
+
+    <div class="panel">
+      <table class="std">
+        <thead>
+          <tr>
+            <th style="width:60px">Code</th>
+            <th>Customization</th>
+            <th>Strategy</th>
+            <th>Teams using</th>
+            <th class="num">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="chip purple">C01</span></td>
+            <td>Custom process templates</td>
+            <td><span class="chip neutral">S01 PROTECT</span></td>
+            <td>Alpha · Bravo · Charlie · Delta · Echo · Foxtrot</td>
+            <td class="num"><strong>6</strong></td>
+          </tr>
+          <tr>
+            <td><span class="chip purple">C02</span></td>
+            <td>Custom work item types</td>
+            <td><span class="chip neutral">S02 TRANSLATE</span></td>
+            <td>Alpha · Bravo · Charlie · Echo · Foxtrot</td>
+            <td class="num"><strong>5</strong></td>
+          </tr>
+          <tr>
+            <td><span class="chip purple">C13</span></td>
+            <td>Service connection configuration</td>
+            <td><span class="chip neutral">S02 TRANSLATE</span></td>
+            <td>Alpha · Bravo · Charlie · Delta · Echo</td>
+            <td class="num"><strong>5</strong></td>
+          </tr>
+          <tr>
+            <td><span class="chip purple">C09</span></td>
+            <td>Shared YAML templates</td>
+            <td><span class="chip neutral">S02 TRANSLATE</span></td>
+            <td>Alpha · Charlie · Delta · Foxtrot</td>
+            <td class="num"><strong>4</strong></td>
+          </tr>
+          <tr>
+            <td><span class="chip purple">C16</span></td>
+            <td>Custom required code reviewers</td>
+            <td><span class="chip neutral">S02 TRANSLATE</span></td>
+            <td>Alpha · Bravo · Charlie · Delta</td>
+            <td class="num"><strong>4</strong></td>
+          </tr>
+          <tr>
+            <td><span class="chip purple">C29</span></td>
+            <td>Custom approval &amp; release gates</td>
+            <td><span class="chip neutral">S01 PROTECT</span></td>
+            <td>Charlie · Echo · Foxtrot</td>
+            <td class="num"><strong>3</strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="legend">
+        <div class="legend-item"><strong style="color:var(--ink)">Read:</strong> if a customization shows up in many teams, build it once centrally instead of N teams rebuilding it.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       3. Extension / vendor overlap (S07 candidates)
+       ========================================================= -->
+  <div class="section" id="s3">
+    <div class="section-tag">03 · S07 candidates</div>
+    <h2>Extension &amp; vendor overlap</h2>
+    <p class="section-lede">ADO extensions installed by multiple teams — natural consolidation candidates. Same data drives identification of vendors with leverage opportunities.</p>
+    <div class="section-source">Source · <strong>Extension</strong> rows grouped by vendor name</div>
+
+    <div class="panel">
+      <table class="std">
+        <thead>
+          <tr>
+            <th>Extension</th>
+            <th>Vendor</th>
+            <th>Used by</th>
+            <th class="num">Teams</th>
+            <th>Migration approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>SonarCloud</strong></td><td>SonarSource</td><td>Alpha · Bravo · Charlie · Delta · Echo</td><td class="num"><strong>5</strong></td><td><span class="chip ok">A1 RE-SETUP</span></td></tr>
+          <tr><td><strong>Snyk</strong></td><td>Snyk</td><td>Alpha · Bravo · Charlie · Echo</td><td class="num"><strong>4</strong></td><td><span class="chip ok">A1 RE-SETUP</span></td></tr>
+          <tr><td><strong>Slack ADO</strong></td><td>Slack</td><td>Alpha · Bravo · Delta · Foxtrot</td><td class="num"><strong>4</strong></td><td><span class="chip ok">A1 RE-SETUP</span></td></tr>
+          <tr><td><strong>Jira Sync</strong></td><td>Atlassian</td><td>Bravo · Echo · Foxtrot</td><td class="num"><strong>3</strong></td><td><span class="chip warn">A3 WORK AROUND</span></td></tr>
+          <tr><td><strong>ServiceNow DevOps</strong></td><td>ServiceNow</td><td>Charlie · Echo</td><td class="num"><strong>2</strong></td><td><span class="chip info">A4 BUILD GLUE</span></td></tr>
+          <tr><td><strong>PagerDuty</strong></td><td>PagerDuty</td><td>Echo · Foxtrot</td><td class="num"><strong>2</strong></td><td><span class="chip ok">A1 RE-SETUP</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       4. Classic vs YAML pipeline mix (aggregate)
+       ========================================================= -->
+  <div class="section" id="s4">
+    <div class="section-tag">04 · Pipelines</div>
+    <h2>Program-wide pipeline composition</h2>
+    <p class="section-lede">How much of the program's pipeline estate is YAML vs. classic UI-based. Classic releases need full rewrite if Pipelines ever migrates; YAML translates more easily.</p>
+    <div class="section-source">Source · sum of <strong>ReleaseDefinition.kind</strong> + <strong>workflow</strong> records across all teams</div>
+
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="panel" style="padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:6px">PIPELINES TOTAL</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">77</div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">across all 6 teams</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--danger)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--danger-ink);margin-bottom:6px">CLASSIC (REBUILD)</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">32 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 42%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">UI-based, no clean translation</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--success)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--success-ink);margin-bottom:6px">YAML (PRESERVE)</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">45 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 58%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">portable as-is</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Where the classic-release rebuild concentrates</div>
+      <div class="panel-sub">2 of 6 teams own 68% of the rebuild burden.</div>
+      <div style="height:28px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--border);margin-bottom:12px">
+        <div style="background:#dc2626;width:44%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Echo · 14</div>
+        <div style="background:#ef4444;width:25%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Bravo · 8</div>
+        <div style="background:#f87171;width:12%;display:flex;align-items:center;padding-left:8px;color:white;font-size:11px;font-weight:600">Char · 4</div>
+        <div style="background:#fca5a5;width:9%;display:flex;align-items:center;padding-left:8px;color:white;font-size:11px;font-weight:600">Fox · 3</div>
+        <div style="background:#fda4af;width:6%;display:flex;align-items:center;padding-left:8px;color:white;font-size:11px;font-weight:600">Alp · 2</div>
+        <div style="background:#fecdd3;width:4%;display:flex;align-items:center;padding-left:6px;color:#7f1d1d;font-size:11px;font-weight:600">Δ 1</div>
+      </div>
+      <div class="legend" style="border-top:none;padding-top:0;margin-top:0">
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Action signal:</strong>&nbsp;solving classic-release migration well for Echo + Bravo handles 22 of the program's 32 classic releases.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       5. Test Plans dependency (aggregate)
+       ========================================================= -->
+  <div class="section" id="s5">
+    <div class="section-tag">05 · Test Plans</div>
+    <h2>Program-wide Test Plans dependency</h2>
+    <p class="section-lede">How much of the program's feature surface depends on Test Plans entities (E35–E43). Strong indicator of how long the hybrid model needs to live for the program as a whole.</p>
+    <div class="section-source">Source · sum of features-in-scope linked to entities E35–E43, across all teams</div>
+
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="panel" style="padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:6px">DEPENDENT FEATURES</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">24 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">/ 178</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)"><strong style="color:var(--ink)">14%</strong> of program-wide feature surface</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--warn)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--warn-ink);margin-bottom:6px">TEAMS DEPENDENT</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">5 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">of 6</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">at least 1 feature anchored to Test Plans</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--danger)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--danger-ink);margin-bottom:6px">DEEPLY DEPENDENT</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">2 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">teams</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">≥ 5 features each</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Where the dependency concentrates</div>
+      <div class="panel-sub">2 teams account for 16 of the program's 24 Test-Plans-dependent features.</div>
+      <div style="height:28px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--border);margin-bottom:12px">
+        <div style="background:#dc2626;width:38%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Echo · 9</div>
+        <div style="background:#ef4444;width:29%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Foxtrot · 7</div>
+        <div style="background:#f87171;width:21%;display:flex;align-items:center;padding-left:8px;color:white;font-size:11px;font-weight:600">Bravo · 5</div>
+        <div style="background:#fca5a5;width:8%;display:flex;align-items:center;padding-left:6px;color:white;font-size:11px;font-weight:600">Cha 2</div>
+        <div style="background:#fecaca;width:4%;display:flex;align-items:center;padding-left:6px;color:#7f1d1d;font-size:11px;font-weight:600">Α 1</div>
+      </div>
+      <div class="legend" style="border-top:none;padding-top:0;margin-top:0">
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Action signal:</strong>&nbsp;Test Plans staying in the hybrid is non-negotiable for ⅔ of dependent features. Foxtrot is the QA team — expected. Echo's 9-feature depth is the surprise.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       6. Identity migration surface (aggregate)
+       ========================================================= -->
+  <div class="section" id="s6">
+    <div class="section-tag">06 · Identity</div>
+    <h2>Program-wide identity surface</h2>
+    <p class="section-lede">How many service connections the program has, and what fraction still rely on PATs (which require manual rotation) vs. OIDC federation (which transfers cleanly).</p>
+    <div class="section-source">Source · sum of <strong>ServiceConnection</strong> records by auth type, across all teams</div>
+
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="panel" style="padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:6px">CONNECTIONS TOTAL</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">76</div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">across all 6 teams</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--success)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--success-ink);margin-bottom:6px">OIDC FEDERATED</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">44 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 58%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">transfer cleanly, no rework</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--warn)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--warn-ink);margin-bottom:6px">PAT-BASED (ROTATE)</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">32 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 42%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">manual rotation at cutover</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Where the PAT rotation work concentrates</div>
+      <div class="panel-sub">Two teams own 22 of the 32 PAT-based connections.</div>
+      <div style="height:28px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--border);margin-bottom:12px">
+        <div style="background:#d97706;width:38%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Echo · 12</div>
+        <div style="background:#f59e0b;width:31%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Bravo · 10</div>
+        <div style="background:#fbbf24;width:12%;display:flex;align-items:center;padding-left:6px;color:#7c2d12;font-size:11px;font-weight:600">Alpha 4</div>
+        <div style="background:#fcd34d;width:9%;display:flex;align-items:center;padding-left:6px;color:#7c2d12;font-size:11px;font-weight:600">Foxt 3</div>
+        <div style="background:#fde68a;width:6%;display:flex;align-items:center;padding-left:6px;color:#7c2d12;font-size:11px;font-weight:600">Cha 2</div>
+        <div style="background:#fef3c7;width:4%;display:flex;align-items:center;padding-left:4px;color:#7c2d12;font-size:11px;font-weight:600">Δ 1</div>
+      </div>
+      <div class="legend" style="border-top:none;padding-top:0;margin-top:0">
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Action signal:</strong>&nbsp;ramp Echo + Bravo to OIDC federation pre-cutover; covers 69% of program-wide rotation work.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       7. Repo footprint (aggregate)
+       ========================================================= -->
+  <div class="section" id="s7">
+    <div class="section-tag">07 · Repos</div>
+    <h2>Program-wide repo footprint</h2>
+    <p class="section-lede">The size and shape of the code estate the program has to migrate via GEI. Drives total runtime, parallelism strategy, and whether any team needs special handling (LFS, monorepo splits).</p>
+    <div class="section-source">Source · sum of <strong>Codebase.repos[]</strong> aggregates across all teams</div>
+
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="panel" style="padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:6px">REPOS TOTAL</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">92</div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">across all 6 teams</div>
+      </div>
+      <div class="panel" style="padding:18px 20px">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--ink-muted);margin-bottom:6px">TOTAL SIZE</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">28.2 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">GB</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">incl. <strong style="color:var(--ink)">16.6 GB LFS</strong></div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--warn)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--warn-ink);margin-bottom:6px">SPECIAL-HANDLING REPOS</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">2 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">monorepos</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">+ 2 with heavy LFS</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Topology distribution &amp; language mix</div>
+      <div class="panel-sub">Most teams are polyrepo — but two monorepos (Echo, Bravo) hold 72% of program code by size.</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:8px">
+        <div>
+          <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px">By topology</div>
+          <div style="display:flex;height:24px;border-radius:4px;overflow:hidden;border:1px solid var(--border);margin-bottom:8px">
+            <div style="background:var(--success);width:67%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11px;font-weight:600">Polyrepo · 4 teams</div>
+            <div style="background:var(--warn);width:33%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11px;font-weight:600">Monorepo · 2</div>
+          </div>
+          <div style="font-size:12px;color:var(--ink-muted)">Monorepos = Echo (11.8 GB), Bravo (8.4 GB)</div>
+        </div>
+        <div>
+          <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px">Primary languages</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px">
+            <span class="chip info">TypeScript · 2 teams</span>
+            <span class="chip info">Python · 2</span>
+            <span class="chip info">C# / .NET · 1</span>
+            <span class="chip info">Swift / Kotlin · 1</span>
+            <span class="chip info">Go · 1</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Action signal:</strong>&nbsp;Echo's 9.4 GB LFS repo will dominate GEI runtime — schedule its cutover window with extra slack.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       8. JTBD coverage gaps
+       ========================================================= -->
+  <div class="section" id="s8">
+    <div class="section-tag">08 · Coverage</div>
+    <h2>JTBD coverage gaps (program-wide)</h2>
+    <p class="section-lede">Set difference: framework JTBDs vs. JTBDs performed by any team. Tells the PL what they don't have to plan for, and what's universally missing if anything.</p>
+    <div class="section-source">Source · <strong>JTBD framework</strong> minus union of <strong>jtbdsPerformed</strong> across teams</div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Framework coverage</div>
+        <div class="panel-sub">Of 118 framework JTBDs.</div>
+        <div style="display:flex;gap:24px;align-items:baseline">
+          <div>
+            <div style="font-size:36px;font-weight:700;letter-spacing:-0.025em;line-height:1">94<span style="font-size:14px;color:var(--ink-muted);font-weight:500;margin-left:6px">/ 118</span></div>
+            <div style="font-size:12px;color:var(--ink-muted)">covered by ≥ 1 team</div>
+          </div>
+          <div>
+            <div style="font-size:36px;font-weight:700;letter-spacing:-0.025em;line-height:1;color:var(--success-ink)">80%</div>
+            <div style="font-size:12px;color:var(--ink-muted)">of framework</div>
+          </div>
+          <div>
+            <div style="font-size:36px;font-weight:700;letter-spacing:-0.025em;line-height:1;color:var(--ink-muted)">24</div>
+            <div style="font-size:12px;color:var(--ink-muted)">unused jobs (skip)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Jobs nobody in the program does</div>
+        <div class="panel-sub">Skip these in tooling and training. 24 of 118.</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px">
+          <span class="chip neutral">J19 Manual UAT signoff</span>
+          <span class="chip neutral">J27 Hot-fix release branch</span>
+          <span class="chip neutral">J34 ADO portal admin</span>
+          <span class="chip neutral">J45 Wiki PR review</span>
+          <span class="chip neutral">J52 Release notes auto-gen</span>
+          <span class="chip neutral">J61 Compliance attest</span>
+          <span class="chip neutral">J67 Cross-org branch share</span>
+          <span class="chip neutral">+ 17 more</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       9. Customization category profile (aggregate)
+       ========================================================= -->
+  <div class="section" id="s9">
+    <div class="section-tag">09 · Category</div>
+    <h2>Program-wide customization category mix</h2>
+    <p class="section-lede">Where the program's customizations actually cluster. Tells the PL which categories of customization are the program's biggest investments and which are rare.</p>
+    <div class="section-source">Source · sum of <strong>Customization.category</strong> across all teams</div>
+
+    <div class="panel">
+      <div class="bar-row" style="grid-template-columns:130px 1fr 100px"><div class="name">Pipelines</div><div class="bar-track"><div class="bar-seg" style="background:var(--primary);width:100%"></div></div><div class="bar-num"><strong>45</strong> <em>· 32%</em></div></div>
+      <div class="bar-row" style="grid-template-columns:130px 1fr 100px"><div class="name">Boards</div><div class="bar-track"><div class="bar-seg" style="background:var(--primary);width:80%"></div></div><div class="bar-num"><strong>36</strong> <em>· 25%</em></div></div>
+      <div class="bar-row" style="grid-template-columns:130px 1fr 100px"><div class="name">Repos</div><div class="bar-track"><div class="bar-seg" style="background:var(--primary);width:49%"></div></div><div class="bar-num"><strong>22</strong> <em>· 15%</em></div></div>
+      <div class="bar-row" style="grid-template-columns:130px 1fr 100px"><div class="name">Process</div><div class="bar-track"><div class="bar-seg" style="background:var(--primary);width:38%"></div></div><div class="bar-num"><strong>17</strong> <em>· 12%</em></div></div>
+      <div class="bar-row" style="grid-template-columns:130px 1fr 100px"><div class="name">Dashboards</div><div class="bar-track"><div class="bar-seg" style="background:var(--primary);width:29%"></div></div><div class="bar-num"><strong>13</strong> <em>· 9%</em></div></div>
+      <div class="bar-row" style="grid-template-columns:130px 1fr 100px"><div class="name">Extensions</div><div class="bar-track"><div class="bar-seg" style="background:var(--primary);width:20%"></div></div><div class="bar-num"><strong>9</strong> <em>· 6%</em></div></div>
+
+      <div class="legend">
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Action signal:</strong>&nbsp;the program is <strong>Pipelines-heavy</strong> (45) and <strong>Boards-heavy</strong> (36) — together 57% of customizations sit on surfaces the hybrid already preserves. That's a relief signal, not a worry.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       10. Discovery state (aggregate)
+       ========================================================= -->
+  <div class="section" id="s10">
+    <div class="section-tag">10 · Trust</div>
+    <h2>Program-wide discovery state</h2>
+    <p class="section-lede">How trustworthy the program's inventory data is right now, in aggregate. Tells the PL whether the rest of this page can be planned against, or whether discovery still has to catch up.</p>
+    <div class="section-source">Source · sum of <strong>findings.status</strong> + age summary across all teams</div>
+
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--success)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--success-ink);margin-bottom:6px">AUTO-CONFIRMED</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">371 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 58%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">trustworthy without Champion review</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--warn)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--warn-ink);margin-bottom:6px">NEEDS HUMAN INPUT</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">224 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 35%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">awaiting Champion confirmation</div>
+      </div>
+      <div class="panel" style="padding:18px 20px;border-top:3px solid var(--danger)">
+        <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.1em;color:var(--danger-ink);margin-bottom:6px">ANOMALIES</div>
+        <div style="font-size:38px;font-weight:700;letter-spacing:-0.025em;line-height:1;margin-bottom:6px">50 <span style="font-size:13px;font-weight:500;color:var(--ink-muted)">· 7%</span></div>
+        <div style="font-size:12.5px;color:var(--ink-muted)">flagged by agent for review</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Program findings — 645 total</div>
+      <div class="panel-sub">Single bar showing the program-wide trust mix.</div>
+      <div style="height:28px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--border);margin-bottom:12px">
+        <div style="background:var(--success);width:58%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Auto · 371</div>
+        <div style="background:var(--warn);width:35%;display:flex;align-items:center;padding-left:10px;color:white;font-size:11.5px;font-weight:600">Needs input · 224</div>
+        <div style="background:var(--danger);width:7%;display:flex;align-items:center;padding-left:8px;color:white;font-size:11px;font-weight:600">Anom · 50</div>
+      </div>
+      <div class="legend" style="border-top:none;padding-top:0;margin-top:0">
+        <div class="legend-item"><strong style="color:var(--ink)">Inventories &gt; 14 days stale:</strong>&nbsp;2 of 6 teams</div>
+        <div class="legend-item" style="margin-left:auto;color:var(--ink)"><strong>Concentration:</strong>&nbsp;Echo holds 22 of the 50 anomalies and hasn't been reviewed in 31 days — the program-wide rollups above are most fragile where Echo lives.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       11. Cohort archetype quantification
+       ========================================================= -->
+  <div class="section" id="s11">
+    <div class="section-tag">11 · Archetype</div>
+    <h2>Cohort archetype quantification</h2>
+    <p class="section-lede">Does each cohort actually fit its tagline? Pivots posture (§01) + customization profile (§09) by cohort to confirm or break prior assumptions.</p>
+    <div class="section-source">Source · <strong>posture</strong> + <strong>customization.strategy</strong> + <strong>parity</strong> grouped by cohort</div>
+
+    <div class="panel">
+      <table class="std">
+        <thead>
+          <tr>
+            <th>Cohort</th>
+            <th>Tagline (assumed)</th>
+            <th>Avg posture</th>
+            <th>Most common strategy</th>
+            <th>Most common parity</th>
+            <th>Confirms tagline?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Alpha</strong></td>
+            <td><em>The easy yes</em></td>
+            <td><span class="chip ok">Easy mover</span></td>
+            <td>S02 Translate (52%)</td>
+            <td>Match (66%)</td>
+            <td><span class="chip ok">Confirmed</span></td>
+          </tr>
+          <tr>
+            <td><strong>Bravo</strong></td>
+            <td><em>The typical healthy team</em></td>
+            <td><span class="chip warn">Mixed</span></td>
+            <td>S01 Protect (44%)</td>
+            <td>Partial (38%)</td>
+            <td><span class="chip warn">Worse than expected</span></td>
+          </tr>
+          <tr>
+            <td><strong>Charlie</strong></td>
+            <td><em>The interesting one</em></td>
+            <td><span class="chip ok">Easy mover</span></td>
+            <td>S02 Translate (48%)</td>
+            <td>Match (61%)</td>
+            <td><span class="chip warn">Easier than expected</span></td>
+          </tr>
+          <tr>
+            <td><strong>Delta</strong></td>
+            <td><em>The heavyweight</em></td>
+            <td><span class="chip warn">Mixed</span></td>
+            <td>S02 Translate (55%)</td>
+            <td>Match (58%)</td>
+            <td><span class="chip ok">Easier than expected</span></td>
+          </tr>
+          <tr>
+            <td><strong>Echo</strong></td>
+            <td><em>The Champion still has work</em></td>
+            <td><span class="chip danger">Deep hybrid</span></td>
+            <td>S05 Build glue (28%)</td>
+            <td>Gap (22%)</td>
+            <td><span class="chip danger">Confirmed (deeply)</span></td>
+          </tr>
+          <tr>
+            <td><strong>Foxtrot</strong></td>
+            <td><em>The edge case</em></td>
+            <td><span class="chip warn">Mixed</span></td>
+            <td>S01 Protect (38%)</td>
+            <td>Partial (33%)</td>
+            <td><span class="chip warn">Different shape than expected</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       12. Shared-feature heatmap
+       ========================================================= -->
+  <div class="section" id="s12">
+    <div class="section-tag">12 · Leverage</div>
+    <h2>Shared-feature heatmap</h2>
+    <p class="section-lede">Features touched by 4+ teams = high-leverage migration targets. Solve the migration once, six teams benefit.</p>
+    <div class="section-source">Source · <strong>features in scope</strong> grouped by count of teams using each</div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">High-leverage features (used by ≥ 4 teams)</div>
+        <div class="panel-sub">Move these well, and most of the program benefits at once.</div>
+        <table class="std">
+          <thead><tr><th>Feature</th><th>Approach</th><th class="num">Teams</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Branch protection rules</strong></td><td><span class="chip ok">Move</span></td><td class="num">6</td></tr>
+            <tr><td><strong>Pull request workflow</strong></td><td><span class="chip ok">Move</span></td><td class="num">6</td></tr>
+            <tr><td><strong>Commit / push</strong></td><td><span class="chip ok">Move</span></td><td class="num">6</td></tr>
+            <tr><td><strong>Required reviewers</strong></td><td><span class="chip ok">Move</span></td><td class="num">5</td></tr>
+            <tr><td><strong>Service connections</strong></td><td><span class="chip warn">Stay (hybrid)</span></td><td class="num">5</td></tr>
+            <tr><td><strong>Sprint planning</strong></td><td><span class="chip warn">Stay (hybrid)</span></td><td class="num">4</td></tr>
+            <tr><td><strong>Release gates</strong></td><td><span class="chip warn">Stay (hybrid)</span></td><td class="num">4</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Niche features (1 team only)</div>
+        <div class="panel-sub">Low leverage — solve case-by-case if at all.</div>
+        <table class="std">
+          <thead><tr><th>Feature</th><th>Team</th><th>Approach</th></tr></thead>
+          <tbody>
+            <tr><td>Manual exploratory testing</td><td>Foxtrot</td><td><span class="chip warn">Stay</span></td></tr>
+            <tr><td>Custom build agents (GPU)</td><td>Charlie</td><td><span class="chip warn">Stay</span></td></tr>
+            <tr><td>Path-scoped permissions</td><td>Echo</td><td><span class="chip danger">Gap</span></td></tr>
+            <tr><td>Universal package feed</td><td>Bravo</td><td><span class="chip warn">Stay</span></td></tr>
+            <tr><td>Test impact analysis</td><td>Foxtrot</td><td><span class="chip danger">Gap</span></td></tr>
+            <tr><td>Custom widget plugins</td><td>Bravo</td><td><span class="chip warn">Stay</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="legend" style="margin-top:14px;border-top:none;padding-top:0">
+      <div class="legend-item"><strong style="color:var(--ink)">Read:</strong> the top of the program's value comes from getting branch protection, PR workflow, and commit migration right — they affect all 6 teams. Niche features are "do them once we get there".</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
