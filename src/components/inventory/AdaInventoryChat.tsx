@@ -47,20 +47,17 @@ function Header() {
 function Transcript() {
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
-      <Turn speaker="Ada · voice" kind="bot">
+      <Turn speaker="Ada" kind="bot">
         Hi — I&rsquo;ve loaded the program-wide inventory across all 142 teams.
         Ask me about cohorts, customizations, vendors, coverage, or feature
         leverage and I&rsquo;ll pull the relevant numbers.
       </Turn>
 
-      <Turn speaker="You · voice note" kind="user">
-        <VoiceNote duration="0:05" />
-        <div className="mt-1 px-[4px] text-[10px] italic text-cyan-100/90">
-          “Which cohorts carry the most migration friction?”
-        </div>
+      <Turn speaker="You" kind="user">
+        Which cohorts carry the most migration friction?
       </Turn>
 
-      <Turn speaker="Ada · voice" kind="bot">
+      <Turn speaker="Ada" kind="bot">
         Looking across the 142-team scan, <strong>Bravo</strong> and{" "}
         <strong>Echo</strong> dominate the friction footprint.
         <Evidence
@@ -75,14 +72,11 @@ function Transcript() {
         I&rsquo;d sequence both cohorts last in the wave plan.
       </Turn>
 
-      <Turn speaker="You · voice note" kind="user">
-        <VoiceNote duration="0:03" />
-        <div className="mt-1 px-[4px] text-[10px] italic text-cyan-100/90">
-          “Where should we focus first?”
-        </div>
+      <Turn speaker="You" kind="user">
+        Where should we focus first?
       </Turn>
 
-      <Turn speaker="Ada · voice" kind="bot">
+      <Turn speaker="Ada" kind="bot">
         Highest leverage is in the features used by ≥ 75% of teams — those are
         all <strong>Move</strong>-style migrations and benefit the entire
         program at once.
@@ -131,33 +125,6 @@ function Turn({
   );
 }
 
-function VoiceNote({ duration }: { duration: string }) {
-  const bars = [7, 10, 14, 17, 11, 14, 18, 12, 9, 15, 10, 6];
-  return (
-    <div className="flex items-center gap-2 text-[12.5px]">
-      <span className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-white/25">
-        <svg
-          className="h-[10px] w-[10px]"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <polygon points="5 3 19 12 5 21 5 3" />
-        </svg>
-      </span>
-      <span className="flex flex-1 items-center gap-[2px]">
-        {bars.map((h, i) => (
-          <span
-            key={i}
-            className="w-[2px] rounded-[1px] bg-white/80"
-            style={{ height: `${h}px` }}
-          />
-        ))}
-      </span>
-      <span className="font-mono text-[10.5px] text-white/85">{duration}</span>
-    </div>
-  );
-}
-
 function Evidence({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="mt-2 rounded-[7px] border border-border-strong bg-bg-elevated px-3 py-[10px]">
@@ -189,20 +156,55 @@ function Evidence({ title, items }: { title: string; items: string[] }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Mic bar                                                                    */
+/* Input bar (text mode)                                                      */
 /* -------------------------------------------------------------------------- */
 
 function MicBar() {
   return (
-    <div className="border-t border-border px-[22px] pb-5 pt-4">
-      <div className="mb-3 flex justify-center">
+    <div className="border-t border-border bg-bg-subtle px-[18px] pb-4 pt-3">
+      <div className="flex items-end gap-2 rounded-xl border border-border bg-bg-elevated px-3 py-2 shadow-[0_1px_2px_rgba(16,24,40,0.04)] focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgba(91,95,207,0.12)]">
+        <textarea
+          rows={1}
+          placeholder="Ask Ada about your inventory…"
+          className="flex-1 resize-none bg-transparent text-[13.5px] leading-[1.5] text-ink placeholder:text-ink-faint focus:outline-none"
+        />
         <button
           type="button"
-          aria-label="Press to speak to Ada"
-          className="relative flex h-[62px] w-[62px] items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-600 text-white shadow-[0_4px_18px_rgba(99,102,241,0.4)] transition-transform hover:scale-105 active:scale-95"
+          aria-label="Send"
+          className="flex h-[30px] w-[30px] flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-cyan-600 text-white shadow-[0_2px_6px_rgba(99,102,241,0.35)] transition-transform hover:scale-105 active:scale-95"
         >
           <svg
-            className="h-6 w-6"
+            className="h-[14px] w-[14px]"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="12" y1="19" x2="12" y2="5" />
+            <polyline points="5 12 12 5 19 12" />
+          </svg>
+        </button>
+      </div>
+      <div className="mt-2 flex items-center justify-between font-mono text-[10.5px] text-ink-muted">
+        <span>
+          <kbd className="rounded border border-border bg-bg-elevated px-[4px] py-px text-[9.5px] text-ink-soft">
+            ↵
+          </kbd>{" "}
+          to send ·{" "}
+          <kbd className="rounded border border-border bg-bg-elevated px-[4px] py-px text-[9.5px] text-ink-soft">
+            ⇧↵
+          </kbd>{" "}
+          for new line
+        </span>
+        <button
+          type="button"
+          aria-label="Switch to voice"
+          className="inline-flex items-center gap-1 rounded-md px-[7px] py-[3px] text-[10.5px] text-ink-muted hover:bg-bg-elevated hover:text-ink"
+        >
+          <svg
+            className="h-[11px] w-[11px]"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -213,29 +215,10 @@ function MicBar() {
             <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
             <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
             <line x1="12" y1="19" x2="12" y2="23" />
-            <line x1="8" y1="23" x2="16" y2="23" />
           </svg>
+          Voice
         </button>
       </div>
-      <div className="mb-3 text-center font-mono text-[11.5px] text-ink-muted">
-        Tap to speak · hold for push-to-talk
-      </div>
-      <div className="flex flex-wrap justify-center gap-[6px]">
-        <MicOption label="Type instead" />
-        <MicOption label="Mute Ada" />
-        <MicOption label="Hand off" />
-      </div>
     </div>
-  );
-}
-
-function MicOption({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      className="rounded-md border border-border bg-transparent px-[11px] py-[6px] text-[11.5px] font-medium text-ink-muted hover:bg-bg-subtle hover:text-ink"
-    >
-      {label}
-    </button>
   );
 }
