@@ -28,8 +28,16 @@ type Row =
       isRef: boolean;
     };
 
+type Destination = "all" | "ado" | "gh" | "both";
+type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
+type LayerFilter = "all" | "jtbd" | "feature" | "entity";
+
 export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
   const rows = useMemo(() => buildRows(groups), [groups]);
+
+  const [destination, setDestination] = useState<Destination>("all");
+  const [patternFilter, setPatternFilter] = useState<PatternFilter>("all");
+  const [layer, setLayer] = useState<LayerFilter>("all");
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
@@ -74,37 +82,131 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
     setExpanded(next);
   };
 
-  const visibleRows = rows.filter((r) => {
+  const matchesFilters = (r: Row): boolean => {
     if (r.kind === "cat") return true;
-    if (r.kind === "jtbd") {
-      // Show if its category is expanded
-      const catId = `cat:${r.jtbd.category}`;
-      return expanded.has(catId);
+    if (destination !== "all") {
+      const stays =
+        r.kind === "jtbd"
+          ? r.jtbd.staysInAdo
+          : r.kind === "feature"
+            ? r.feature.staysInAdo
+            : r.entity.staysInAdo;
+      if (stays !== destination) return false;
     }
-    if (r.kind === "feature") {
-      return expanded.has(r.parentId);
+    if (patternFilter !== "all") {
+      if (r.kind === "jtbd") return false; // JTBDs have no pattern
+      const p = r.kind === "feature" ? r.feature.pattern : r.entity.pattern;
+      if (p !== patternFilter) return false;
     }
-    if (r.kind === "entity") {
-      return expanded.has(r.parentId);
+    return true;
+  };
+
+  // Layer "all" → tree with collapse semantics; other layers → flat list of that layer.
+  const visibleRows: Row[] = (() => {
+    if (layer === "all") {
+      return rows.filter((r) => {
+        if (!matchesFilters(r)) return false;
+        if (r.kind === "cat") return true;
+        if (r.kind === "jtbd") return expanded.has(`cat:${r.jtbd.category}`);
+        if (r.kind === "feature") return expanded.has(r.parentId);
+        if (r.kind === "entity") return expanded.has(r.parentId);
+        return false;
+      });
     }
-    return false;
-  });
+    // Flat layer view: show category headers (JTBD layer only) + matching rows.
+    // Dedupe features/entities by id.
+    const seen = new Set<string>();
+    const flat: Row[] = [];
+    let pendingCat: (Row & { kind: "cat" }) | null = null;
+    let catEmitted = false;
+    for (const r of rows) {
+      if (r.kind === "cat") {
+        pendingCat = r;
+        catEmitted = false;
+        continue;
+      }
+      if (r.kind === "jtbd" && layer === "jtbd" && matchesFilters(r)) {
+        if (pendingCat && !catEmitted) {
+          flat.push(pendingCat);
+          catEmitted = true;
+        }
+        flat.push(r);
+        continue;
+      }
+      if (r.kind === "feature" && layer === "feature" && matchesFilters(r)) {
+        if (seen.has(r.feature.id)) continue;
+        seen.add(r.feature.id);
+        flat.push({ ...r, isRef: false });
+        continue;
+      }
+      if (r.kind === "entity" && layer === "entity" && matchesFilters(r)) {
+        if (seen.has(r.entity.id)) continue;
+        seen.add(r.entity.id);
+        flat.push({ ...r, isRef: false });
+        continue;
+      }
+    }
+    return flat;
+  })();
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <ChipGroup
+          label="View"
+          value={layer}
+          onChange={(v) => setLayer(v as LayerFilter)}
+          options={[
+            { value: "all", label: "All layers" },
+            { value: "jtbd", label: "JTBDs only" },
+            { value: "feature", label: "Features only" },
+            { value: "entity", label: "Entities only" },
+          ]}
+        />
+        <ChipGroup
+          label="Destination"
+          value={destination}
+          onChange={(v) => setDestination(v as Destination)}
+          options={[
+            { value: "all", label: "All" },
+            { value: "gh", label: "Moves to GitHub" },
+            { value: "ado", label: "Stays in ADO" },
+            { value: "both", label: "Hybrid" },
+          ]}
+        />
+        <ChipGroup
+          label="Pattern"
+          value={patternFilter}
+          onChange={(v) => setPatternFilter(v as PatternFilter)}
+          options={[
+            { value: "all", label: "All" },
+            { value: "P1", label: "P1" },
+            { value: "P2", label: "P2" },
+            { value: "P3", label: "P3" },
+            { value: "P4", label: "P4" },
+            { value: "P5", label: "P5" },
+            { value: "P6", label: "P6" },
+          ]}
+        />
+      </div>
+
       <div className="flex items-center gap-2">
-        <button
-          onClick={expandAll}
-          className="rounded-md border border-border bg-bg-elevated px-3 py-1 font-mono text-[11px] text-ink-muted hover:text-ink"
-        >
-          Expand all
-        </button>
-        <button
-          onClick={collapseAll}
-          className="rounded-md border border-border bg-bg-elevated px-3 py-1 font-mono text-[11px] text-ink-muted hover:text-ink"
-        >
-          Collapse all
-        </button>
+        {layer === "all" ? (
+          <>
+            <button
+              onClick={expandAll}
+              className="rounded-md border border-border bg-bg-elevated px-3 py-1 font-mono text-[11px] text-ink-muted hover:text-ink"
+            >
+              Expand all
+            </button>
+            <button
+              onClick={collapseAll}
+              className="rounded-md border border-border bg-bg-elevated px-3 py-1 font-mono text-[11px] text-ink-muted hover:text-ink"
+            >
+              Collapse all
+            </button>
+          </>
+        ) : null}
         <span className="ml-auto font-mono text-[11px] text-ink-muted">
           {rows.filter((r) => r.kind === "jtbd").length} JTBDs ·{" "}
           {rows.filter((r) => r.kind === "feature").length} features ·{" "}
@@ -502,6 +604,43 @@ function Legend() {
       <span className="text-ink-faint">
         Shared items show once in full, then as greyed reference rows.
       </span>
+    </div>
+  );
+}
+
+function ChipGroup({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="mr-1 font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
+        {label}
+      </span>
+      {options.map((o) => {
+        const active = o.value === value;
+        return (
+          <button
+            key={o.value}
+            type="button"
+            onClick={() => onChange(o.value)}
+            className={`rounded-full border px-2.5 py-[3px] text-[11.5px] transition-colors ${
+              active
+                ? "border-ink bg-ink text-white"
+                : "border-border bg-bg-elevated text-ink-soft hover:text-ink"
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
