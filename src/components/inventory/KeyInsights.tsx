@@ -93,6 +93,35 @@ const INSIGHT_CATEGORIES: Array<{
   { label: "Extensions", count: 168, pct: 6 },
 ];
 
+type LeverageRow = {
+  feature: string;
+  teams: number;
+  approach: "move" | "stay" | "gap";
+};
+
+const INSIGHT_LEVERAGE: {
+  highLeverage: LeverageRow[];
+  niche: LeverageRow[];
+} = {
+  highLeverage: [
+    { feature: "Branch protection rules", teams: 142, approach: "move" },
+    { feature: "Pull request workflow", teams: 142, approach: "move" },
+    { feature: "Commit / push", teams: 142, approach: "move" },
+    { feature: "Required reviewers", teams: 138, approach: "move" },
+    { feature: "Service connections", teams: 134, approach: "stay" },
+    { feature: "Sprint planning", teams: 129, approach: "stay" },
+    { feature: "Release gates", teams: 116, approach: "stay" },
+  ],
+  niche: [
+    { feature: "Path-scoped permissions", teams: 4, approach: "gap" },
+    { feature: "Manual exploratory testing", teams: 3, approach: "stay" },
+    { feature: "Custom build agents (GPU)", teams: 2, approach: "stay" },
+    { feature: "Universal package feed", teams: 2, approach: "stay" },
+    { feature: "Custom widget plugins", teams: 2, approach: "stay" },
+    { feature: "Test impact analysis", teams: 1, approach: "gap" },
+  ],
+};
+
 export function KeyInsights() {
   return (
     <section className="space-y-3">
@@ -101,6 +130,7 @@ export function KeyInsights() {
         <DiscoveryPanel />
         <CategoryPanel />
       </div>
+      <LeveragePanel />
     </section>
   );
 }
@@ -359,6 +389,92 @@ function CategoryPanel() {
       </div>
     </div>
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/* §12 — Shared-feature heatmap (high-leverage vs niche)                      */
+/* -------------------------------------------------------------------------- */
+
+function LeveragePanel() {
+  return (
+    <div className="rounded-xl border border-border bg-bg-elevated p-5">
+      <div className="mb-1 text-[13.5px] font-semibold tracking-[-0.01em] text-ink">
+        Feature leverage
+      </div>
+      <div className="mb-4 text-[12px] text-ink-muted">
+        Where solving once benefits many — versus niche features that affect
+        only a handful of teams.
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <LeverageTable
+          label="High-leverage features"
+          sub="Used by ≥ 75% of teams. Move these well and most of the program benefits at once."
+          rows={INSIGHT_LEVERAGE.highLeverage}
+        />
+        <LeverageTable
+          label="Niche features"
+          sub="Used by ≤ 5% of teams. Low leverage — solve case-by-case if at all."
+          rows={INSIGHT_LEVERAGE.niche}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LeverageTable({
+  label,
+  sub,
+  rows,
+}: {
+  label: string;
+  sub: string;
+  rows: LeverageRow[];
+}) {
+  return (
+    <div>
+      <div className="mb-1 text-[12.5px] font-semibold text-ink">{label}</div>
+      <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
+        {sub}
+      </div>
+      <table className="w-full border-collapse text-[12.5px]">
+        <thead>
+          <tr>
+            <ArchTh>Feature</ArchTh>
+            <ArchTh>Approach</ArchTh>
+            <ArchTh className="text-right">% of teams</ArchTh>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const pct = Math.round((row.teams / ARCHETYPE_TOTAL_TEAMS) * 100);
+            return (
+              <tr
+                key={row.feature}
+                className="border-b border-border-soft last:border-b-0"
+              >
+                <td className="px-3 py-2 font-medium text-ink">
+                  {row.feature}
+                </td>
+                <td className="px-3 py-2">
+                  <ApproachChip approach={row.approach} />
+                </td>
+                <td className="px-3 py-2 text-right font-mono text-[12px] text-ink-soft">
+                  {pct < 1 ? "<1%" : `${pct}%`}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ApproachChip({ approach }: { approach: "move" | "stay" | "gap" }) {
+  if (approach === "move") return <Chip tone="ok">Move</Chip>;
+  if (approach === "stay") return <Chip tone="warn">Stay (hybrid)</Chip>;
+  return <Chip tone="danger">Gap</Chip>;
 }
 
 /* -------------------------------------------------------------------------- */
