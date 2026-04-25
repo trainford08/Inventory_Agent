@@ -342,7 +342,7 @@ function SubNavItem({
     : isDone
       ? "text-success-ink"
       : "text-ink-muted";
-  const className = `mb-px flex items-center gap-[10px] rounded-md py-[6px] pl-[34px] pr-[10px] text-[12.5px] transition-colors ${
+  const className = `mb-px flex items-center gap-[10px] rounded-md py-[6px] pl-[52px] pr-[10px] text-[12px] transition-colors ${
     active
       ? "bg-sidebar-active font-semibold text-primary"
       : href
