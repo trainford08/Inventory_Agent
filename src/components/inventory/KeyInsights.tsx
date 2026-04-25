@@ -8,60 +8,76 @@
 // Numbers are illustrative until the catalog + findings data are seeded across
 // every cohort. Replace each INSIGHT_* block with a server query once available.
 
-const INSIGHT_ARCHETYPE = [
+type Posture = "Easy mover" | "Mixed" | "Deep hybrid";
+
+const INSIGHT_ARCHETYPE: Array<{
+  cohort: string;
+  tagline: string;
+  teamsScanned: number;
+  programPct: number;
+  posture: Posture;
+  accent: string;
+  summary: string;
+}> = [
   {
     cohort: "Alpha",
     tagline: "The easy yes",
     teamsScanned: 32,
-    postureMatch: 91,
+    programPct: 23,
     posture: "Easy mover",
-    strategy: "S02 Translate (54%)",
-    parity: "Match (66%)",
+    accent: "#5b5fcf",
+    summary:
+      "Modern web and cloud-native teams. Polyrepo, YAML-first, OIDC, minimal customization. Ideal pilot wave.",
   },
   {
     cohort: "Bravo",
     tagline: "The typical healthy team",
     teamsScanned: 47,
-    postureMatch: 68,
+    programPct: 33,
     posture: "Easy mover",
-    strategy: "S02 Translate (52%)",
-    parity: "Match (62%)",
+    accent: "#06b6d4",
+    summary:
+      "The program's benchmark for “normal”. Average per-team complexity; high totals reflect team count, not risk. Main wave after Alpha.",
   },
   {
     cohort: "Charlie",
     tagline: "The interesting one",
     teamsScanned: 24,
-    postureMatch: 79,
+    programPct: 17,
     posture: "Easy mover",
-    strategy: "S02 Translate (48%)",
-    parity: "Match (61%)",
+    accent: "#f59e0b",
+    summary:
+      "Data-platform and analytics teams. Python-heavy with a few unusual data-tool integrations. Easier than the “interesting” label suggested.",
   },
   {
     cohort: "Delta",
     tagline: "The heavyweight",
     teamsScanned: 19,
-    postureMatch: 72,
+    programPct: 13,
     posture: "Mixed",
-    strategy: "S02 Translate (55%)",
-    parity: "Match (58%)",
+    accent: "#1f4d3a",
+    summary:
+      "Infrastructure teams — Kubernetes, build systems, internal tooling. Movable but mixed: integrates with every other team. Per-team review wave.",
   },
   {
     cohort: "Echo",
     tagline: "The Champion still has work",
     teamsScanned: 13,
-    postureMatch: 85,
+    programPct: 9,
     posture: "Deep hybrid",
-    strategy: "S05 Build glue (28%)",
-    parity: "Gap (22%)",
+    accent: "#dc2626",
+    summary:
+      "Regulated payments. Compliance workflows, monorepos, deep Test Plans. Per-team complexity 4× program average. Multi-year hybrid.",
   },
   {
     cohort: "Foxtrot",
     tagline: "The edge case",
     teamsScanned: 7,
-    postureMatch: 71,
+    programPct: 5,
     posture: "Deep hybrid",
-    strategy: "S01 Protect (52%)",
-    parity: "Partial (41%)",
+    accent: "#71717a",
+    summary:
+      "QA-platform teams. Anchored to ADO Test Plans (manual, exploratory, traceability) — no GitHub equivalent. Hybrid is a permanent home, not a transition.",
   },
 ];
 
@@ -453,57 +469,84 @@ function ArchetypePanel() {
         (Alpha–Foxtrot) by the program — typically by engineering domain (web,
         mobile, data, infra, payments, QA), tech stack, and target migration
         wave. For each cohort, the agent classifies every team&apos;s hybrid
-        posture and surfaces the dominant pattern below. <em>Match</em> = share
-        of teams in the cohort that landed as that dominant posture.
+        posture and surfaces the dominant pattern below.
       </div>
-      <table className="w-full border-collapse text-[12.5px]">
-        <thead>
-          <tr>
-            <ArchTh>Cohort</ArchTh>
-            <ArchTh>Profile</ArchTh>
-            <ArchTh className="text-right">Teams</ArchTh>
-            <ArchTh>Dominant posture</ArchTh>
-            <ArchTh>Most common strategy</ArchTh>
-            <ArchTh>Most common parity</ArchTh>
-          </tr>
-        </thead>
-        <tbody>
-          {INSIGHT_ARCHETYPE.map((row) => {
-            const tone =
-              row.postureMatch >= 75
-                ? ("ok" as const)
-                : row.postureMatch >= 50
-                  ? ("warn" as const)
-                  : ("danger" as const);
-            return (
-              <tr
-                key={row.cohort}
-                className="border-b border-border-soft/60 last:border-b-0"
-              >
-                <td className="px-3 py-2 font-semibold text-ink">
+
+      <div className="mb-4 flex flex-col gap-1.5 rounded-lg border border-border bg-bg-subtle px-3 py-2.5 text-[11.5px] leading-[1.5] text-ink-soft">
+        <div className="mb-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
+          Postures
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="w-[88px] flex-shrink-0">
+            <Chip tone="ok">Easy mover</Chip>
+          </span>
+          <span>≥ 60% of the team&apos;s features move cleanly to GitHub.</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="w-[88px] flex-shrink-0">
+            <Chip tone="warn">Mixed</Chip>
+          </span>
+          <span>Balanced split — some features move, others stay in ADO.</span>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="w-[88px] flex-shrink-0">
+            <Chip tone="danger">Deep hybrid</Chip>
+          </span>
+          <span>
+            ≥ 50% of features stay in ADO long-term (Test Plans, Boards, classic
+            pipelines, regulated workflows).
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {INSIGHT_ARCHETYPE.map((row) => {
+          const tone: "ok" | "warn" | "danger" =
+            row.posture === "Easy mover"
+              ? "ok"
+              : row.posture === "Mixed"
+                ? "warn"
+                : "danger";
+          return (
+            <div
+              key={row.cohort}
+              className="rounded-xl border border-border bg-bg-elevated p-5"
+              style={{ borderLeft: `4px solid ${row.accent}` }}
+            >
+              <div className="mb-1 flex items-baseline justify-between gap-3">
+                <div className="text-[20px] font-bold tracking-[-0.02em] leading-[1.1] text-ink">
                   {row.cohort}
-                </td>
-                <td className="px-3 py-2 italic text-ink-soft">
-                  {row.tagline}
-                </td>
-                <td className="px-3 py-2 text-right font-mono text-[12px] text-ink-soft">
-                  {row.teamsScanned}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-2">
-                    <Chip tone={tone}>{row.posture}</Chip>
-                    <span className="font-mono text-[11px] text-ink-muted">
-                      {row.postureMatch}%
-                    </span>
+                </div>
+                <Chip tone={tone}>{row.posture}</Chip>
+              </div>
+              <div className="mb-4 text-[12px] italic text-ink-muted">
+                {row.tagline}
+              </div>
+              <div className="mb-4 grid grid-cols-2 gap-2 rounded-lg bg-bg-subtle p-3">
+                <div className="flex flex-col gap-[3px]">
+                  <div className="text-[20px] font-bold tracking-[-0.025em] leading-none text-ink">
+                    {row.teamsScanned}
                   </div>
-                </td>
-                <td className="px-3 py-2 text-ink-soft">{row.strategy}</td>
-                <td className="px-3 py-2 text-ink-soft">{row.parity}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                  <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
+                    Teams
+                  </div>
+                </div>
+                <div className="flex flex-col gap-[3px] border-l border-border pl-3">
+                  <div className="text-[20px] font-bold tracking-[-0.025em] leading-none text-ink">
+                    {row.programPct}%
+                  </div>
+                  <div className="font-mono text-[9.5px] font-semibold uppercase tracking-[0.1em] text-ink-muted">
+                    Of program
+                  </div>
+                </div>
+              </div>
+              <div className="text-[12.5px] leading-[1.55] text-ink-soft">
+                {row.summary}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cohort cards (Option B) — clearer stats</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.08);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+    --c-alpha: #5b5fcf;
+    --c-bravo: #06b6d4;
+    --c-charlie: #f59e0b;
+    --c-delta: #1f4d3a;
+    --c-echo: #dc2626;
+    --c-foxtrot: #71717a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  .mock-banner {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  .mock-banner strong { color: var(--ink); }
+
+  .section-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 4px 12px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .lede {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    max-width: 760px;
+    margin-bottom: 28px;
+  }
+
+  .cohort-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .cohort-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    border-left: 4px solid;
+  }
+
+  .cohort-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .cohort-card-name {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .pill.ok { background: var(--success-soft); color: var(--success-ink); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn-ink); }
+  .pill.danger { background: var(--danger-soft); color: var(--danger-ink); }
+
+  .cohort-card-tagline {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    font-style: italic;
+    margin-bottom: 16px;
+  }
+
+  /* Posture legend */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+  }
+  .legend-title {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    align-self: center;
+    margin-right: 4px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    flex: 1 1 240px;
+  }
+  .legend-item .pill { flex-shrink: 0; }
+  .legend-item .def { color: var(--ink-soft); }
+
+  /* Stats strip — primary teams count + secondary share */
+  .stats-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px;
+    background: var(--bg-subtle);
+    border-radius: 8px;
+    margin-bottom: 14px;
+  }
+  .stats-strip > div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .stats-strip > div + div {
+    border-left: 1px solid var(--border);
+    padding-left: 12px;
+  }
+  .stats-num {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .stats-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .cohort-summary {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+  }
+
+  @media (max-width: 900px) {
+    .cohort-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .cohort-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mock-banner">
+    <strong>Option B (refined) · cohort cards.</strong> Each card now leads with two clear stat blocks: <em>Teams</em> (count) and <em>Of program</em> (share %). Numbers are illustrative against a 142-team scan.
+  </div>
+
+  <span class="section-tag">Option B · Cohort cards (refined)</span>
+  <h2>One card per cohort, ultra-simple</h2>
+  <p class="lede">Each card now has an explicit two-stat strip — <strong>32 Teams · 23% Of program</strong> — instead of the cramped <code>32 teams · 23%</code> dot syntax. No ambiguity about what each number means.</p>
+
+  <div class="legend">
+    <span class="legend-title">Postures</span>
+    <div class="legend-item">
+      <span class="pill ok">Easy mover</span>
+      <span class="def">≥ 60% of the team&rsquo;s features move cleanly to GitHub.</span>
+    </div>
+    <div class="legend-item">
+      <span class="pill warn">Mixed</span>
+      <span class="def">Balanced split — some features move, others stay in ADO.</span>
+    </div>
+    <div class="legend-item">
+      <span class="pill danger">Deep hybrid</span>
+      <span class="def">≥ 50% of features stay in ADO long-term (Test Plans, Boards, classic pipelines, regulated workflows).</span>
+    </div>
+  </div>
+
+  <div class="cohort-grid">
+
+    <!-- Alpha -->
+    <div class="cohort-card" style="border-left-color:var(--c-alpha)">
+      <div class="cohort-card-head">
+        <div class="cohort-card-name">Alpha</div>
+        <span class="pill ok">Easy mover</span>
+      </div>
+      <div class="cohort-card-tagline">The easy yes</div>
+      <div class="stats-strip">
+        <div>
+          <div class="stats-num">32</div>
+          <div class="stats-label">Teams</div>
+        </div>
+        <div>
+          <div class="stats-num">23%</div>
+          <div class="stats-label">Of program</div>
+        </div>
+      </div>
+      <div class="cohort-summary">
+        Modern web and cloud-native teams. Polyrepo, YAML-first, OIDC, minimal
+        customization. Ideal pilot wave.
+      </div>
+    </div>
+
+    <!-- Bravo -->
+    <div class="cohort-card" style="border-left-color:var(--c-bravo)">
+      <div class="cohort-card-head">
+        <div class="cohort-card-name">Bravo</div>
+        <span class="pill ok">Easy mover</span>
+      </div>
+      <div class="cohort-card-tagline">The typical healthy team</div>
+      <div class="stats-strip">
+        <div>
+          <div class="stats-num">47</div>
+          <div class="stats-label">Teams</div>
+        </div>
+        <div>
+          <div class="stats-num">33%</div>
+          <div class="stats-label">Of program</div>
+        </div>
+      </div>
+      <div class="cohort-summary">
+        The program&apos;s benchmark for &ldquo;normal&rdquo;. Average per-team
+        complexity; high totals reflect team count, not risk. Main wave after
+        Alpha.
+      </div>
+    </div>
+
+    <!-- Charlie -->
+    <div class="cohort-card" style="border-left-color:var(--c-charlie)">
+      <div class="cohort-card-head">
+        <div class="cohort-card-name">Charlie</div>
+        <span class="pill ok">Easy mover</span>
+      </div>
+      <div class="cohort-card-tagline">The interesting one</div>
+      <div class="stats-strip">
+        <div>
+          <div class="stats-num">24</div>
+          <div class="stats-label">Teams</div>
+        </div>
+        <div>
+          <div class="stats-num">17%</div>
+          <div class="stats-label">Of program</div>
+        </div>
+      </div>
+      <div class="cohort-summary">
+        Data-platform and analytics teams. Python-heavy with a few unusual
+        data-tool integrations. Easier than the &ldquo;interesting&rdquo;
+        label suggested.
+      </div>
+    </div>
+
+    <!-- Delta -->
+    <div class="cohort-card" style="border-left-color:var(--c-delta)">
+      <div class="cohort-card-head">
+        <div class="cohort-card-name">Delta</div>
+        <span class="pill warn">Mixed</span>
+      </div>
+      <div class="cohort-card-tagline">The heavyweight</div>
+      <div class="stats-strip">
+        <div>
+          <div class="stats-num">19</div>
+          <div class="stats-label">Teams</div>
+        </div>
+        <div>
+          <div class="stats-num">13%</div>
+          <div class="stats-label">Of program</div>
+        </div>
+      </div>
+      <div class="cohort-summary">
+        Infrastructure teams — Kubernetes, build systems, internal tooling.
+        Movable but mixed: integrates with every other team. Per-team
+        review wave.
+      </div>
+    </div>
+
+    <!-- Echo -->
+    <div class="cohort-card" style="border-left-color:var(--c-echo)">
+      <div class="cohort-card-head">
+        <div class="cohort-card-name">Echo</div>
+        <span class="pill danger">Deep hybrid</span>
+      </div>
+      <div class="cohort-card-tagline">The Champion still has work</div>
+      <div class="stats-strip">
+        <div>
+          <div class="stats-num">13</div>
+          <div class="stats-label">Teams</div>
+        </div>
+        <div>
+          <div class="stats-num">9%</div>
+          <div class="stats-label">Of program</div>
+        </div>
+      </div>
+      <div class="cohort-summary">
+        Regulated payments. Compliance workflows, monorepos, deep Test
+        Plans. Per-team complexity 4× program average. Multi-year hybrid.
+      </div>
+    </div>
+
+    <!-- Foxtrot -->
+    <div class="cohort-card" style="border-left-color:var(--c-foxtrot)">
+      <div class="cohort-card-head">
+        <div class="cohort-card-name">Foxtrot</div>
+        <span class="pill danger">Deep hybrid</span>
+      </div>
+      <div class="cohort-card-tagline">The edge case</div>
+      <div class="stats-strip">
+        <div>
+          <div class="stats-num">7</div>
+          <div class="stats-label">Teams</div>
+        </div>
+        <div>
+          <div class="stats-num">5%</div>
+          <div class="stats-label">Of program</div>
+        </div>
+      </div>
+      <div class="cohort-summary">
+        QA-platform teams. Anchored to ADO Test Plans (manual,
+        exploratory, traceability) — no GitHub equivalent. Hybrid is a
+        permanent home, not a transition.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

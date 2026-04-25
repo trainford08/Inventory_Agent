@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cohort insight mocks — simpler options</title>
+<style>
+  :root {
+    --bg: #f7f7f8;
+    --bg-elev: #ffffff;
+    --bg-subtle: #f0f0f2;
+    --bg-muted: #e4e4e7;
+    --ink: #0a0a0a;
+    --ink-soft: #3f3f46;
+    --ink-muted: #71717a;
+    --ink-faint: #a1a1aa;
+    --border: #e4e4e7;
+    --border-soft: #f0f0f2;
+    --primary: #5b5fcf;
+    --primary-soft: rgba(91, 95, 207, 0.08);
+    --success: #16a34a;
+    --success-soft: #dcfce7;
+    --success-ink: #15803d;
+    --warn: #d97706;
+    --warn-soft: #fef3c7;
+    --warn-ink: #b45309;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+    --danger-ink: #b91c1c;
+    --purple: #8b5cf6;
+    --purple-soft: #ede9fe;
+    --purple-ink: #6d28d9;
+    /* Cohort identity colors */
+    --c-alpha: #5b5fcf;
+    --c-bravo: #06b6d4;
+    --c-charlie: #f59e0b;
+    --c-delta: #1f4d3a;
+    --c-echo: #dc2626;
+    --c-foxtrot: #71717a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Geist", "Inter", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.003em;
+    -webkit-font-smoothing: antialiased;
+    padding: 28px 32px 80px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  .mock-banner {
+    background: var(--warn-soft);
+    border-left: 3px solid var(--warn);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--warn-ink);
+    margin-bottom: 24px;
+  }
+  .mock-banner strong { color: var(--ink); }
+
+  .option-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 4px 12px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .option-lede {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    max-width: 760px;
+    margin-bottom: 20px;
+  }
+  .section {
+    margin-top: 56px;
+    padding-top: 36px;
+    border-top: 2px solid var(--ink);
+  }
+  .section:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+
+  .panel {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .panel-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .panel-sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 4px; margin-bottom: 18px; }
+
+  /* ===== OPTION A: 3-card posture distribution ===== */
+  .opt-a-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .posture-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    border-top: 4px solid;
+    background: var(--bg-elev);
+  }
+  .posture-card.easy { border-top-color: var(--success); }
+  .posture-card.mixed { border-top-color: var(--warn); }
+  .posture-card.deep { border-top-color: var(--danger); }
+  .posture-pct {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .posture-card.easy .posture-pct { color: var(--success-ink); }
+  .posture-card.mixed .posture-pct { color: var(--warn-ink); }
+  .posture-card.deep .posture-pct { color: var(--danger-ink); }
+  .posture-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .posture-explain {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .posture-cohorts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+  .cohort-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    background: var(--bg-subtle);
+    border-radius: 999px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .cohort-pill .swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+  }
+  .cohort-pill strong { font-weight: 600; color: var(--ink); }
+
+  /* ===== OPTION B: cohort cards (per-cohort posture cards) ===== */
+  .opt-b-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .cohort-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    border-left: 4px solid;
+  }
+  .cohort-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .cohort-card-name {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .cohort-card-pct {
+    font-family: "Geist Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .cohort-card-tagline {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    font-style: italic;
+    margin-bottom: 12px;
+  }
+  .cohort-card-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12.5px;
+    margin-bottom: 4px;
+  }
+  .cohort-card-row .lbl {
+    font-family: "Geist Mono", monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-muted);
+    min-width: 64px;
+  }
+  .cohort-card-summary {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-family: "Geist Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .pill.ok { background: var(--success-soft); color: var(--success-ink); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn-ink); }
+  .pill.danger { background: var(--danger-soft); color: var(--danger-ink); }
+
+  /* ===== OPTION C: stacked bar of teams per cohort ===== */
+  .opt-c-bar {
+    display: flex;
+    height: 56px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .opt-c-seg {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 14px;
+    color: white;
+    font-weight: 600;
+    transition: filter 0.15s;
+  }
+  .opt-c-seg:hover { filter: brightness(1.08); }
+  .opt-c-seg .seg-name {
+    font-size: 13.5px;
+  }
+  .opt-c-seg .seg-detail {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    opacity: 0.9;
+  }
+  .opt-c-seg.alpha   { background: var(--c-alpha); }
+  .opt-c-seg.bravo   { background: var(--c-bravo); }
+  .opt-c-seg.charlie { background: var(--c-charlie); }
+  .opt-c-seg.delta   { background: var(--c-delta); }
+  .opt-c-seg.echo    { background: var(--c-echo); }
+  .opt-c-seg.foxtrot { background: var(--c-foxtrot); }
+
+  /* ===== OPTION D: wave-readiness map ===== */
+  .opt-d-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .wave-card {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-top: 3px solid;
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .wave-card.w1 { border-top-color: var(--success); }
+  .wave-card.w2 { border-top-color: var(--success); }
+  .wave-card.w3 { border-top-color: var(--warn); }
+  .wave-card.w4 { border-top-color: var(--danger); }
+  .wave-label {
+    font-family: "Geist Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+  }
+  .wave-card.w1 .wave-label, .wave-card.w2 .wave-label { color: var(--success-ink); }
+  .wave-card.w3 .wave-label { color: var(--warn-ink); }
+  .wave-card.w4 .wave-label { color: var(--danger-ink); }
+  .wave-tag {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .wave-cohorts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .wave-cohort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .wave-cohort .swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .wave-cohort strong { color: var(--ink); font-weight: 600; }
+  .wave-cohort .ct {
+    margin-left: auto;
+    font-family: "Geist Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  /* ===== OPTION E: simple ranked list ===== */
+  .opt-e-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .opt-e-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 200px 100px;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .opt-e-rank {
+    font-family: "Geist Mono", monospace;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-muted);
+  }
+  .opt-e-cohort {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .opt-e-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+  .opt-e-tagline {
+    font-size: 12px;
+    color: var(--ink-muted);
+    font-style: italic;
+  }
+  .opt-e-bar {
+    height: 8px;
+    background: var(--bg-subtle);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .opt-e-bar > div {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 999px;
+  }
+  .opt-e-meta {
+    text-align: right;
+    font-family: "Geist Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .opt-e-meta strong { color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .opt-a-grid, .opt-b-grid, .opt-d-grid { grid-template-columns: 1fr 1fr; }
+    .opt-e-row { grid-template-columns: 24px 1fr 80px; }
+    .opt-e-row .opt-e-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="mock-banner">
+    <strong>Five mocks for simpler cohort insights.</strong> Each replaces (or sits beside) the current dense Cohort archetypes table. Numbers illustrative against the 142-team scan we&apos;ve been working with.
+  </div>
+
+  <!-- ========== OPTION A ========== -->
+  <div class="section">
+    <span class="option-tag">Option A · Posture distribution</span>
+    <h2>Three big numbers: how the program splits</h2>
+    <p class="option-lede">Drops cohort detail entirely. Just shows what proportion of the program lands in each posture, plus which cohorts make up each bucket.</p>
+
+    <div class="opt-a-grid">
+      <div class="posture-card easy">
+        <div class="posture-pct">73%</div>
+        <div class="posture-name">Easy mover</div>
+        <div class="posture-explain">≥ 60% of features move cleanly to GitHub. Standard PR &amp; branch-protection migrations.</div>
+        <div class="posture-cohorts">
+          <span class="cohort-pill"><span class="swatch" style="background:var(--c-alpha)"></span><strong>Alpha</strong>&nbsp;32</span>
+          <span class="cohort-pill"><span class="swatch" style="background:var(--c-bravo)"></span><strong>Bravo</strong>&nbsp;47</span>
+          <span class="cohort-pill"><span class="swatch" style="background:var(--c-charlie)"></span><strong>Charlie</strong>&nbsp;24</span>
+        </div>
+      </div>
+      <div class="posture-card mixed">
+        <div class="posture-pct">13%</div>
+        <div class="posture-name">Mixed</div>
+        <div class="posture-explain">Balanced split — some features move, others stay in ADO. Plan a per-team review.</div>
+        <div class="posture-cohorts">
+          <span class="cohort-pill"><span class="swatch" style="background:var(--c-delta)"></span><strong>Delta</strong>&nbsp;19</span>
+        </div>
+      </div>
+      <div class="posture-card deep">
+        <div class="posture-pct">14%</div>
+        <div class="posture-name">Deep hybrid</div>
+        <div class="posture-explain">≥ 50% of features stay in ADO long-term. Multi-year hybrid commitment.</div>
+        <div class="posture-cohorts">
+          <span class="cohort-pill"><span class="swatch" style="background:var(--c-echo)"></span><strong>Echo</strong>&nbsp;13</span>
+          <span class="cohort-pill"><span class="swatch" style="background:var(--c-foxtrot)"></span><strong>Foxtrot</strong>&nbsp;7</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== OPTION B ========== -->
+  <div class="section">
+    <span class="option-tag">Option B · Cohort cards</span>
+    <h2>One card per cohort, ultra-simple</h2>
+    <p class="option-lede">Six cards. Each shows the cohort name, team count, posture pill, and a one-sentence summary. No tables, no match percentages, no jargon.</p>
+
+    <div class="opt-b-grid">
+      <div class="cohort-card" style="border-left-color:var(--c-alpha)">
+        <div class="cohort-card-head"><div class="cohort-card-name">Alpha</div><div class="cohort-card-pct">32 teams · 23%</div></div>
+        <div class="cohort-card-tagline">The easy yes</div>
+        <div><span class="pill ok">Easy mover</span></div>
+        <div class="cohort-card-summary">Almost every team moves cleanly to GitHub. Start here.</div>
+      </div>
+      <div class="cohort-card" style="border-left-color:var(--c-bravo)">
+        <div class="cohort-card-head"><div class="cohort-card-name">Bravo</div><div class="cohort-card-pct">47 teams · 33%</div></div>
+        <div class="cohort-card-tagline">The typical healthy team</div>
+        <div><span class="pill ok">Easy mover</span></div>
+        <div class="cohort-card-summary">Largest cohort, average per-team complexity. Operationally mature.</div>
+      </div>
+      <div class="cohort-card" style="border-left-color:var(--c-charlie)">
+        <div class="cohort-card-head"><div class="cohort-card-name">Charlie</div><div class="cohort-card-pct">24 teams · 17%</div></div>
+        <div class="cohort-card-tagline">The interesting one</div>
+        <div><span class="pill ok">Easy mover</span></div>
+        <div class="cohort-card-summary">More movable than expected. Standard migration shape.</div>
+      </div>
+      <div class="cohort-card" style="border-left-color:var(--c-delta)">
+        <div class="cohort-card-head"><div class="cohort-card-name">Delta</div><div class="cohort-card-pct">19 teams · 13%</div></div>
+        <div class="cohort-card-tagline">The heavyweight</div>
+        <div><span class="pill warn">Mixed</span></div>
+        <div class="cohort-card-summary">Infra-heavy. Movable, but plan for per-team review.</div>
+      </div>
+      <div class="cohort-card" style="border-left-color:var(--c-echo)">
+        <div class="cohort-card-head"><div class="cohort-card-name">Echo</div><div class="cohort-card-pct">13 teams · 9%</div></div>
+        <div class="cohort-card-tagline">The Champion still has work</div>
+        <div><span class="pill danger">Deep hybrid</span></div>
+        <div class="cohort-card-summary">Regulated payments. Highest per-team complexity. Plan as multi-year hybrid.</div>
+      </div>
+      <div class="cohort-card" style="border-left-color:var(--c-foxtrot)">
+        <div class="cohort-card-head"><div class="cohort-card-name">Foxtrot</div><div class="cohort-card-pct">7 teams · 5%</div></div>
+        <div class="cohort-card-tagline">The edge case</div>
+        <div><span class="pill danger">Deep hybrid</span></div>
+        <div class="cohort-card-summary">QA-platform. Anchored to ADO Test Plans long-term.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== OPTION C ========== -->
+  <div class="section">
+    <span class="option-tag">Option C · Single stacked bar</span>
+    <h2>How the 142 teams split, in one bar</h2>
+    <p class="option-lede">A single visual: which cohort holds what share of the program. Width-proportional, color-keyed, one glance. Best paired with anything else as a "size context" header.</p>
+
+    <div class="panel">
+      <div class="opt-c-bar">
+        <div class="opt-c-seg bravo"   style="width: 33%"><div class="seg-name">Bravo</div><div class="seg-detail">47 · 33%</div></div>
+        <div class="opt-c-seg alpha"   style="width: 23%"><div class="seg-name">Alpha</div><div class="seg-detail">32 · 23%</div></div>
+        <div class="opt-c-seg charlie" style="width: 17%"><div class="seg-name">Charlie</div><div class="seg-detail">24 · 17%</div></div>
+        <div class="opt-c-seg delta"   style="width: 13%"><div class="seg-name">Delta</div><div class="seg-detail">19 · 13%</div></div>
+        <div class="opt-c-seg echo"    style="width: 9%"><div class="seg-name">Echo</div><div class="seg-detail">13 · 9%</div></div>
+        <div class="opt-c-seg foxtrot" style="width: 5%"><div class="seg-name">Foxtrot</div><div class="seg-detail">7 · 5%</div></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--ink-muted); margin-top:6px">
+        <span>Easy movers (Alpha, Bravo, Charlie) — <strong style="color:var(--ink)">73% of teams</strong></span>
+        <span>Deep hybrid (Echo, Foxtrot) — <strong style="color:var(--ink)">14%</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== OPTION D ========== -->
+  <div class="section">
+    <span class="option-tag">Option D · Wave plan</span>
+    <h2>Sequence the migration: which cohorts go in which wave</h2>
+    <p class="option-lede">Most actionable framing. Translates the cohort archetype directly into the wave-order recommendation a Program Lead would actually use.</p>
+
+    <div class="opt-d-grid">
+      <div class="wave-card w1">
+        <div class="wave-label">Wave 01 · Pilot</div>
+        <div class="wave-tag">Start clean</div>
+        <div style="font-size:12.5px; color:var(--ink-muted); line-height:1.5">Easiest migrations, lowest risk. Prove the playbook here.</div>
+        <div class="wave-cohorts">
+          <div class="wave-cohort"><span class="swatch" style="background:var(--c-alpha)"></span><strong>Alpha</strong><span class="ct">32 teams</span></div>
+        </div>
+      </div>
+      <div class="wave-card w2">
+        <div class="wave-label">Wave 02 · Bulk</div>
+        <div class="wave-tag">Scale the pattern</div>
+        <div style="font-size:12.5px; color:var(--ink-muted); line-height:1.5">Apply the proven playbook to the largest healthy cohorts.</div>
+        <div class="wave-cohorts">
+          <div class="wave-cohort"><span class="swatch" style="background:var(--c-bravo)"></span><strong>Bravo</strong><span class="ct">47 teams</span></div>
+          <div class="wave-cohort"><span class="swatch" style="background:var(--c-charlie)"></span><strong>Charlie</strong><span class="ct">24 teams</span></div>
+        </div>
+      </div>
+      <div class="wave-card w3">
+        <div class="wave-label">Wave 03 · Mixed</div>
+        <div class="wave-tag">Per-team review</div>
+        <div style="font-size:12.5px; color:var(--ink-muted); line-height:1.5">Mixed-posture teams. More tailoring; slower cadence.</div>
+        <div class="wave-cohorts">
+          <div class="wave-cohort"><span class="swatch" style="background:var(--c-delta)"></span><strong>Delta</strong><span class="ct">19 teams</span></div>
+        </div>
+      </div>
+      <div class="wave-card w4">
+        <div class="wave-label">Wave 04 · Hybrid</div>
+        <div class="wave-tag">Anchored to ADO</div>
+        <div style="font-size:12.5px; color:var(--ink-muted); line-height:1.5">Plan as multi-year hybrid, not transitional. Regulated &amp; QA workflows.</div>
+        <div class="wave-cohorts">
+          <div class="wave-cohort"><span class="swatch" style="background:var(--c-echo)"></span><strong>Echo</strong><span class="ct">13 teams</span></div>
+          <div class="wave-cohort"><span class="swatch" style="background:var(--c-foxtrot)"></span><strong>Foxtrot</strong><span class="ct">7 teams</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== OPTION E ========== -->
+  <div class="section">
+    <span class="option-tag">Option E · Ranked list</span>
+    <h2>Cohorts sorted by migration ease</h2>
+    <p class="option-lede">Vertical list ranked easiest to hardest. Each row: cohort name, tagline, a small visual representing share-of-program, and the count + posture pill.</p>
+
+    <div class="opt-e-list">
+      <div class="opt-e-row">
+        <div class="opt-e-rank">1</div>
+        <div class="opt-e-cohort"><span class="opt-e-name">Alpha</span><span class="opt-e-tagline">The easy yes</span></div>
+        <div class="opt-e-bar"><div style="width:23%"></div></div>
+        <div class="opt-e-meta"><strong>32</strong>&nbsp;<span class="pill ok">Easy</span></div>
+      </div>
+      <div class="opt-e-row">
+        <div class="opt-e-rank">2</div>
+        <div class="opt-e-cohort"><span class="opt-e-name">Bravo</span><span class="opt-e-tagline">Typical healthy</span></div>
+        <div class="opt-e-bar"><div style="width:33%"></div></div>
+        <div class="opt-e-meta"><strong>47</strong>&nbsp;<span class="pill ok">Easy</span></div>
+      </div>
+      <div class="opt-e-row">
+        <div class="opt-e-rank">3</div>
+        <div class="opt-e-cohort"><span class="opt-e-name">Charlie</span><span class="opt-e-tagline">The interesting one</span></div>
+        <div class="opt-e-bar"><div style="width:17%"></div></div>
+        <div class="opt-e-meta"><strong>24</strong>&nbsp;<span class="pill ok">Easy</span></div>
+      </div>
+      <div class="opt-e-row">
+        <div class="opt-e-rank">4</div>
+        <div class="opt-e-cohort"><span class="opt-e-name">Delta</span><span class="opt-e-tagline">The heavyweight</span></div>
+        <div class="opt-e-bar"><div style="width:13%"></div></div>
+        <div class="opt-e-meta"><strong>19</strong>&nbsp;<span class="pill warn">Mixed</span></div>
+      </div>
+      <div class="opt-e-row">
+        <div class="opt-e-rank">5</div>
+        <div class="opt-e-cohort"><span class="opt-e-name">Echo</span><span class="opt-e-tagline">Champion still has work</span></div>
+        <div class="opt-e-bar"><div style="width:9%"></div></div>
+        <div class="opt-e-meta"><strong>13</strong>&nbsp;<span class="pill danger">Deep</span></div>
+      </div>
+      <div class="opt-e-row">
+        <div class="opt-e-rank">6</div>
+        <div class="opt-e-cohort"><span class="opt-e-name">Foxtrot</span><span class="opt-e-tagline">The edge case</span></div>
+        <div class="opt-e-bar"><div style="width:5%"></div></div>
+        <div class="opt-e-meta"><strong>7</strong>&nbsp;<span class="pill danger">Deep</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
