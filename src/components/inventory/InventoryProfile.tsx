@@ -214,40 +214,249 @@ export function InventoryProfile({ groups }: { groups: CategoryGroup[] }) {
         </span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-        <table className="w-full border-collapse text-[13px]">
-          <thead>
-            <tr>
-              <Th className="w-[44px] text-right">#</Th>
-              <Th>Item</Th>
-              <Th className="w-[13%]">Layer</Th>
-              <Th className="w-[13%]">Stays in ADO?</Th>
-              <Th className="w-[9%]">Pattern</Th>
-              <Th className="w-[11%] text-right">Detail</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {(() => {
-              let rowNum = 0;
-              return visibleRows.map((r) => {
-                const num = r.kind === "cat" ? null : ++rowNum;
-                return (
-                  <RowView
-                    key={rowKey(r)}
-                    row={r}
-                    rowNum={num}
-                    expanded={expanded}
-                    onToggle={toggle}
-                  />
-                );
-              });
-            })()}
-          </tbody>
-        </table>
-      </div>
+      {layer === "all" ? (
+        <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr>
+                <Th className="w-[44px] text-right">#</Th>
+                <Th>Item</Th>
+                <Th className="w-[13%]">Layer</Th>
+                <Th className="w-[13%]">Stays in ADO?</Th>
+                <Th className="w-[9%]">Pattern</Th>
+                <Th className="w-[11%] text-right">Detail</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {(() => {
+                let rowNum = 0;
+                return visibleRows.map((r) => {
+                  const num = r.kind === "cat" ? null : ++rowNum;
+                  return (
+                    <RowView
+                      key={rowKey(r)}
+                      row={r}
+                      rowNum={num}
+                      expanded={expanded}
+                      onToggle={toggle}
+                    />
+                  );
+                });
+              })()}
+            </tbody>
+          </table>
+        </div>
+      ) : layer === "jtbd" ? (
+        <JtbdTable rows={visibleRows} />
+      ) : layer === "feature" ? (
+        <FeatureTable rows={visibleRows} />
+      ) : (
+        <EntityTable rows={visibleRows} />
+      )}
 
       <Legend />
     </div>
+  );
+}
+
+/* ================ Layer-specific tables ================ */
+
+function JtbdTable({ rows }: { rows: Row[] }) {
+  let rowNum = 0;
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+      <table className="w-full border-collapse text-[13px]">
+        <thead>
+          <tr>
+            <Th className="w-[44px] text-right">#</Th>
+            <Th className="w-[6%]">ID</Th>
+            <Th>Job-to-be-done</Th>
+            <Th className="w-[10%]">Persona</Th>
+            <Th className="w-[8%]">Frequency</Th>
+            <Th className="w-[12%]">Stays in ADO?</Th>
+            <Th>Migration impact</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            if (r.kind === "cat") {
+              return (
+                <tr key={r.id} className="border-t-2 border-ink/60 bg-bg-muted">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-[9px] font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
+                  >
+                    {r.label}
+                  </td>
+                </tr>
+              );
+            }
+            if (r.kind !== "jtbd") return null;
+            const j = r.jtbd;
+            const num = ++rowNum;
+            return (
+              <tr key={r.id} className="bg-primary/[0.04]">
+                <NumTd>{num}</NumTd>
+                <Td className="font-mono text-[10.5px] text-ink-muted">
+                  {j.id}
+                </Td>
+                <Td>
+                  <span className="font-medium text-ink">{j.name}</span>
+                </Td>
+                <Td className="font-mono text-[11px] text-ink-soft">
+                  {j.persona}
+                </Td>
+                <Td className="font-mono text-[11px] text-ink-soft">
+                  {j.frequency}
+                </Td>
+                <Td>
+                  <StaysBadge value={j.staysInAdo} />
+                </Td>
+                <Td className="text-[12px] leading-snug text-ink-soft">
+                  {j.impact}
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function FeatureTable({ rows }: { rows: Row[] }) {
+  let rowNum = 0;
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+      <table className="w-full border-collapse text-[13px]">
+        <thead>
+          <tr>
+            <Th className="w-[44px] text-right">#</Th>
+            <Th className="w-[6%]">ID</Th>
+            <Th>Feature</Th>
+            <Th className="w-[12%]">Stays in ADO?</Th>
+            <Th className="w-[8%]">Pattern</Th>
+            <Th className="w-[10%] text-right">Entities</Th>
+            <Th>Preservation strategy</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            if (r.kind !== "feature") return null;
+            const f = r.feature;
+            const num = ++rowNum;
+            return (
+              <tr key={r.rowKey} className="bg-warn/[0.04]">
+                <NumTd>{num}</NumTd>
+                <Td className="font-mono text-[10.5px] text-ink-muted">
+                  {f.id}
+                </Td>
+                <Td>
+                  <span className="font-medium text-ink">{f.name}</span>
+                </Td>
+                <Td>
+                  <StaysBadge value={f.staysInAdo} />
+                </Td>
+                <Td>
+                  <PatternBadge value={f.pattern} />
+                </Td>
+                <Td className="text-right font-mono text-[11.5px] text-ink-muted">
+                  {f.entityNodes.length}
+                </Td>
+                <Td className="text-[12px] italic leading-snug text-ink-soft">
+                  {f.preservationStrategy}
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function EntityTable({ rows }: { rows: Row[] }) {
+  let rowNum = 0;
+  return (
+    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+      <table className="w-full border-collapse text-[13px]">
+        <thead>
+          <tr>
+            <Th className="w-[44px] text-right">#</Th>
+            <Th className="w-[6%]">ID</Th>
+            <Th>ADO Entity</Th>
+            <Th className="w-[10%]">Service</Th>
+            <Th className="w-[10%]">Data preservation</Th>
+            <Th className="w-[11%]">Capability preservation</Th>
+            <Th className="w-[8%]">Pattern</Th>
+            <Th className="w-[12%]">Stays in ADO?</Th>
+            <Th className="w-[8%] text-right">Fields</Th>
+            <Th>Migration note</Th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            if (r.kind !== "entity") return null;
+            const e = r.entity;
+            const num = ++rowNum;
+            return (
+              <tr key={r.rowKey} className="bg-success/[0.04]">
+                <NumTd>{num}</NumTd>
+                <Td className="font-mono text-[10.5px] text-ink-muted">
+                  {e.id}
+                </Td>
+                <Td>
+                  <span className="font-medium text-ink">{e.name}</span>
+                </Td>
+                <Td className="font-mono text-[11px] text-ink-soft">
+                  {e.serviceLabel}
+                </Td>
+                <Td>
+                  <FidelityBadge value={e.dataPreservation} />
+                </Td>
+                <Td>
+                  <FidelityBadge value={e.capabilityPreservation} />
+                </Td>
+                <Td>
+                  <PatternBadge value={e.pattern} />
+                </Td>
+                <Td>
+                  <StaysBadge value={e.staysInAdo} />
+                </Td>
+                <Td className="text-right font-mono text-[11.5px] text-ink-muted">
+                  {e.fieldCount}
+                </Td>
+                <Td className="text-[12px] leading-snug text-ink-soft">
+                  {e.note}
+                </Td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function FidelityBadge({
+  value,
+}: {
+  value: "high" | "medium" | "low" | "gap" | "na";
+}) {
+  const map = {
+    high: { label: "High", cls: "bg-emerald-100 text-emerald-800" },
+    medium: { label: "Medium", cls: "bg-amber-100 text-amber-800" },
+    low: { label: "Low", cls: "bg-rose-100 text-rose-800" },
+    gap: { label: "Gap", cls: "bg-rose-200 text-rose-900" },
+    na: { label: "N/A", cls: "bg-bg-muted text-ink-muted" },
+  };
+  const m = map[value] ?? map.na;
+  return (
+    <span
+      className={`inline-block rounded-[3px] px-1.5 py-[1px] font-mono text-[10px] font-semibold uppercase tracking-[0.04em] ${m.cls}`}
+    >
+      {m.label}
+    </span>
   );
 }
 
