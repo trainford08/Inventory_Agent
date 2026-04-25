@@ -111,7 +111,7 @@ const INSIGHT_PIPELINES = {
     { cohort: "Delta", teams: 19, classic: 68 },
   ],
   actionSignal:
-    "Pipelines stays in ADO under the hybrid — this isn't a migration question. But Bravo and Echo cohorts together own 52% of the classic-pipeline estate, which is a separate modernization opportunity: classic UI pipelines are harder to maintain and would be the long pole if a future phase moves CI/CD to GitHub Actions.",
+    "Pipelines stay in ADO under the hybrid — nothing here needs to move for the GitHub migration. But if the program wants to invest in a separate ADO-internal cleanup (converting Classic UI pipelines to YAML), Bravo and Echo cohorts together hold 52% of the work. The payoff: pipelines become version-controlled and peer-reviewed in PRs, audits get easier, and any future phase that does move CI/CD to GitHub Actions starts from a far easier base — Classic pipelines need full rebuilds, YAML mostly translates.",
 };
 
 const INSIGHT_TESTPLANS = {
@@ -1128,11 +1128,12 @@ function PipelinesPanel() {
         <strong className="font-semibold text-ink-soft">
           Pipelines stay in ADO under the hybrid model
         </strong>
-        , so this isn&apos;t a migration question — it&apos;s a separate
-        modernization signal: <em>classic pipelines</em> (configured in a
-        graphical drag-and-drop UI) are harder to maintain and harder to move
-        later than <em>YAML pipelines</em> (defined as text files in the repo,
-        portable across platforms).
+        , so this isn&apos;t about migrating to GitHub. It surfaces an optional,
+        separate cleanup project that runs <em>inside ADO</em>: converting older{" "}
+        <em>classic pipelines</em> (configured in a drag-and-drop UI, hard to
+        version-control or audit) into <em>YAML pipelines</em> (text files in
+        the repo, peer-reviewed in PRs, easier to maintain — and far easier to
+        translate later if a future phase ever moves CI/CD to GitHub Actions).
       </div>
 
       <div className="mb-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
@@ -1174,10 +1175,10 @@ function PipelinesPanel() {
         </div>
         <div className="mb-3 text-[11.5px] leading-[1.45] text-ink-muted">
           Two cohorts own <strong>{top2Pct}%</strong> of the{" "}
-          {classicPipelines.toLocaleString()} classic pipelines. If the program
-          ever modernizes them in place (or moves CI/CD to GitHub Actions
-          later), these are the cohorts where most of the rebuild work would
-          live.
+          {classicPipelines.toLocaleString()} Classic pipelines. If the program
+          decides to convert them to YAML (an ADO-internal cleanup), or ever
+          moves CI/CD to GitHub Actions in a later phase, these are the cohorts
+          where most of the work would land.
         </div>
         <div className="mb-2 flex h-[22px] overflow-hidden rounded-md border border-border">
           {sortedCohorts.map((row, i) => {
