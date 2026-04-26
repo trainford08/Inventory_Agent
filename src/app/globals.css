@@ -86,3 +86,46 @@ body {
   letter-spacing: -0.003em;
   -webkit-font-smoothing: antialiased;
 }
+
+.prose-ada p {
+  margin: 0 0 0.6em;
+}
+.prose-ada p:last-child {
+  margin-bottom: 0;
+}
+.prose-ada strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.prose-ada ul {
+  list-style: disc;
+  padding-left: 1.1em;
+  margin: 0.4em 0;
+}
+.prose-ada ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+  margin: 0.4em 0;
+}
+.prose-ada li {
+  margin: 0.15em 0;
+}
+.prose-ada h1,
+.prose-ada h2,
+.prose-ada h3 {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+  color: var(--color-ink);
+}
+.prose-ada code {
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+  background: var(--color-bg-subtle);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.prose-ada a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}

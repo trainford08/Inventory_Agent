@@ -5,6 +5,8 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type AdaPanelProps = {
   fieldLabel: string | null;
@@ -41,55 +43,12 @@ export function AdaPanel({
         closeHref={closeHref}
         showClose={isActive}
       />
-      {isActive ? (
-        <Conversation
-          fieldLabel={fieldLabel}
-          fieldValue={fieldValue}
-          teamSlug={teamSlug}
-        />
-      ) : (
-        <>
-          <EmptyState />
-          <div className="border-t border-border p-3">
-            <Composer
-              teamSlug={teamSlug ?? null}
-              fieldLabel={null}
-              fieldValue={null}
-            />
-          </div>
-        </>
-      )}
+      <ChatBody
+        fieldLabel={fieldLabel}
+        fieldValue={fieldValue ?? null}
+        teamSlug={teamSlug ?? null}
+      />
     </aside>
-  );
-}
-
-function EmptyState() {
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center px-8 py-10 text-center">
-      <div className="mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-bg-subtle">
-        <svg
-          className="h-6 w-6 text-ink-faint"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      </div>
-      <h3 className="mb-2 text-[14.5px] font-semibold tracking-[-0.005em] text-ink">
-        Ask Ada anything
-      </h3>
-      <p className="max-w-[260px] text-[12.5px] leading-[1.55] text-ink-muted">
-        I know your team&rsquo;s inventory, the migration framework, and the
-        ADO→GitHub patterns. Try{" "}
-        <span className="rounded bg-bg-subtle px-[6px] py-[1px] font-mono text-[11px] text-ink-soft">
-          What stays in ADO?
-        </span>
-      </p>
-    </div>
   );
 }
 
@@ -163,26 +122,6 @@ function Header({
   );
 }
 
-function Conversation({
-  fieldLabel,
-  fieldValue,
-  teamSlug,
-}: {
-  fieldLabel: string;
-  fieldValue?: string | null;
-  teamSlug?: string | null;
-}) {
-  return (
-    <>
-      <ChatBody
-        fieldLabel={fieldLabel}
-        fieldValue={fieldValue ?? null}
-        teamSlug={teamSlug ?? null}
-      />
-    </>
-  );
-}
-
 function ChatBody({
   fieldLabel,
   fieldValue,
@@ -244,12 +183,19 @@ function MessageTurn({ message }: { message: UIMessage }) {
   const text = message.parts
     .map((p) => (p.type === "text" ? p.text : ""))
     .join("");
+  const isBot = message.role !== "user";
   return (
     <Turn
       speaker={message.role === "user" ? "You" : "Ada"}
-      kind={message.role === "user" ? "user" : "bot"}
+      kind={isBot ? "bot" : "user"}
     >
-      <span className="whitespace-pre-wrap">{text}</span>
+      {isBot ? (
+        <div className="prose-ada">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+        </div>
+      ) : (
+        <span className="whitespace-pre-wrap">{text}</span>
+      )}
     </Turn>
   );
 }
