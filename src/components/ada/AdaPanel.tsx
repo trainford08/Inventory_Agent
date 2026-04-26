@@ -555,7 +555,53 @@ function Composer({
   disabled?: boolean;
 }) {
   const [value, setValue] = useState("");
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const recognitionRef = React.useRef<SpeechRecognitionLike | null>(null);
   const noop = !onSubmit;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const Ctor =
+      (window as unknown as { SpeechRecognition?: SpeechRecognitionCtor })
+        .SpeechRecognition ??
+      (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionCtor })
+        .webkitSpeechRecognition;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (Ctor) setVoiceSupported(true);
+  }, []);
+
+  const startVoice = () => {
+    if (typeof window === "undefined") return;
+    const Ctor =
+      (window as unknown as { SpeechRecognition?: SpeechRecognitionCtor })
+        .SpeechRecognition ??
+      (window as unknown as { webkitSpeechRecognition?: SpeechRecognitionCtor })
+        .webkitSpeechRecognition;
+    if (!Ctor) return;
+    const rec = new Ctor();
+    rec.lang = "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    rec.onresult = (event) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setValue(transcript);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recognitionRef.current = rec;
+    setListening(true);
+    rec.start();
+  };
+
+  const stopVoice = () => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  };
+
   return (
     <form
       onSubmit={(e) => {
@@ -572,11 +618,43 @@ function Composer({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={
-          noop ? "Open a field to chat with Ada" : "Ask Ada anything…"
+          listening
+            ? "Listening…"
+            : noop
+              ? "Open a field to chat with Ada"
+              : "Ask Ada anything…"
         }
         disabled={disabled || noop}
         className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-[8px] text-[13px] outline-none focus:border-accent-mid disabled:opacity-50"
       />
+      {voiceSupported ? (
+        <button
+          type="button"
+          onClick={listening ? stopVoice : startVoice}
+          disabled={disabled || noop}
+          aria-label={listening ? "Stop dictation" : "Dictate"}
+          className={`flex h-[34px] w-[34px] items-center justify-center rounded-md border transition-colors disabled:opacity-40 ${
+            listening
+              ? "animate-pulse border-rose-400 bg-rose-50 text-rose-600"
+              : "border-border bg-bg-elevated text-ink-muted hover:bg-bg-subtle hover:text-ink"
+          }`}
+        >
+          <svg
+            className="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="23" />
+            <line x1="8" y1="23" x2="16" y2="23" />
+          </svg>
+        </button>
+      ) : null}
       <button
         type="submit"
         disabled={disabled || noop || !value.trim()}
@@ -587,3 +665,25 @@ function Composer({
     </form>
   );
 }
+
+type SpeechRecognitionLike = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult:
+    | ((event: {
+        resultIndex: number;
+        results: {
+          [index: number]: { [index: number]: { transcript: string } };
+        } & {
+          length: number;
+        };
+      }) => void)
+    | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionCtor = new () => SpeechRecognitionLike;
