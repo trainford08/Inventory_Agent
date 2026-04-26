@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTeamInventory } from "@/server/inventory";
 import { listTeams } from "@/server/teams";
 
 export const dynamic = "force-dynamic";
@@ -13,16 +14,6 @@ const COHORT_LABEL: Record<string, string> = {
   UNASSIGNED: "Unassigned",
 };
 
-const STATE_LABEL: Record<string, string> = {
-  NOT_STARTED: "Not started",
-  DISCOVERING: "Discovering",
-  REVIEWING: "Reviewing",
-  IN_PROGRESS: "In progress",
-  COMPLETED: "Completed",
-  ROLLED_BACK: "Rolled back",
-  BLOCKED: "Blocked",
-};
-
 const SWATCH: Record<string, string> = {
   ALPHA: "linear-gradient(135deg,#5b5fcf,#8b5cf6)",
   BRAVO: "linear-gradient(135deg,#06b6d4,#0ea5e9)",
@@ -35,6 +26,12 @@ const SWATCH: Record<string, string> = {
 
 export default async function InventoryLandingPage() {
   const teams = await listTeams();
+  const inventories = await Promise.all(
+    teams.map(async (t) => ({
+      team: t,
+      inv: await getTeamInventory(t.slug),
+    })),
+  );
 
   return (
     <div className="mx-auto max-w-[1500px] space-y-6 px-[32px] py-[28px]">
@@ -55,19 +52,19 @@ export default async function InventoryLandingPage() {
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <Th className="w-[26%]">Team</Th>
-              <Th className="w-[10%]">Cohort</Th>
-              <Th className="w-[8%]">Wave</Th>
-              <Th className="w-[11%]">State</Th>
-              <Th className="w-[11%]">Health</Th>
-              <Th className="w-[8%] text-right">Engineers</Th>
-              <Th className="w-[9%] text-right">Open risks</Th>
-              <Th className="w-[9%] text-right">% reviewed</Th>
-              <Th className="w-[8%]">Cutover</Th>
+              <Th className="w-[22%]">Team</Th>
+              <Th className="w-[9%]">Cohort</Th>
+              <Th className="w-[10%] text-right">JTBDs in scope</Th>
+              <Th className="w-[10%] text-right">Features touched</Th>
+              <Th className="w-[10%] text-right">Entities touched</Th>
+              <Th className="w-[10%] text-right">Customizations</Th>
+              <Th className="w-[10%] text-right">3rd-party integrations</Th>
+              <Th className="w-[9%] text-right">Orphan features</Th>
+              <Th className="w-[10%]">{""}</Th>
             </tr>
           </thead>
           <tbody>
-            {teams.map((t) => (
+            {inventories.map(({ team: t, inv }) => (
               <tr
                 key={t.id}
                 className="border-b border-border/60 transition-colors hover:bg-bg-muted/60"
@@ -83,12 +80,12 @@ export default async function InventoryLandingPage() {
                         background: SWATCH[t.cohort] ?? SWATCH.UNASSIGNED,
                       }}
                     />
-                    <span>
+                    <span className="flex flex-col">
                       <span className="font-semibold tracking-[-0.005em] text-ink">
                         {t.name}
                       </span>
                       {t.tagline ? (
-                        <span className="ml-2 font-mono text-[11px] text-ink-muted">
+                        <span className="font-mono text-[11px] text-ink-muted">
                           {t.tagline}
                         </span>
                       ) : null}
@@ -97,25 +94,61 @@ export default async function InventoryLandingPage() {
                 </Td>
                 <Td>{COHORT_LABEL[t.cohort] ?? t.cohort}</Td>
                 <Td className="text-right font-mono tabular-nums">
-                  {t.wave !== null
-                    ? `W${String(t.wave).padStart(2, "0")}`
-                    : "—"}
-                </Td>
-                <Td>{STATE_LABEL[t.migrationState] ?? t.migrationState}</Td>
-                <Td>
-                  <HealthPill status={t.healthStatus} />
-                </Td>
-                <Td className="text-right font-mono tabular-nums">
-                  {t.engineerCount ?? "—"}
-                </Td>
-                <Td className="text-right font-mono tabular-nums">
-                  {t.openBlockerCount}
+                  {inv ? (
+                    <>
+                      {inv.totals.jtbdsInScope}
+                      <span className="ml-1 text-ink-muted">
+                        / {inv.totals.jtbdsTotal}
+                      </span>
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </Td>
                 <Td className="text-right font-mono tabular-nums">
-                  {t.completionPercent}%
+                  {inv ? (
+                    <>
+                      {inv.totals.featuresInScope}
+                      {inv.totals.sharedFeatures > 0 ? (
+                        <span className="ml-1 text-ink-muted">
+                          ({inv.totals.sharedFeatures} shared)
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    "—"
+                  )}
                 </Td>
-                <Td className="font-mono text-[12px] text-ink-muted">
-                  {formatCutover(t.targetCutoverAt)}
+                <Td className="text-right font-mono tabular-nums">
+                  {inv ? (
+                    <>
+                      {inv.totals.entitiesInScope}
+                      {inv.totals.sharedEntities > 0 ? (
+                        <span className="ml-1 text-ink-muted">
+                          ({inv.totals.sharedEntities} shared)
+                        </span>
+                      ) : null}
+                    </>
+                  ) : (
+                    "—"
+                  )}
+                </Td>
+                <Td className="text-right font-mono tabular-nums">
+                  {inv ? inv.customizations.total : "—"}
+                </Td>
+                <Td className="text-right font-mono tabular-nums">
+                  {dummyIntegrations(t.slug)}
+                </Td>
+                <Td className="text-right font-mono tabular-nums">
+                  {inv ? inv.coverage.orphanFeatures.length : "—"}
+                </Td>
+                <Td className="text-right">
+                  <Link
+                    href={`/teams/${t.slug}/inventory`}
+                    className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary px-4 py-[8px] text-[12.5px] font-semibold text-white shadow-sm transition-colors hover:bg-primary/90"
+                  >
+                    View inventory →
+                  </Link>
                 </Td>
               </tr>
             ))}
@@ -128,6 +161,12 @@ export default async function InventoryLandingPage() {
       </div>
     </div>
   );
+}
+
+function dummyIntegrations(slug: string): number {
+  let h = 0;
+  for (let i = 0; i < slug.length; i++) h = (h * 31 + slug.charCodeAt(i)) >>> 0;
+  return 3 + (h % 12);
 }
 
 function Th({
@@ -158,46 +197,4 @@ function Td({
       {children}
     </td>
   );
-}
-
-function HealthPill({ status }: { status: string | null }) {
-  if (!status)
-    return <span className="font-mono text-[11px] text-ink-faint">—</span>;
-  const map: Record<string, { label: string; cls: string }> = {
-    ON_TRACK: {
-      label: "On track",
-      cls: "bg-emerald-100 text-emerald-800",
-    },
-    AT_RISK: {
-      label: "At risk",
-      cls: "bg-amber-100 text-amber-800",
-    },
-    BLOCKED: {
-      label: "Blocked",
-      cls: "bg-rose-100 text-rose-800",
-    },
-    DONE: {
-      label: "Done",
-      cls: "bg-bg-muted text-ink-muted",
-    },
-  };
-  const m = map[status] ?? { label: status, cls: "bg-bg-muted text-ink-muted" };
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-[2px] font-mono text-[10px] font-semibold uppercase tracking-[0.04em] ${m.cls}`}
-    >
-      <span className="h-[5px] w-[5px] rounded-full bg-current" />
-      {m.label}
-    </span>
-  );
-}
-
-function formatCutover(date: Date | null): string {
-  if (!date) return "—";
-  const days = Math.round(
-    (date.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  );
-  if (days === 0) return "today";
-  if (days > 0) return `+${days}d`;
-  return `${days}d`;
 }
