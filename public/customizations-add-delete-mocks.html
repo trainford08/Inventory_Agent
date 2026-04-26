@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1400,initial-scale=1" />
+    <title>Customizations — add/delete row UX</title>
+    <style>
+      :root {
+        --bg: #f7f7f5;
+        --bg-elevated: #fff;
+        --bg-muted: #f1f1ee;
+        --bg-subtle: #ebebe6;
+        --border: #e3e3df;
+        --ink: #1f1f1d;
+        --ink-soft: #3b3b37;
+        --ink-muted: #6b6b65;
+        --ink-faint: #999992;
+        --primary: #5b5fcf;
+        --danger: #be123c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          -apple-system, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        padding: 32px;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--ink-muted);
+        margin-bottom: 28px;
+      }
+      h2 {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        margin: 32px 0 8px;
+        font-weight: 600;
+      }
+      .desc {
+        color: var(--ink-muted);
+        font-size: 12px;
+        margin-bottom: 12px;
+        max-width: 800px;
+      }
+      .wrap {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      th {
+        background: var(--bg-muted);
+        text-align: left;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        padding: 10px 12px;
+        border-bottom: 1.5px solid var(--border);
+        font-weight: 600;
+      }
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--ink-soft);
+        vertical-align: top;
+      }
+      .id {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        color: var(--ink-muted);
+      }
+      .name {
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .chip {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid;
+      }
+      .ch-strat {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.4);
+      }
+      .ch-stays {
+        background: rgba(249, 115, 22, 0.1);
+        color: #c2410c;
+        border-color: rgba(249, 115, 22, 0.4);
+      }
+      .cat-row td {
+        background: var(--bg-muted);
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink);
+        font-weight: 600;
+        padding: 8px 12px;
+      }
+
+      /* shared button styles */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid;
+        background: var(--bg-elevated);
+        color: var(--ink-soft);
+        border-color: var(--border);
+      }
+      .btn:hover {
+        color: var(--ink);
+        border-color: var(--ink-faint);
+      }
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+      .btn-primary:hover {
+        background: #4b4fc0;
+        color: #fff;
+      }
+      .btn-danger {
+        color: var(--danger);
+        border-color: rgba(190, 18, 60, 0.3);
+        background: rgba(190, 18, 60, 0.04);
+      }
+      .btn-danger:hover {
+        background: rgba(190, 18, 60, 0.1);
+      }
+      .btn-icon {
+        padding: 4px 6px;
+        font-size: 13px;
+      }
+
+      /* OPTION A — hover row actions */
+      .opt-a tr.data-row:hover {
+        background: var(--bg-muted);
+      }
+      .opt-a .row-actions {
+        opacity: 0;
+        transition: opacity 0.15s;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .opt-a tr.data-row:hover .row-actions {
+        opacity: 1;
+      }
+      .opt-a .row-actions button {
+        padding: 3px 8px;
+        font-size: 11px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--bg-elevated);
+        color: var(--ink-muted);
+        cursor: pointer;
+        margin-left: 4px;
+      }
+      .opt-a .row-actions button:hover {
+        color: var(--danger);
+        border-color: rgba(190, 18, 60, 0.3);
+      }
+      .opt-a .add-row td {
+        padding: 8px 12px;
+        background: var(--bg);
+      }
+      .opt-a .add-btn {
+        background: none;
+        border: 1px dashed var(--border);
+        color: var(--ink-muted);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+      }
+      .opt-a .add-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: rgba(91, 95, 207, 0.04);
+      }
+
+      /* OPTION B — edit mode */
+      .opt-b .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: var(--bg-muted);
+        border-bottom: 1px solid var(--border);
+      }
+      .opt-b .toolbar-left {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .opt-b .selected-count {
+        font-size: 11.5px;
+        color: var(--ink-muted);
+      }
+      .opt-b .check-col {
+        width: 32px;
+        text-align: center;
+      }
+      .opt-b input[type="checkbox"] {
+        cursor: pointer;
+        accent-color: var(--primary);
+      }
+      .opt-b .add-banner {
+        background: rgba(91, 95, 207, 0.06);
+        border-top: 1px dashed rgba(91, 95, 207, 0.3);
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* OPTION C — actions column + FAB */
+      .opt-c {
+        position: relative;
+      }
+      .opt-c .actions-col {
+        width: 60px;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .opt-c .icon-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--ink-faint);
+        padding: 4px 6px;
+        border-radius: 4px;
+        font-size: 13px;
+      }
+      .opt-c .icon-btn:hover {
+        color: var(--danger);
+        background: rgba(190, 18, 60, 0.08);
+      }
+      .opt-c .fab {
+        position: sticky;
+        bottom: 16px;
+        margin: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(91, 95, 207, 0.3);
+        cursor: pointer;
+        border: none;
+      }
+      .opt-c .fab:hover {
+        background: #4b4fc0;
+      }
+
+      .pros-cons {
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 11.5px;
+        color: var(--ink-muted);
+        line-height: 1.55;
+      }
+      .pros-cons strong {
+        color: var(--ink-soft);
+      }
+      .recommend {
+        margin-top: 28px;
+        padding: 14px 18px;
+        background: rgba(91, 95, 207, 0.06);
+        border-left: 3px solid var(--primary);
+        border-radius: 6px;
+        color: var(--ink-soft);
+        font-size: 13px;
+      }
+      .recommend strong {
+        color: var(--ink);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Customizations table — add/delete row UX</h1>
+    <div class="sub">
+      Three patterns for letting a champion add their team's own customizations
+      and remove rows that don't apply.
+    </div>
+
+    <!-- ============ OPTION A ============ -->
+    <h2>Option A — Hover row actions + inline "Add" footer per category</h2>
+    <div class="desc">
+      Delete revealed on row hover. Each category has a dashed "+ Add" row at
+      the bottom. Lowest-friction for one-off edits; reads as a regular table
+      until you hover.
+    </div>
+    <div class="wrap opt-a">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50px">ID</th>
+            <th>Customization</th>
+            <th style="width: 90px">Parity</th>
+            <th style="width: 110px">Strategy</th>
+            <th style="width: 110px">Hybrid</th>
+            <th style="width: 130px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat-row">
+            <td colspan="6">Pipelines & CI/CD · 3</td>
+          </tr>
+          <tr class="data-row">
+            <td class="id">C30</td>
+            <td><div class="name">Built-in task translation gaps</div></td>
+            <td><span class="chip ch-strat">Partial</span></td>
+            <td><span class="chip ch-strat">S04</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+            <td class="row-actions">
+              <button>Edit</button><button>Delete</button>
+            </td>
+          </tr>
+          <tr class="data-row">
+            <td class="id">C13</td>
+            <td><div class="name">Pipeline source wiring</div></td>
+            <td><span class="chip ch-strat">Match</span></td>
+            <td><span class="chip ch-strat">S02</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+            <td class="row-actions">
+              <button>Edit</button><button>Delete</button>
+            </td>
+          </tr>
+          <tr class="add-row">
+            <td colspan="6">
+              <button class="add-btn">+ Add customization to Pipelines</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pros-cons">
+      <strong>Pros:</strong> minimal chrome, scoped add-action keeps
+      categorization correct, familiar pattern. <strong>Cons:</strong> hidden
+      actions are less discoverable; bulk delete requires multiple clicks.
+    </div>
+
+    <!-- ============ OPTION B ============ -->
+    <h2>Option B — Explicit Edit mode with checkboxes + bulk actions</h2>
+    <div class="desc">
+      A top toolbar with an "Edit" button. Toggling edit reveals checkboxes;
+      you can select many rows and delete in bulk. Add button always visible
+      in toolbar.
+    </div>
+    <div class="wrap opt-b">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-primary">+ Add customization</button>
+          <button class="btn btn-danger">Delete 2 selected</button>
+          <span class="selected-count">2 of 11 selected</span>
+        </div>
+        <button class="btn">Done editing</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th class="check-col">
+              <input type="checkbox" />
+            </th>
+            <th style="width: 50px">ID</th>
+            <th>Customization</th>
+            <th style="width: 90px">Parity</th>
+            <th style="width: 110px">Strategy</th>
+            <th style="width: 110px">Hybrid</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat-row">
+            <td colspan="6">Pipelines & CI/CD · 3</td>
+          </tr>
+          <tr>
+            <td class="check-col"><input type="checkbox" checked /></td>
+            <td class="id">C30</td>
+            <td><div class="name">Built-in task translation gaps</div></td>
+            <td><span class="chip ch-strat">Partial</span></td>
+            <td><span class="chip ch-strat">S04</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+          </tr>
+          <tr>
+            <td class="check-col"><input type="checkbox" /></td>
+            <td class="id">C13</td>
+            <td><div class="name">Pipeline source wiring</div></td>
+            <td><span class="chip ch-strat">Match</span></td>
+            <td><span class="chip ch-strat">S02</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+          </tr>
+          <tr>
+            <td class="check-col"><input type="checkbox" checked /></td>
+            <td class="id">C31</td>
+            <td><div class="name">External-system release gates</div></td>
+            <td><span class="chip ch-strat">Partial</span></td>
+            <td><span class="chip ch-strat">S05</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="pros-cons">
+      <strong>Pros:</strong> very discoverable, scales to bulk operations,
+      modes the UI clearly so accidents are unlikely.
+      <strong>Cons:</strong> two-step (toggle edit, then act); checkboxes add
+      visual weight; less inline.
+    </div>
+
+    <!-- ============ OPTION C ============ -->
+    <h2>Option C — Always-visible actions column + sticky "+ Add" pill</h2>
+    <div class="desc">
+      A dedicated narrow column on the right with a delete icon per row,
+      always visible. A floating "+ Add customization" pill stays anchored to
+      the bottom of the table.
+    </div>
+    <div class="wrap opt-c">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50px">ID</th>
+            <th>Customization</th>
+            <th style="width: 90px">Parity</th>
+            <th style="width: 110px">Strategy</th>
+            <th style="width: 110px">Hybrid</th>
+            <th class="actions-col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat-row">
+            <td colspan="6">Pipelines & CI/CD · 3</td>
+          </tr>
+          <tr>
+            <td class="id">C30</td>
+            <td><div class="name">Built-in task translation gaps</div></td>
+            <td><span class="chip ch-strat">Partial</span></td>
+            <td><span class="chip ch-strat">S04</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+            <td class="actions-col">
+              <button class="icon-btn" title="Delete">×</button>
+            </td>
+          </tr>
+          <tr>
+            <td class="id">C13</td>
+            <td><div class="name">Pipeline source wiring</div></td>
+            <td><span class="chip ch-strat">Match</span></td>
+            <td><span class="chip ch-strat">S02</span></td>
+            <td><span class="chip ch-stays">Stays in ADO</span></td>
+            <td class="actions-col">
+              <button class="icon-btn" title="Delete">×</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button class="fab">+ Add customization</button>
+    </div>
+    <div class="pros-cons">
+      <strong>Pros:</strong> delete is always visible without hover,
+      single-click bulk-friendly via repeated clicks, FAB never gets lost.
+      <strong>Cons:</strong> permanent action column eats horizontal space,
+      always-on delete buttons are easy to mis-click.
+    </div>
+
+    <div class="recommend">
+      <strong>Recommendation:</strong> Option A. The customizations view is
+      reference-heavy (champions read more than they edit), so revealing
+      destructive actions on hover keeps the table calm; the per-category
+      "+ Add" footer is low-friction and reinforces correct categorization.
+      If multi-select / bulk deletion turns out to be common after testing,
+      promote to Option B; otherwise Option A scales cleanly.
+    </div>
+  </body>
+</html>

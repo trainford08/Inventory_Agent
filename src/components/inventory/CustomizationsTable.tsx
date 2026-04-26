@@ -310,6 +310,7 @@ function CategoryBlock({
   category: string;
   rows: CustomizationRow[];
 }) {
+  const label = CATEGORY_LABELS[category] ?? category;
   return (
     <>
       <tr className="bg-bg-muted">
@@ -317,20 +318,33 @@ function CategoryBlock({
           colSpan={9}
           className="border-y border-border px-4 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink"
         >
-          {CATEGORY_LABELS[category] ?? category}
+          {label}
           <span className="ml-2 text-ink-muted">· {rows.length}</span>
         </td>
       </tr>
       {rows.map((row) => (
         <Row key={row.id} row={row} />
       ))}
+      <tr>
+        <td colSpan={9} className="border-b border-border bg-bg/50 px-3 py-2">
+          <button
+            type="button"
+            onClick={() =>
+              alert(`Add customization to ${label} (not wired yet)`)
+            }
+            className="w-full rounded-md border border-dashed border-border px-3 py-2 text-left text-[11.5px] text-ink-muted transition-colors hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
+          >
+            + Add customization to {label}
+          </button>
+        </td>
+      </tr>
     </>
   );
 }
 
 function Row({ row }: { row: CustomizationRow }) {
   return (
-    <tr className="border-b border-border/60 hover:bg-bg-hover">
+    <tr className="group border-b border-border/60 hover:bg-bg-hover">
       <Td className="font-mono text-[11px] text-ink-muted">
         {row.catalogCode ?? "—"}
       </Td>
@@ -414,11 +428,29 @@ function Row({ row }: { row: CustomizationRow }) {
         )}
       </Td>
       <Td className="text-[11.5px] italic leading-[1.45] text-ink-soft">
-        {row.catalogCode && CATALOG_NOTES[row.catalogCode] ? (
-          CATALOG_NOTES[row.catalogCode]
-        ) : (
-          <span className="not-italic text-ink-faint">—</span>
-        )}
+        <div className="relative pr-1">
+          {row.catalogCode && CATALOG_NOTES[row.catalogCode] ? (
+            CATALOG_NOTES[row.catalogCode]
+          ) : (
+            <span className="not-italic text-ink-faint">—</span>
+          )}
+          <div className="pointer-events-none absolute -top-1 right-0 z-10 hidden gap-1 not-italic group-hover:pointer-events-auto group-hover:flex">
+            <button
+              type="button"
+              onClick={() => alert(`Edit ${row.name} (not wired yet)`)}
+              className="rounded border border-border bg-bg-elevated px-2 py-0.5 font-mono text-[10px] font-medium text-ink-soft shadow-sm hover:border-primary/40 hover:text-primary"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={() => alert(`Delete ${row.name} (not wired yet)`)}
+              className="rounded border border-rose-500/30 bg-bg-elevated px-2 py-0.5 font-mono text-[10px] font-medium text-rose-700 shadow-sm hover:border-rose-500/60 hover:bg-rose-500/10"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
       </Td>
     </tr>
   );
