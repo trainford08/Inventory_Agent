@@ -245,8 +245,6 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
         {block.total} customizations
       </div>
 
-      <Legend />
-
       <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
         <table className="w-full border-collapse text-[13px]">
           <thead>
@@ -273,6 +271,8 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
           </tbody>
         </table>
       </div>
+
+      <Legend />
     </div>
   );
 }
