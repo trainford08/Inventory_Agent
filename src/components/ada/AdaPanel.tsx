@@ -1,23 +1,27 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
 
 type AdaPanelProps = {
   fieldLabel: string | null;
   fieldSubject?: string | null;
   fieldValue?: string | null;
+  teamSlug?: string | null;
 };
 
 /**
- * Ada reviewer-assistant panel. Visual prototype — all content is canned.
- * Ada appears as the 3rd column in ReviewShell when the URL has
- * `?ada=<fieldId>`. The close button clears the param.
+ * Ada reviewer-assistant panel. Streams from /api/ada (Claude via Vercel AI SDK).
+ * Visible when the URL has `?ada=<fieldId>`. Close clears the param.
  */
 export function AdaPanel({
   fieldLabel,
   fieldSubject,
   fieldValue,
+  teamSlug,
 }: AdaPanelProps) {
   const pathname = usePathname();
   const params = useSearchParams();
@@ -38,11 +42,23 @@ export function AdaPanel({
         showClose={isActive}
       />
       {isActive ? (
-        <Transcript fieldLabel={fieldLabel} fieldValue={fieldValue} />
+        <Conversation
+          fieldLabel={fieldLabel}
+          fieldValue={fieldValue}
+          teamSlug={teamSlug}
+        />
       ) : (
-        <EmptyState />
+        <>
+          <EmptyState />
+          <div className="border-t border-border p-3">
+            <Composer
+              teamSlug={teamSlug ?? null}
+              fieldLabel={null}
+              fieldValue={null}
+            />
+          </div>
+        </>
       )}
-      <MicBar disabled={!isActive} />
     </aside>
   );
 }
@@ -64,15 +80,14 @@ function EmptyState() {
         </svg>
       </div>
       <h3 className="mb-2 text-[14.5px] font-semibold tracking-[-0.005em] text-ink">
-        Ada is ready when you are
+        Ask Ada anything
       </h3>
       <p className="max-w-[260px] text-[12.5px] leading-[1.55] text-ink-muted">
-        Stuck on a field? Click{" "}
+        I know your team&rsquo;s inventory, the migration framework, and the
+        ADO→GitHub patterns. Try{" "}
         <span className="rounded bg-bg-subtle px-[6px] py-[1px] font-mono text-[11px] text-ink-soft">
-          Not sure
-        </span>{" "}
-        on any pending item and Ada will pull up the evidence and walk through
-        it with you.
+          What stays in ADO?
+        </span>
       </p>
     </div>
   );
@@ -148,86 +163,94 @@ function Header({
   );
 }
 
-function Transcript({
+function Conversation({
   fieldLabel,
   fieldValue,
+  teamSlug,
 }: {
   fieldLabel: string;
   fieldValue?: string | null;
+  teamSlug?: string | null;
 }) {
-  // Canned script — specific to the Git LFS demo path, generic for others.
-  const isLfs = /lfs/i.test(fieldLabel);
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
-      <Turn speaker="Ada · voice" kind="bot">
-        {isLfs ? (
-          <>
-            Hi! I noticed you&rsquo;re not sure about this one. I can help you
-            figure it out. Do you want me to explain what Git LFS is first, or
-            should I just look at your repo and tell you what I find?
-          </>
-        ) : (
-          <>
-            Hi — I can help you think through <strong>{fieldLabel}</strong>.
-            Want me to explain what it means first, or pull evidence from your
-            repo and share what I find?
-          </>
-        )}
-      </Turn>
+    <>
+      <ChatBody
+        fieldLabel={fieldLabel}
+        fieldValue={fieldValue ?? null}
+        teamSlug={teamSlug ?? null}
+      />
+    </>
+  );
+}
 
-      <Turn speaker="You · voice note" kind="user">
-        <VoiceNote duration="0:04" />
-        <div className="mt-1 px-[4px] text-[10px] italic text-cyan-100/90">
-          {isLfs
-            ? "“Honestly, I've heard of LFS but don't know what it means”"
-            : "“Yeah, explain it and show me the evidence”"}
-        </div>
-      </Turn>
+function ChatBody({
+  fieldLabel,
+  fieldValue,
+  teamSlug,
+}: {
+  fieldLabel: string | null;
+  fieldValue: string | null;
+  teamSlug: string | null;
+}) {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/ada",
+      body: { teamSlug, fieldLabel, fieldValue },
+    }),
+  });
 
-      <Turn speaker="Ada · voice" kind="bot">
-        {isLfs ? (
-          <>
-            No worries. Git LFS (Large File Storage) is a way to track big
-            binary files — like ML models or compiled libraries — outside your
-            normal Git history. It matters for migration because LFS repos need
-            a different path to GitHub.
-          </>
+  return (
+    <>
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
+        {messages.length === 0 ? (
+          <Turn speaker="Ada" kind="bot">
+            {fieldLabel ? (
+              <>
+                I can help you think through <strong>{fieldLabel}</strong>. Ask
+                me what it means, what the evidence says, or how teams usually
+                answer it.
+              </>
+            ) : (
+              <>Hi — what would you like to know about your migration?</>
+            )}
+          </Turn>
         ) : (
-          <>
-            Got it. Here&rsquo;s what I found about{" "}
-            <strong>{fieldLabel}</strong> in the agent&rsquo;s evidence for this
-            team.
-          </>
+          messages.map((m) => <MessageTurn key={m.id} message={m} />)
         )}
-        <Evidence
-          title={
-            isLfs
-              ? "What I found in coreai-backend-main"
-              : "What the agent recorded"
-          }
-          items={
-            isLfs
-              ? [
-                  ".gitattributes has LFS filters for .onnx, .dll",
-                  "2.3 GB of binary files tracked via LFS",
-                  "Last LFS commit 3 days ago by @jthomas",
-                ]
-              : [
-                  `Current value: ${fieldValue ?? "—"}`,
-                  "Source: ADO discovery pass (2 days ago)",
-                  "Confidence: medium — inferred from repo metadata",
-                ]
-          }
+        {status === "submitted" || status === "streaming" ? (
+          <Turn speaker="Ada" kind="bot">
+            <span className="inline-flex gap-1">
+              <Dot />
+              <Dot delay={0.15} />
+              <Dot delay={0.3} />
+            </span>
+          </Turn>
+        ) : null}
+      </div>
+      <div className="border-t border-border p-3">
+        <Composer
+          teamSlug={teamSlug}
+          fieldLabel={fieldLabel}
+          fieldValue={fieldValue}
+          onSubmit={(text) => sendMessage({ text })}
+          disabled={status === "submitted" || status === "streaming"}
         />
-      </Turn>
+      </div>
+    </>
+  );
+}
 
-      <Turn speaker="Ada · voice" kind="bot">
-        Based on this, I&rsquo;m confident the answer is{" "}
-        <strong>{isLfs ? "yes" : (fieldValue ?? "unchanged")}</strong>. Want me
-        to fill that in?
-        <Proposal value={isLfs ? "true" : (fieldValue ?? "—")} />
-      </Turn>
-    </div>
+function MessageTurn({ message }: { message: UIMessage }) {
+  const text = message.parts
+    .map((p) => (p.type === "text" ? p.text : ""))
+    .join("");
+  return (
+    <Turn
+      speaker={message.role === "user" ? "You" : "Ada"}
+      kind={message.role === "user" ? "user" : "bot"}
+    >
+      <span className="whitespace-pre-wrap">{text}</span>
+    </Turn>
   );
 }
 
@@ -261,154 +284,55 @@ function Turn({
   );
 }
 
-function VoiceNote({ duration }: { duration: string }) {
-  const bars = [7, 10, 14, 17, 11, 14, 18, 12, 9, 15, 10, 6];
+function Dot({ delay = 0 }: { delay?: number }) {
   return (
-    <div className="flex items-center gap-2 text-[12.5px]">
-      <span className="flex h-[22px] w-[22px] flex-shrink-0 items-center justify-center rounded-full bg-white/25">
-        <svg
-          className="h-[10px] w-[10px]"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <polygon points="5 3 19 12 5 21 5 3" />
-        </svg>
-      </span>
-      <span className="flex flex-1 items-center gap-[2px]">
-        {bars.map((h, i) => (
-          <span
-            key={i}
-            className="w-[2px] rounded-[1px] bg-white/80"
-            style={{ height: `${h}px` }}
-          />
-        ))}
-      </span>
-      <span className="font-mono text-[10.5px] text-white/85">{duration}</span>
-    </div>
+    <span
+      className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-ink-faint"
+      style={{ animationDelay: `${delay}s` }}
+    />
   );
 }
 
-function Evidence({ title, items }: { title: string; items: string[] }) {
+function Composer({
+  onSubmit,
+  disabled,
+}: {
+  teamSlug: string | null;
+  fieldLabel: string | null;
+  fieldValue: string | null;
+  onSubmit?: (text: string) => void;
+  disabled?: boolean;
+}) {
+  const [value, setValue] = useState("");
+  const noop = !onSubmit;
   return (
-    <div className="mt-2 rounded-[7px] border border-border-strong bg-bg-elevated px-3 py-[10px]">
-      <div className="mb-[6px] flex items-center gap-[5px] font-mono text-[9px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
-        <svg
-          className="h-[10px] w-[10px]"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-        {title}
-      </div>
-      <ul className="font-mono text-[11px] leading-[1.7] text-ink-soft">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-[6px]">
-            <span className="flex-shrink-0 text-accent">›</span>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function Proposal({ value }: { value: string }) {
-  return (
-    <div className="mt-[10px] rounded-lg border border-accent-mid bg-accent-soft p-3">
-      <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.08em] text-accent-ink">
-        Proposed answer
-      </div>
-      <div className="mb-[10px] inline-block rounded-[5px] border border-border bg-bg-elevated px-[11px] py-[7px] font-mono text-[12.5px]">
-        {value}
-      </div>
-      <div className="flex flex-wrap gap-[7px]">
-        <button
-          type="button"
-          className="inline-flex items-center gap-[5px] rounded-md border border-accent bg-accent px-[13px] py-[7px] text-[12px] font-semibold text-white hover:bg-accent-ink"
-        >
-          <svg
-            className="h-[11px] w-[11px]"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-          Accept this answer
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-border bg-bg-elevated px-[13px] py-[7px] text-[12px] font-semibold text-ink hover:bg-bg-subtle"
-        >
-          Tell me more
-        </button>
-        <button
-          type="button"
-          className="rounded-md border border-border bg-bg-elevated px-[13px] py-[7px] text-[12px] font-semibold text-ink hover:bg-bg-subtle"
-        >
-          Still not sure
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MicBar({ disabled = false }: { disabled?: boolean }) {
-  return (
-    <div
-      className={`border-t border-border px-[22px] pb-5 pt-4 ${disabled ? "opacity-50" : ""}`}
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        const text = value.trim();
+        if (!text || !onSubmit) return;
+        onSubmit(text);
+        setValue("");
+      }}
+      className="flex items-center gap-2"
     >
-      <div className="mb-3 flex justify-center">
-        <button
-          type="button"
-          disabled={disabled}
-          aria-label="Press to speak to Ada"
-          className="relative flex h-[62px] w-[62px] items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-600 text-white shadow-[0_4px_18px_rgba(99,102,241,0.4)] transition-transform enabled:hover:scale-105 enabled:active:scale-95 disabled:cursor-not-allowed"
-        >
-          <svg
-            className="h-6 w-6"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" />
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-            <line x1="12" y1="19" x2="12" y2="23" />
-            <line x1="8" y1="23" x2="16" y2="23" />
-          </svg>
-        </button>
-      </div>
-      <div className="mb-3 text-center font-mono text-[11.5px] text-ink-muted">
-        Tap to speak · hold for push-to-talk
-      </div>
-      <div className="flex flex-wrap justify-center gap-[6px]">
-        <MicOption label="Type instead" />
-        <MicOption label="Mute Ada" />
-        <MicOption label="Hand off" />
-      </div>
-    </div>
-  );
-}
-
-function MicOption({ label }: { label: string }) {
-  return (
-    <button
-      type="button"
-      className="rounded-md border border-border bg-transparent px-[11px] py-[6px] text-[11.5px] font-medium text-ink-muted hover:bg-bg-subtle hover:text-ink"
-    >
-      {label}
-    </button>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={
+          noop ? "Open a field to chat with Ada" : "Ask Ada anything…"
+        }
+        disabled={disabled || noop}
+        className="flex-1 rounded-md border border-border bg-bg-elevated px-3 py-[8px] text-[13px] outline-none focus:border-accent-mid disabled:opacity-50"
+      />
+      <button
+        type="submit"
+        disabled={disabled || noop || !value.trim()}
+        className="rounded-md bg-accent px-3 py-[8px] text-[12.5px] font-semibold text-white disabled:opacity-40"
+      >
+        Send
+      </button>
+    </form>
   );
 }

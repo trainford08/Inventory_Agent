@@ -39,6 +39,7 @@ export function ReviewShell({
         fieldLabel={ada?.fieldLabel ?? null}
         fieldSubject={ada?.fieldSubject ?? null}
         fieldValue={ada?.fieldValue ?? null}
+        teamSlug={teamSlug}
       />
     </div>
   );
