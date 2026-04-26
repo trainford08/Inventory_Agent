@@ -1,23 +1,15 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { InventoryCoverage } from "@/components/inventory/InventoryCoverage";
 import { InventoryProfile } from "@/components/inventory/InventoryProfile";
 import { getTeamInventory, totalEntitiesInFramework } from "@/server/inventory";
 
 export const dynamic = "force-dynamic";
 
-type TabKey = "profile" | "coverage";
-
 export default async function TeamInventoryPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string }>;
 }) {
   const { slug } = await params;
-  const { tab: tabParam } = await searchParams;
-  const tab: TabKey = tabParam === "coverage" ? "coverage" : "profile";
 
   const inventory = await getTeamInventory(slug);
   if (!inventory) notFound();
@@ -38,9 +30,7 @@ export default async function TeamInventoryPage({
         <p className="max-w-[760px] text-[13.5px] leading-[1.55] text-ink-soft">
           The framework taxonomy this team actually touches. JTBDs are the work
           your team does; features are the platform capabilities those jobs
-          depend on; entities are the underlying data objects. Use{" "}
-          <strong className="text-ink">Profile</strong> to drill in, or{" "}
-          <strong className="text-ink">Coverage</strong> to see the M:N picture.
+          depend on; entities are the underlying data objects.
         </p>
       </header>
 
@@ -67,29 +57,9 @@ export default async function TeamInventoryPage({
         />
       </div>
 
-      <div className="border-b border-border">
-        <nav className={`${constrained} -mb-px flex gap-1`}>
-          <Tab href={`/teams/${slug}/inventory`} active={tab === "profile"}>
-            Profile
-          </Tab>
-          <Tab
-            href={`/teams/${slug}/inventory?tab=coverage`}
-            active={tab === "coverage"}
-          >
-            Coverage matrix
-          </Tab>
-        </nav>
+      <div className="min-w-[1720px] pl-[64px] pr-[32px]">
+        <InventoryProfile groups={groups} customizations={customizations} />
       </div>
-
-      {tab === "profile" ? (
-        <div className="min-w-[1720px] pl-[64px] pr-[32px]">
-          <InventoryProfile groups={groups} customizations={customizations} />
-        </div>
-      ) : (
-        <div className="w-full pl-[64px] pr-[32px]">
-          <InventoryCoverage coverage={coverage} />
-        </div>
-      )}
     </div>
   );
 }
@@ -113,28 +83,5 @@ function Stat({
       </div>
       <div className="text-[11px] text-ink-muted">{sub}</div>
     </div>
-  );
-}
-
-function Tab({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`-mb-px border-b-2 px-4 py-[10px] text-[13.5px] font-medium tracking-[-0.005em] transition-colors ${
-        active
-          ? "border-primary text-primary"
-          : "border-transparent text-ink-muted hover:text-ink"
-      }`}
-    >
-      {children}
-    </Link>
   );
 }

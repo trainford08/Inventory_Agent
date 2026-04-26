@@ -763,8 +763,8 @@ export function InventoryProfile({
         <div
           className="overflow-hidden"
           style={{
-            width: jtbdDepth === "jtbd" ? "1413px" : "2129px",
-            maxWidth: jtbdDepth === "jtbd" ? "1413px" : "2129px",
+            width: jtbdDepth === "jtbd" ? "1388px" : "2111px",
+            maxWidth: jtbdDepth === "jtbd" ? "1388px" : "2111px",
           }}
         >
           <table className="w-full table-fixed border-collapse text-[12.5px]">
@@ -774,8 +774,8 @@ export function InventoryProfile({
               <col
                 style={{ width: jtbdDepth === "jtbd" ? "320px" : "272px" }}
               />
-              <col style={{ width: jtbdDepth === "jtbd" ? "136px" : "99px" }} />
-              <col style={{ width: jtbdDepth === "jtbd" ? "111px" : "80px" }} />
+              <col style={{ width: jtbdDepth === "jtbd" ? "122px" : "89px" }} />
+              <col style={{ width: jtbdDepth === "jtbd" ? "100px" : "72px" }} />
               <col
                 style={{ width: jtbdDepth === "jtbd" ? "186px" : "158px" }}
               />
@@ -878,7 +878,7 @@ export function InventoryProfile({
         </div>
       )}
 
-      {layer === "jtbd" && jtbdDepth !== "jtbd" ? <BadgeLegend /> : null}
+      {layer === "jtbd" ? <BadgeLegend /> : null}
     </div>
   );
 }
