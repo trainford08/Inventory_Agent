@@ -698,13 +698,13 @@ function EntityTable({
           <thead>
             <tr>
               <Th className="w-[44px] text-right">#</Th>
-              <Th className="w-[5%]">ID</Th>
-              <Th className="w-[14%]">Entity</Th>
-              <Th className="w-[14%]">GitHub Target</Th>
-              <Th className="w-[8%]">Data Preservation</Th>
-              <Th className="w-[8%]">Capability Preservation</Th>
-              <Th className="w-[18%]">Migration Pattern</Th>
-              <Th className="w-[10%]">Stays in ADO?</Th>
+              <Th className="w-[4.05%]">ID</Th>
+              <Th className="w-[11.34%]">Entity</Th>
+              <Th className="w-[11.34%]">GitHub Target</Th>
+              <Th className="w-[6.48%]">Data Preservation</Th>
+              <Th className="w-[6.48%]">Capability Preservation</Th>
+              <Th className="w-[16.2%]">Migration Pattern</Th>
+              <Th className="w-[8.5%]">Hybrid Approach</Th>
               <Th>Migration Note</Th>
             </tr>
           </thead>
@@ -768,7 +768,7 @@ function EntityTable({
                             <PatternBadge value={e.pattern} withDescription />
                           </Td>
                           <Td>
-                            <StaysBadge value={e.staysInAdo} />
+                            <HybridApproachChip value={e.staysInAdo} />
                           </Td>
                           <Td className="text-[11.5px] leading-snug text-ink-soft">
                             {e.note}
@@ -787,7 +787,7 @@ function EntityTable({
           </tbody>
         </table>
       </div>
-      <div className="grid grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+      <div className="grid w-1/2 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
         <div>
           <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
             Data preservation
@@ -1270,6 +1270,42 @@ function StaysBadge({
   return (
     <span
       className={`inline-block rounded-[3px] px-[7px] py-[2px] font-mono text-[10px] font-semibold ${m.cls} ${faded ? "opacity-50" : ""}`}
+    >
+      {m.label}
+    </span>
+  );
+}
+
+function HybridApproachChip({
+  value,
+}: {
+  value: "ado" | "gh" | "both" | "na";
+}) {
+  const map: Record<
+    "ado" | "gh" | "both" | "na",
+    { label: string; cls: string }
+  > = {
+    ado: {
+      label: "Stays in ADO",
+      cls: "border-orange-500/40 bg-orange-500/10 text-orange-700",
+    },
+    gh: {
+      label: "Moves to GitHub",
+      cls: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700",
+    },
+    both: {
+      label: "Both",
+      cls: "border-primary/40 bg-primary/10 text-primary",
+    },
+    na: {
+      label: "N/A",
+      cls: "border-border bg-bg-muted text-ink-muted",
+    },
+  };
+  const m = map[value] ?? map.na;
+  return (
+    <span
+      className={`inline-block rounded border px-2 py-[2px] text-[11px] font-semibold ${m.cls}`}
     >
       {m.label}
     </span>
