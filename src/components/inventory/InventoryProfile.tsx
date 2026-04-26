@@ -409,8 +409,6 @@ export function InventoryProfile({
           ) : null}
         </div>
       ) : null}
-
-      {layer !== "customization" ? <Legend /> : null}
     </div>
   );
 }
@@ -643,86 +641,146 @@ function EntityTable({ rows }: { rows: Row[] }) {
 
   let rowNum = 0;
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-      <table className="w-full border-collapse text-[12.5px]">
-        <thead>
-          <tr>
-            <Th className="w-[44px] text-right">#</Th>
-            <Th className="w-[5%]">ID</Th>
-            <Th className="w-[14%]">Entity</Th>
-            <Th className="w-[14%]">GitHub Target</Th>
-            <Th className="w-[8%]">Data Preservation</Th>
-            <Th className="w-[8%]">Capability Preservation</Th>
-            <Th className="w-[18%]">Migration Pattern</Th>
-            <Th className="w-[10%]">Stays in ADO?</Th>
-            <Th>Migration Note</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {order.map((key) => {
-            const group = grouped.get(key)!;
-            return (
-              <Fragment key={key}>
-                <tr className="border-t-2 border-ink/60 bg-bg-muted">
-                  <td colSpan={9} className="px-4 py-[9px]">
-                    <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink">
-                      {group.label} · {group.entities.length}{" "}
-                      {group.entities.length === 1 ? "entity" : "entities"}
-                    </span>
-                  </td>
-                </tr>
-                {group.entities.map((e) => {
-                  const num = ++rowNum;
-                  const isNoTarget = /^no direct target$/i.test(e.githubTarget);
-                  return (
-                    <tr
-                      key={e.id}
-                      className="border-b border-border/60 hover:bg-bg-hover"
-                    >
-                      <NumTd>{num}</NumTd>
-                      <Td className="font-mono text-[10.5px] text-ink-muted">
-                        {e.id}
-                      </Td>
-                      <Td>
-                        <span className="font-medium text-ink">{e.name}</span>
-                      </Td>
-                      <Td
-                        className={
-                          isNoTarget
-                            ? "text-[11.5px] italic text-ink-faint"
-                            : "text-[11.5px] text-ink-soft"
-                        }
+    <div className="space-y-4">
+      <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+        <table className="w-full border-collapse text-[12.5px]">
+          <thead>
+            <tr>
+              <Th className="w-[44px] text-right">#</Th>
+              <Th className="w-[5%]">ID</Th>
+              <Th className="w-[14%]">Entity</Th>
+              <Th className="w-[14%]">GitHub Target</Th>
+              <Th className="w-[8%]">Data Preservation</Th>
+              <Th className="w-[8%]">Capability Preservation</Th>
+              <Th className="w-[18%]">Migration Pattern</Th>
+              <Th className="w-[10%]">Stays in ADO?</Th>
+              <Th>Migration Note</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.map((key) => {
+              const group = grouped.get(key)!;
+              return (
+                <Fragment key={key}>
+                  <tr className="border-t-2 border-ink/60 bg-bg-muted">
+                    <td colSpan={9} className="px-4 py-[9px]">
+                      <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink">
+                        {group.label} · {group.entities.length}{" "}
+                        {group.entities.length === 1 ? "entity" : "entities"}
+                      </span>
+                    </td>
+                  </tr>
+                  {group.entities.map((e) => {
+                    const num = ++rowNum;
+                    const isNoTarget = /^no direct target$/i.test(
+                      e.githubTarget,
+                    );
+                    return (
+                      <tr
+                        key={e.id}
+                        className="border-b border-border/60 hover:bg-bg-hover"
                       >
-                        {e.githubTarget}
-                      </Td>
-                      <Td>
-                        <FidelityBadge value={e.dataPreservation} />
-                      </Td>
-                      <Td>
-                        <FidelityBadge value={e.capabilityPreservation} />
-                      </Td>
-                      <Td>
-                        <PatternBadge value={e.pattern} withDescription />
-                      </Td>
-                      <Td>
-                        <StaysBadge value={e.staysInAdo} />
-                      </Td>
-                      <Td className="text-[11.5px] leading-snug text-ink-soft">
-                        {e.note}
-                      </Td>
-                    </tr>
-                  );
-                })}
-              </Fragment>
-            );
-          })}
-          <tr>
-            <td colSpan={8} className="px-3 py-2">
-              <AddRowButton label="Add entity" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                        <NumTd>{num}</NumTd>
+                        <Td className="font-mono text-[10.5px] text-ink-muted">
+                          {e.id}
+                        </Td>
+                        <Td>
+                          <span className="font-medium text-ink">{e.name}</span>
+                        </Td>
+                        <Td
+                          className={
+                            isNoTarget
+                              ? "text-[11.5px] italic text-ink-faint"
+                              : "text-[11.5px] text-ink-soft"
+                          }
+                        >
+                          {e.githubTarget}
+                        </Td>
+                        <Td>
+                          <FidelityBadge value={e.dataPreservation} />
+                        </Td>
+                        <Td>
+                          <FidelityBadge value={e.capabilityPreservation} />
+                        </Td>
+                        <Td>
+                          <PatternBadge value={e.pattern} withDescription />
+                        </Td>
+                        <Td>
+                          <StaysBadge value={e.staysInAdo} />
+                        </Td>
+                        <Td className="text-[11.5px] leading-snug text-ink-soft">
+                          {e.note}
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </Fragment>
+              );
+            })}
+            <tr>
+              <td colSpan={9} className="px-3 py-2">
+                <AddRowButton label="Add entity" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="grid grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Data preservation
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="high" />
+              <span>Data and structure transfer intact</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="medium" />
+              <span>Data transfers; some structure or semantics degrade</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="low" />
+              <span>Significant loss of structure or fidelity</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="gap" />
+              <span>No equivalent — data not preserved</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Capability preservation
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="high" />
+              <span>Workflow survives intact</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="medium" />
+              <span>Workflow preserved with some redesign</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="low" />
+              <span>Workflow degrades significantly</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="gap" />
+              <span>No equivalent — capability not preserved</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1237,19 +1295,6 @@ function AddRowButton({ label }: { label: string }) {
   );
 }
 
-function Legend() {
-  return (
-    <div className="flex flex-wrap items-center gap-6 rounded-xl border border-border bg-bg-elevated px-5 py-3 text-[12px] text-ink-muted">
-      <LegendItem swatch="bg-primary/[0.08]" label="JTBD row" />
-      <LegendItem swatch="bg-warn/[0.08]" label="Feature row" />
-      <LegendItem swatch="bg-success/[0.08]" label="Entity row" />
-      <span className="text-ink-faint">
-        Shared items show once in full, then as greyed reference rows.
-      </span>
-    </div>
-  );
-}
-
 function ExpandToggle({
   isExpanded,
   onClick,
@@ -1342,16 +1387,5 @@ function ChipGroup({
         })}
       </div>
     </div>
-  );
-}
-
-function LegendItem({ swatch, label }: { swatch: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      <span
-        className={`inline-block h-[14px] w-[14px] rounded-[3px] border border-border ${swatch}`}
-      />
-      {label}
-    </span>
   );
 }
