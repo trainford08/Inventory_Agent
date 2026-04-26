@@ -57,6 +57,8 @@ export function InventoryProfile({
 
   const [patternFilter, setPatternFilter] = useState<PatternFilter>("all");
   const [fidelityFilter, setFidelityFilter] = useState<FidelityFilter>("all");
+  const [capabilityFilter, setCapabilityFilter] =
+    useState<FidelityFilter>("all");
   const [layer, setLayer] = useState<LayerFilter>("jtbd");
 
   const initialExpanded = useMemo(() => {
@@ -66,7 +68,10 @@ export function InventoryProfile({
     for (const r of rows) {
       if (r.kind === "cat" || r.kind === "jtbd") set.add(r.id);
       else if (r.kind === "feature" && !r.isRef) set.add(r.rowKey);
-      else if (r.kind === "entity" && !r.isRef) set.add(r.rowKey);
+      else if (r.kind === "entity" && !r.isRef) {
+        set.add(r.rowKey);
+        set.add(`entcat:${r.entity.service}`);
+      }
     }
     return set;
   }, [rows]);
@@ -99,6 +104,11 @@ export function InventoryProfile({
       if (r.kind === "cat" || r.kind === "jtbd") next.add(r.id);
       else if ((r.kind === "feature" || r.kind === "entity") && !r.isRef)
         next.add(r.rowKey);
+    }
+    // Entity-table service categories.
+    for (const r of rows) {
+      if (r.kind === "entity" && !r.isRef)
+        next.add(`entcat:${r.entity.service}`);
     }
     setExpanded(next);
   };
@@ -149,6 +159,24 @@ export function InventoryProfile({
       } else if (r.kind === "jtbd") {
         const has = r.jtbd.featureNodes.some((f) =>
           f.entityNodes.some((e) => e.dataPreservation === fidelityFilter),
+        );
+        if (!has) return false;
+      }
+    }
+    if (capabilityFilter !== "all") {
+      // Capability preservation lives on entities only.
+      if (r.kind === "entity") {
+        if (r.entity.capabilityPreservation !== capabilityFilter) return false;
+      } else if (r.kind === "feature") {
+        const has = r.feature.entityNodes.some(
+          (e) => e.capabilityPreservation === capabilityFilter,
+        );
+        if (!has) return false;
+      } else if (r.kind === "jtbd") {
+        const has = r.jtbd.featureNodes.some((f) =>
+          f.entityNodes.some(
+            (e) => e.capabilityPreservation === capabilityFilter,
+          ),
         );
         if (!has) return false;
       }
@@ -295,6 +323,21 @@ export function InventoryProfile({
             ]}
           />
         ) : null}
+        {layer !== "customization" && layer !== "field" ? (
+          <ChipGroup
+            label="Capability preservation"
+            value={capabilityFilter}
+            onChange={(v) => setCapabilityFilter(v as FidelityFilter)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "high", label: "High" },
+              { value: "medium", label: "Medium" },
+              { value: "low", label: "Low" },
+              { value: "gap", label: "Gap" },
+              { value: "na", label: "N/A" },
+            ]}
+          />
+        ) : null}
       </div>
 
       {(() => {
@@ -343,7 +386,7 @@ export function InventoryProfile({
           fidelityFilter={fidelityFilter}
         />
       ) : layer === "entity" ? (
-        <EntityTable rows={visibleRows} />
+        <EntityTable rows={visibleRows} expanded={expanded} onToggle={toggle} />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
           <table className="w-full border-collapse text-[13px]">
@@ -616,7 +659,15 @@ function FieldTable({
   );
 }
 
-function EntityTable({ rows }: { rows: Row[] }) {
+function EntityTable({
+  rows,
+  expanded,
+  onToggle,
+}: {
+  rows: Row[];
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
+}) {
   // Collect entity rows in order; dedupe by entity.id (visibleRows already
   // dedupes for the entity layer, but be defensive). Group by service.
   const entityRows = rows.filter(
@@ -641,7 +692,7 @@ function EntityTable({ rows }: { rows: Row[] }) {
 
   let rowNum = 0;
   return (
-    <div className="space-y-4">
+    <div className="w-4/5 space-y-4">
       <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
         <table className="w-full border-collapse text-[12.5px]">
           <thead>
@@ -660,60 +711,71 @@ function EntityTable({ rows }: { rows: Row[] }) {
           <tbody>
             {order.map((key) => {
               const group = grouped.get(key)!;
+              const catId = `entcat:${key}`;
+              const isOpen = expanded.has(catId);
               return (
                 <Fragment key={key}>
-                  <tr className="border-t-2 border-ink/60 bg-bg-muted">
+                  <tr
+                    className="cursor-pointer border-t-2 border-ink/60 bg-bg-muted hover:bg-bg-hover"
+                    onClick={() => onToggle(catId)}
+                  >
                     <td colSpan={9} className="px-4 py-[9px]">
                       <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink">
+                        <span className="mr-2 inline-block w-3 text-ink-muted">
+                          {isOpen ? "▼" : "▸"}
+                        </span>
                         {group.label} · {group.entities.length}{" "}
                         {group.entities.length === 1 ? "entity" : "entities"}
                       </span>
                     </td>
                   </tr>
-                  {group.entities.map((e) => {
-                    const num = ++rowNum;
-                    const isNoTarget = /^no direct target$/i.test(
-                      e.githubTarget,
-                    );
-                    return (
-                      <tr
-                        key={e.id}
-                        className="border-b border-border/60 hover:bg-bg-hover"
-                      >
-                        <NumTd>{num}</NumTd>
-                        <Td className="font-mono text-[10.5px] text-ink-muted">
-                          {e.id}
-                        </Td>
-                        <Td>
-                          <span className="font-medium text-ink">{e.name}</span>
-                        </Td>
-                        <Td
-                          className={
-                            isNoTarget
-                              ? "text-[11.5px] italic text-ink-faint"
-                              : "text-[11.5px] text-ink-soft"
-                          }
+                  {isOpen &&
+                    group.entities.map((e) => {
+                      const num = ++rowNum;
+                      const isNoTarget = /^no direct target$/i.test(
+                        e.githubTarget,
+                      );
+                      return (
+                        <tr
+                          key={e.id}
+                          className="border-b border-border/60 hover:bg-bg-hover"
                         >
-                          {e.githubTarget}
-                        </Td>
-                        <Td>
-                          <FidelityBadge value={e.dataPreservation} />
-                        </Td>
-                        <Td>
-                          <FidelityBadge value={e.capabilityPreservation} />
-                        </Td>
-                        <Td>
-                          <PatternBadge value={e.pattern} withDescription />
-                        </Td>
-                        <Td>
-                          <StaysBadge value={e.staysInAdo} />
-                        </Td>
-                        <Td className="text-[11.5px] leading-snug text-ink-soft">
-                          {e.note}
-                        </Td>
-                      </tr>
-                    );
-                  })}
+                          <NumTd>{num}</NumTd>
+                          <Td className="font-mono text-[10.5px] text-ink-muted">
+                            {e.id}
+                          </Td>
+                          <Td>
+                            <span className="font-medium text-ink">
+                              {e.name}
+                            </span>
+                          </Td>
+                          <Td
+                            className={
+                              isNoTarget
+                                ? "text-[11.5px] italic text-ink-faint"
+                                : "text-[11.5px] text-ink-soft"
+                            }
+                          >
+                            {e.githubTarget}
+                          </Td>
+                          <Td>
+                            <FidelityBadge value={e.dataPreservation} />
+                          </Td>
+                          <Td>
+                            <FidelityBadge value={e.capabilityPreservation} />
+                          </Td>
+                          <Td>
+                            <PatternBadge value={e.pattern} withDescription />
+                          </Td>
+                          <Td>
+                            <StaysBadge value={e.staysInAdo} />
+                          </Td>
+                          <Td className="text-[11.5px] leading-snug text-ink-soft">
+                            {e.note}
+                          </Td>
+                        </tr>
+                      );
+                    })}
                 </Fragment>
               );
             })}
@@ -1342,9 +1404,21 @@ function isMostlyExpanded(
       }
     } else if (r.kind === "entity" && !r.isRef) {
       if (layer === "entity") {
-        total++;
-        if (expanded.has(r.rowKey)) openCount++;
+        // Count distinct service categories instead of individual entities,
+        // since the entity table groups by service.
+        // Handled via a separate pass below.
       }
+    }
+  }
+  if (layer === "entity") {
+    const cats = new Set<string>();
+    for (const r of rows) {
+      if (r.kind === "entity" && !r.isRef)
+        cats.add(`entcat:${r.entity.service}`);
+    }
+    for (const c of cats) {
+      total++;
+      if (expanded.has(c)) openCount++;
     }
   }
   if (total === 0) return false;
