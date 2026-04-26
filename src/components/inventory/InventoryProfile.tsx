@@ -13,6 +13,7 @@ import { CustomizationsTable } from "./CustomizationsTable";
 type Row =
   | { kind: "cat"; id: string; label: string; count: number }
   | { kind: "featcat"; id: string; label: string; count: number }
+  | { kind: "featadd"; id: string; category: string }
   | {
       kind: "jtbd";
       id: string;
@@ -130,7 +131,8 @@ export function InventoryProfile({
   };
 
   const matchesFilters = (r: Row): boolean => {
-    if (r.kind === "cat" || r.kind === "featcat") return true;
+    if (r.kind === "cat" || r.kind === "featcat" || r.kind === "featadd")
+      return true;
     if (r.kind === "field") {
       if (patternFilter !== "all" && r.field.pattern !== patternFilter)
         return false;
@@ -259,6 +261,11 @@ export function InventoryProfile({
             if (ents) out.push(...ents);
           }
         }
+        out.push({
+          kind: "featadd",
+          id: `featadd:${cat}`,
+          category: cat,
+        });
       }
       return out;
     }
@@ -426,9 +433,15 @@ export function InventoryProfile({
         />
       ) : layer === "entity" ? (
         <EntityTable rows={visibleRows} expanded={expanded} onToggle={toggle} />
+      ) : layer === "feature" ? (
+        <FeatureTable
+          rows={visibleRows}
+          expanded={expanded}
+          onToggle={toggle}
+        />
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-[12.5px]">
+          <table className="w-[80%] border-collapse text-[12.5px]">
             <thead>
               <tr>
                 <Th className="w-[44px] text-right">#</Th>
@@ -447,7 +460,11 @@ export function InventoryProfile({
                 let rowNum = 0;
                 return visibleRows.map((r) => {
                   const num =
-                    r.kind === "cat" || r.kind === "featcat" ? null : ++rowNum;
+                    r.kind === "cat" ||
+                    r.kind === "featcat" ||
+                    r.kind === "featadd"
+                      ? null
+                      : ++rowNum;
                   return (
                     <RowView
                       key={rowKey(r)}
@@ -907,6 +924,102 @@ function EntityTable({
   );
 }
 
+function FeatureTable({
+  rows,
+  expanded,
+  onToggle,
+}: {
+  rows: Row[];
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
+}) {
+  // Group the pre-built rows by featcat. Rows arrive in canonical order:
+  // featcat, feature, entity..., feature, entity..., featadd, featcat, ...
+  type Group = {
+    catId: string;
+    label: string;
+    count: number;
+    children: Row[]; // feature + entity rows (no featcat/featadd)
+  };
+  const groups: Group[] = [];
+  let current: Group | null = null;
+  for (const r of rows) {
+    if (r.kind === "featcat") {
+      current = { catId: r.id, label: r.label, count: r.count, children: [] };
+      groups.push(current);
+    } else if (r.kind === "featadd") {
+      // Skip — we render Add manually inside each card
+    } else if (current) {
+      current.children.push(r);
+    }
+  }
+
+  let rowNum = 0;
+  return (
+    <div className="w-4/5 space-y-4">
+      {groups.map((group) => {
+        const isOpen = expanded.has(group.catId);
+        return (
+          <div
+            key={group.catId}
+            className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
+          >
+            <button
+              type="button"
+              onClick={() => onToggle(group.catId)}
+              className="flex w-full items-baseline gap-2 border-y border-border bg-bg-muted px-4 py-2 text-left font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink hover:bg-bg-hover"
+            >
+              <span className="inline-block w-3 text-ink-muted">
+                {isOpen ? "▼" : "▸"}
+              </span>
+              <span>{group.label}</span>
+              <span className="ml-auto font-normal text-ink-muted">
+                {group.count} {group.count === 1 ? "feature" : "features"}
+              </span>
+            </button>
+            {isOpen && (
+              <table className="w-full border-collapse text-[12.5px]">
+                <thead>
+                  <tr>
+                    <Th className="w-[44px] text-right">#</Th>
+                    <Th className="w-[5%]">ID</Th>
+                    <Th>Feature</Th>
+                    <Th className="w-[11%]">Depends on</Th>
+                    <Th className="w-[11%]">Stays in ADO?</Th>
+                    <Th className="w-[9%]">Pattern</Th>
+                    <Th className="w-[8%]">Preservation</Th>
+                    <Th className="w-[6%]">Risk</Th>
+                    <Th className="w-[22%]">Preservation strategy</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.children.map((r) => {
+                    const num = ++rowNum;
+                    return (
+                      <RowView
+                        key={rowKey(r)}
+                        row={r}
+                        rowNum={num}
+                        expanded={expanded}
+                        onToggle={onToggle}
+                      />
+                    );
+                  })}
+                  <tr>
+                    <td colSpan={9} className="px-3 py-2">
+                      <AddRowButton label="Add feature" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function FidelityBadge({
   value,
 }: {
@@ -954,6 +1067,7 @@ function RiskBadge({
 function rowKey(r: Row): string {
   if (r.kind === "cat") return r.id;
   if (r.kind === "featcat") return r.id;
+  if (r.kind === "featadd") return r.id;
   if (r.kind === "jtbd") return r.id;
   return r.rowKey;
 }
@@ -1043,6 +1157,16 @@ function RowView({
             <Caret open={isOpen} tone="ink" />
             {row.label} · {row.count} JTBDs
           </button>
+        </td>
+      </tr>
+    );
+  }
+
+  if (row.kind === "featadd") {
+    return (
+      <tr>
+        <td colSpan={9} className="px-3 py-2">
+          <AddRowButton label="Add feature" />
         </td>
       </tr>
     );
