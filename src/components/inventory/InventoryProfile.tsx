@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Field } from "@/lib/inventory-fields";
 import type {
   CategoryGroup,
@@ -71,6 +71,7 @@ export function InventoryProfile({
       else if (r.kind === "entity" && !r.isRef) {
         set.add(r.rowKey);
         set.add(`entcat:${r.entity.service}`);
+        set.add(`fldent:${r.entity.id}`);
       }
     }
     return set;
@@ -105,10 +106,12 @@ export function InventoryProfile({
       else if ((r.kind === "feature" || r.kind === "entity") && !r.isRef)
         next.add(r.rowKey);
     }
-    // Entity-table service categories.
+    // Entity-table service categories + field-table per-entity sections.
     for (const r of rows) {
-      if (r.kind === "entity" && !r.isRef)
+      if (r.kind === "entity" && !r.isRef) {
         next.add(`entcat:${r.entity.service}`);
+        next.add(`fldent:${r.entity.id}`);
+      }
     }
     setExpanded(next);
   };
@@ -270,7 +273,7 @@ export function InventoryProfile({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-bg-elevated p-3">
-        {layer !== "customization" && layer !== "field" ? (
+        {layer !== "customization" ? (
           <ExpandToggle
             isExpanded={isMostlyExpanded(rows, expanded, layer)}
             onClick={() =>
@@ -384,6 +387,8 @@ export function InventoryProfile({
           rows={visibleRows}
           patternFilter={patternFilter}
           fidelityFilter={fidelityFilter}
+          expanded={expanded}
+          onToggle={toggle}
         />
       ) : layer === "entity" ? (
         <EntityTable rows={visibleRows} expanded={expanded} onToggle={toggle} />
@@ -495,10 +500,14 @@ function FieldTable({
   rows,
   patternFilter,
   fidelityFilter,
+  expanded,
+  onToggle,
 }: {
   rows: Row[];
   patternFilter: PatternFilter;
   fidelityFilter: FidelityFilter;
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
 }) {
   let rowNum = 0;
   const fieldsForEntity = (e: Row & { kind: "entity" }) =>
@@ -515,12 +524,21 @@ function FieldTable({
       {entityRows.map((r) => {
         const visibleFields = fieldsForEntity(r);
         if (visibleFields.length === 0) return null;
+        const fldKey = `fldent:${r.entity.id}`;
+        const isOpen = expanded.has(fldKey);
         return (
           <div
             key={r.entity.id}
             className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
           >
-            <div className="flex items-baseline gap-2 border-y border-border bg-bg-muted px-4 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink">
+            <button
+              type="button"
+              onClick={() => onToggle(fldKey)}
+              className="flex w-full items-baseline gap-2 border-y border-border bg-bg-muted px-4 py-2 text-left font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink hover:bg-bg-hover"
+            >
+              <span className="inline-block w-3 text-ink-muted">
+                {isOpen ? "▼" : "▸"}
+              </span>
               <span>
                 {r.entity.id} · {r.entity.name} fields
               </span>
@@ -528,74 +546,78 @@ function FieldTable({
                 {visibleFields.length}{" "}
                 {visibleFields.length === 1 ? "field" : "fields"}
               </span>
-            </div>
-            <table className="w-full border-collapse text-[12.5px]">
-              <thead>
-                <tr>
-                  <Th className="w-[44px] text-right">#</Th>
-                  <Th className="w-[7.1%]">Field ID</Th>
-                  <Th className="w-[12.5%]">ADO Field</Th>
-                  <Th className="w-[8.03%]">Data type</Th>
-                  <Th className="w-[15.96%]">GitHub target</Th>
-                  <Th className="w-[17.74%]">Migration pattern</Th>
-                  <Th className="w-[7.1%]">Data preservation</Th>
-                  <Th className="w-[14.47%]">Preservation strategy</Th>
-                  <Th className="w-[17.09%]">Notes</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleFields.map((fld) => {
-                  const num = ++rowNum;
-                  return (
-                    <tr
-                      key={fld.id}
-                      className="border-b border-border/60 hover:bg-bg-hover"
-                    >
-                      <NumTd>{num}</NumTd>
-                      <Td className="font-mono text-[10px] text-ink-muted">
-                        {fld.id}
-                      </Td>
-                      <Td>
-                        <span className="font-medium text-ink">{fld.name}</span>
-                      </Td>
-                      <Td className="font-mono text-[10.5px] text-ink-soft">
-                        {fld.dataType}
-                      </Td>
-                      <Td className="text-[11.5px] text-ink-soft">
-                        {renderGithubTarget(fld.githubTarget)}
-                      </Td>
-                      <Td>
-                        {fld.pattern === "na" ? (
-                          <span className="font-mono text-[10px] text-ink-faint">
-                            N/A
+            </button>
+            {isOpen && (
+              <table className="w-full border-collapse text-[12.5px]">
+                <thead>
+                  <tr>
+                    <Th className="w-[44px] text-right">#</Th>
+                    <Th className="w-[7.1%]">Field ID</Th>
+                    <Th className="w-[12.5%]">ADO Field</Th>
+                    <Th className="w-[8.03%]">Data type</Th>
+                    <Th className="w-[15.96%]">GitHub target</Th>
+                    <Th className="w-[17.74%]">Migration pattern</Th>
+                    <Th className="w-[7.1%]">Data preservation</Th>
+                    <Th className="w-[14.47%]">Preservation strategy</Th>
+                    <Th className="w-[17.09%]">Notes</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleFields.map((fld) => {
+                    const num = ++rowNum;
+                    return (
+                      <tr
+                        key={fld.id}
+                        className="border-b border-border/60 hover:bg-bg-hover"
+                      >
+                        <NumTd>{num}</NumTd>
+                        <Td className="font-mono text-[10px] text-ink-muted">
+                          {fld.id}
+                        </Td>
+                        <Td>
+                          <span className="font-medium text-ink">
+                            {fld.name}
                           </span>
-                        ) : (
-                          <PatternBadge value={fld.pattern} withDescription />
-                        )}
-                      </Td>
-                      <Td>
-                        <FidelityBadge value={fld.dataPreservation} />
-                      </Td>
-                      <Td className="text-[11.5px] italic leading-snug text-ink-soft">
-                        {fld.strategy}
-                      </Td>
-                      <Td className="text-[11.5px] leading-snug text-ink-soft">
-                        {fld.notes}
-                      </Td>
-                    </tr>
-                  );
-                })}
-                <tr>
-                  <td colSpan={9} className="px-3 py-2">
-                    <AddRowButton label="Add field" />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                        </Td>
+                        <Td className="font-mono text-[10.5px] text-ink-soft">
+                          {fld.dataType}
+                        </Td>
+                        <Td className="text-[11.5px] text-ink-soft">
+                          {renderGithubTarget(fld.githubTarget)}
+                        </Td>
+                        <Td>
+                          {fld.pattern === "na" ? (
+                            <span className="font-mono text-[10px] text-ink-faint">
+                              N/A
+                            </span>
+                          ) : (
+                            <PatternBadge value={fld.pattern} withDescription />
+                          )}
+                        </Td>
+                        <Td>
+                          <FidelityBadge value={fld.dataPreservation} />
+                        </Td>
+                        <Td className="text-[11.5px] italic leading-snug text-ink-soft">
+                          {fld.strategy}
+                        </Td>
+                        <Td className="text-[11.5px] leading-snug text-ink-soft">
+                          {fld.notes}
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                  <tr>
+                    <td colSpan={9} className="px-3 py-2">
+                      <AddRowButton label="Add field" />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
           </div>
         );
       })}
-      <div className="grid grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+      <div className="grid w-1/2 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
         <div>
           <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
             Migration pattern
@@ -693,100 +715,100 @@ function EntityTable({
   let rowNum = 0;
   return (
     <div className="w-4/5 space-y-4">
-      <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-        <table className="w-full border-collapse text-[12.5px]">
-          <thead>
-            <tr>
-              <Th className="w-[44px] text-right">#</Th>
-              <Th className="w-[4.05%]">ID</Th>
-              <Th className="w-[11.34%]">Entity</Th>
-              <Th className="w-[11.34%]">GitHub Target</Th>
-              <Th className="w-[6.48%]">Data Preservation</Th>
-              <Th className="w-[6.48%]">Capability Preservation</Th>
-              <Th className="w-[16.2%]">Migration Pattern</Th>
-              <Th className="w-[8.5%]">Hybrid Approach</Th>
-              <Th>Migration Note</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.map((key) => {
-              const group = grouped.get(key)!;
-              const catId = `entcat:${key}`;
-              const isOpen = expanded.has(catId);
-              return (
-                <Fragment key={key}>
-                  <tr
-                    className="cursor-pointer border-t-2 border-ink/60 bg-bg-muted hover:bg-bg-hover"
-                    onClick={() => onToggle(catId)}
-                  >
-                    <td colSpan={9} className="px-4 py-[9px]">
-                      <span className="font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink">
-                        <span className="mr-2 inline-block w-3 text-ink-muted">
-                          {isOpen ? "▼" : "▸"}
-                        </span>
-                        {group.label} · {group.entities.length}{" "}
-                        {group.entities.length === 1 ? "entity" : "entities"}
-                      </span>
+      {order.map((key) => {
+        const group = grouped.get(key)!;
+        const catId = `entcat:${key}`;
+        const isOpen = expanded.has(catId);
+        return (
+          <div
+            key={key}
+            className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
+          >
+            <button
+              type="button"
+              onClick={() => onToggle(catId)}
+              className="flex w-full items-baseline gap-2 border-y border-border bg-bg-muted px-4 py-2 text-left font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink hover:bg-bg-hover"
+            >
+              <span className="inline-block w-3 text-ink-muted">
+                {isOpen ? "▼" : "▸"}
+              </span>
+              <span>{group.label}</span>
+              <span className="ml-auto font-normal text-ink-muted">
+                {group.entities.length}{" "}
+                {group.entities.length === 1 ? "entity" : "entities"}
+              </span>
+            </button>
+            {isOpen && (
+              <table className="w-full border-collapse text-[12.5px]">
+                <thead>
+                  <tr>
+                    <Th className="w-[44px] text-right">#</Th>
+                    <Th className="w-[4.05%]">ID</Th>
+                    <Th className="w-[11.34%]">Entity</Th>
+                    <Th className="w-[11.34%]">GitHub Target</Th>
+                    <Th className="w-[6.48%]">Data Preservation</Th>
+                    <Th className="w-[6.48%]">Capability Preservation</Th>
+                    <Th className="w-[16.2%]">Migration Pattern</Th>
+                    <Th className="w-[8.5%]">Hybrid Approach</Th>
+                    <Th>Migration Note</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.entities.map((e) => {
+                    const num = ++rowNum;
+                    const isNoTarget = /^no direct target$/i.test(
+                      e.githubTarget,
+                    );
+                    return (
+                      <tr
+                        key={e.id}
+                        className="border-b border-border/60 hover:bg-bg-hover"
+                      >
+                        <NumTd>{num}</NumTd>
+                        <Td className="font-mono text-[10.5px] text-ink-muted">
+                          {e.id}
+                        </Td>
+                        <Td>
+                          <span className="font-medium text-ink">{e.name}</span>
+                        </Td>
+                        <Td
+                          className={
+                            isNoTarget
+                              ? "text-[11.5px] italic text-ink-faint"
+                              : "text-[11.5px] text-ink-soft"
+                          }
+                        >
+                          {e.githubTarget}
+                        </Td>
+                        <Td>
+                          <FidelityBadge value={e.dataPreservation} />
+                        </Td>
+                        <Td>
+                          <FidelityBadge value={e.capabilityPreservation} />
+                        </Td>
+                        <Td>
+                          <PatternBadge value={e.pattern} withDescription />
+                        </Td>
+                        <Td>
+                          <HybridApproachChip value={e.staysInAdo} />
+                        </Td>
+                        <Td className="text-[11.5px] leading-snug text-ink-soft">
+                          {e.note}
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                  <tr>
+                    <td colSpan={9} className="px-3 py-2">
+                      <AddRowButton label="Add entity" />
                     </td>
                   </tr>
-                  {isOpen &&
-                    group.entities.map((e) => {
-                      const num = ++rowNum;
-                      const isNoTarget = /^no direct target$/i.test(
-                        e.githubTarget,
-                      );
-                      return (
-                        <tr
-                          key={e.id}
-                          className="border-b border-border/60 hover:bg-bg-hover"
-                        >
-                          <NumTd>{num}</NumTd>
-                          <Td className="font-mono text-[10.5px] text-ink-muted">
-                            {e.id}
-                          </Td>
-                          <Td>
-                            <span className="font-medium text-ink">
-                              {e.name}
-                            </span>
-                          </Td>
-                          <Td
-                            className={
-                              isNoTarget
-                                ? "text-[11.5px] italic text-ink-faint"
-                                : "text-[11.5px] text-ink-soft"
-                            }
-                          >
-                            {e.githubTarget}
-                          </Td>
-                          <Td>
-                            <FidelityBadge value={e.dataPreservation} />
-                          </Td>
-                          <Td>
-                            <FidelityBadge value={e.capabilityPreservation} />
-                          </Td>
-                          <Td>
-                            <PatternBadge value={e.pattern} withDescription />
-                          </Td>
-                          <Td>
-                            <HybridApproachChip value={e.staysInAdo} />
-                          </Td>
-                          <Td className="text-[11.5px] leading-snug text-ink-soft">
-                            {e.note}
-                          </Td>
-                        </tr>
-                      );
-                    })}
-                </Fragment>
-              );
-            })}
-            <tr>
-              <td colSpan={9} className="px-3 py-2">
-                <AddRowButton label="Add entity" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
+      })}
       <div className="grid w-1/2 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
         <div>
           <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
@@ -1455,6 +1477,16 @@ function isMostlyExpanded(
     for (const c of cats) {
       total++;
       if (expanded.has(c)) openCount++;
+    }
+  }
+  if (layer === "field") {
+    const ents = new Set<string>();
+    for (const r of rows) {
+      if (r.kind === "entity" && !r.isRef) ents.add(`fldent:${r.entity.id}`);
+    }
+    for (const e of ents) {
+      total++;
+      if (expanded.has(e)) openCount++;
     }
   }
   if (total === 0) return false;
