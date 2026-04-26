@@ -21,6 +21,7 @@ import {
   FEATURES_BY_ENTITY,
 } from "@/lib/inventory-framework";
 import { getTeamInventory } from "@/server/inventory";
+import { listTeams } from "@/server/teams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,13 +79,17 @@ export async function POST(req: Request) {
   const tools = {
     getTeamSummary: tool({
       description:
-        "Get totals for the active team: JTBDs in scope, features touched, entities touched, customization counts, orphan features.",
+        "Get totals AND schedule info for a team: JTBDs in scope, features touched, entities touched, customization counts, orphan features, cohort, wave, migration state, health, target cutover date, engineer count. Use this for any 'when does X cutover', 'what wave is Y in', 'what's the health of Z' question.",
       inputSchema: z.object({
         slug: z.string().describe("Team slug, e.g. 'echo'"),
       }),
       execute: async ({ slug }) => {
-        const inv = await getTeamInventory(slug);
+        const [inv, teams] = await Promise.all([
+          getTeamInventory(slug),
+          listTeams(),
+        ]);
         if (!inv) return { error: `Team '${slug}' not found.` };
+        const t = teams.find((x) => x.slug === slug);
         return {
           team: inv.team,
           totals: inv.totals,
@@ -94,6 +99,21 @@ export async function POST(req: Request) {
             teamSpecific: inv.customizations.teamSpecific,
           },
           orphanFeatures: inv.coverage.orphanFeatures.length,
+          schedule: t
+            ? {
+                cohort: t.cohort,
+                wave: t.wave,
+                migrationState: t.migrationState,
+                healthStatus: t.healthStatus,
+                targetCutoverAt: t.targetCutoverAt
+                  ? t.targetCutoverAt.toISOString()
+                  : null,
+                slackWeeks: t.slackWeeks,
+                engineerCount: t.engineerCount,
+                openBlockerCount: t.openBlockerCount,
+                completionPercent: t.completionPercent,
+              }
+            : null,
         };
       },
     }),
