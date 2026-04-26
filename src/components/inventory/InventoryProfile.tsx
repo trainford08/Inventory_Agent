@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Field } from "@/lib/inventory-fields";
 import type {
   CategoryGroup,
@@ -93,12 +93,15 @@ export function InventoryProfile({
   const [capabilityFilter, setCapabilityFilter] =
     useState<FidelityFilter>("all");
   const [layer, setLayer] = useState<LayerFilter>("jtbd");
+  const [jtbdDepth, setJtbdDepth] = useState<"jtbd" | "feature" | "entity">(
+    "jtbd",
+  );
   const [featureDepth, setFeatureDepth] = useState<
     "category" | "feature" | "entity" | "field"
-  >("field");
+  >("feature");
   const [entityDepth, setEntityDepth] = useState<
     "category" | "entity" | "field"
-  >("field");
+  >("entity");
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
@@ -127,6 +130,84 @@ export function InventoryProfile({
 
   // Customizations section — collapsed by default in All-layers view.
   const [customExpanded, setCustomExpanded] = useState(false);
+
+  // Track the previous layer so we re-apply the layer's depth exactly once
+  // on layer change (and not on subsequent re-renders). Inlining the
+  // expansion logic here keeps the effect self-contained — no references to
+  // the apply* helpers declared further down the component.
+  const prevLayerRef = useRef<LayerFilter>(layer);
+  useEffect(() => {
+    if (prevLayerRef.current === layer) return;
+    prevLayerRef.current = layer;
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (layer === "jtbd") {
+        for (const r of rows) {
+          if (r.kind === "feature" && !r.isRef) next.delete(r.rowKey);
+          if (r.kind === "entity") next.delete(r.rowKey);
+        }
+        for (const r of rows) {
+          if (r.kind === "cat") next.add(r.id);
+          if (r.kind === "jtbd") next.add(r.id);
+        }
+        if (jtbdDepth === "jtbd") return next;
+        for (const r of rows) {
+          if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+        }
+        if (jtbdDepth === "feature") return next;
+        for (const r of rows) {
+          if (r.kind === "entity") next.add(r.rowKey);
+        }
+        return next;
+      }
+      if (layer === "feature") {
+        for (const r of rows) {
+          if (r.kind === "feature" && !r.isRef) {
+            next.delete(`featcat:${r.feature.category}`);
+            next.delete(r.rowKey);
+          } else if (r.kind === "entity") {
+            next.delete(r.rowKey);
+          }
+        }
+        if (featureDepth === "category") return next;
+        for (const r of rows) {
+          if (r.kind === "feature" && !r.isRef)
+            next.add(`featcat:${r.feature.category}`);
+        }
+        if (featureDepth === "feature") return next;
+        for (const r of rows) {
+          if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+        }
+        if (featureDepth === "entity") return next;
+        for (const r of rows) {
+          if (r.kind === "entity") next.add(r.rowKey);
+        }
+        return next;
+      }
+      if (layer === "entity") {
+        for (const r of rows) {
+          if (r.kind === "entity" && !r.isRef) {
+            next.delete(`entcat:${r.entity.service}`);
+            next.delete(`fldent:${r.entity.id}`);
+          }
+        }
+        if (entityDepth === "category") return next;
+        for (const r of rows) {
+          if (r.kind === "entity" && !r.isRef)
+            next.add(`entcat:${r.entity.service}`);
+        }
+        if (entityDepth === "entity") return next;
+        for (const r of rows) {
+          if (r.kind === "entity" && !r.isRef)
+            next.add(`fldent:${r.entity.id}`);
+        }
+        return next;
+      }
+      return next;
+    });
+    // Run only when layer changes; depth values are read snapshot-style.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layer]);
 
   if (groups.length === 0) {
     return (
@@ -169,6 +250,34 @@ export function InventoryProfile({
     const next = new Set<string>();
     for (const r of rows) if (r.kind === "cat") next.add(r.id);
     setExpanded(next);
+  };
+
+  const applyJtbdDepth = (depth: "jtbd" | "feature" | "entity") => {
+    setJtbdDepth(depth);
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      // Strip jtbd-view-controlled ids first.
+      for (const r of rows) {
+        if (r.kind === "feature" && !r.isRef) next.delete(r.rowKey);
+        if (r.kind === "entity") next.delete(r.rowKey);
+      }
+      // Always expand category headers + JTBD rows so JTBDs show.
+      for (const r of rows) {
+        if (r.kind === "cat") next.add(r.id);
+        if (r.kind === "jtbd") next.add(r.id);
+      }
+      if (depth === "jtbd") return next;
+      // depth >= feature: expand each JTBD's features
+      for (const r of rows) {
+        if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+      }
+      if (depth === "feature") return next;
+      // depth === entity: expand features so entities appear
+      for (const r of rows) {
+        if (r.kind === "entity") next.add(r.rowKey);
+      }
+      return next;
+    });
   };
 
   const applyEntityDepth = (depth: "category" | "entity" | "field") => {
@@ -437,6 +546,18 @@ export function InventoryProfile({
             { value: "customization", label: "Customizations" },
           ]}
         />
+        {layer === "jtbd" ? (
+          <ChipGroup
+            label="Show depth"
+            value={jtbdDepth}
+            onChange={(v) => applyJtbdDepth(v as "jtbd" | "feature" | "entity")}
+            options={[
+              { value: "jtbd", label: "JTBDs" },
+              { value: "feature", label: "Features" },
+              { value: "entity", label: "Entities" },
+            ]}
+          />
+        ) : null}
         {layer === "feature" ? (
           <ChipGroup
             label="Show depth"
