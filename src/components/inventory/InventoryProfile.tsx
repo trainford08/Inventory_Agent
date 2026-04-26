@@ -965,10 +965,10 @@ function ExpandToggle({
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-elevated px-3 py-[3px] font-mono text-[11px] text-ink-soft hover:text-ink"
+      className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-3 py-[6px] text-[12px] font-semibold text-primary shadow-[0_1px_2px_rgba(91,95,207,0.15)] transition-colors hover:bg-primary/15 hover:border-primary/50"
       aria-pressed={isExpanded}
     >
-      <span className="text-[10px]">{isExpanded ? "▼" : "▶"}</span>
+      <span className="font-mono text-[10px]">{isExpanded ? "▼" : "▶"}</span>
       {isExpanded ? "Collapse all" : "Expand all"}
     </button>
   );
