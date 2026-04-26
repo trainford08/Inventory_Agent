@@ -489,13 +489,15 @@ function FieldTable({
                 </tr>
               );
             });
-            return [entityHeader, ...fieldRows];
+            const addRow = (
+              <tr key={`add-${e.id}`}>
+                <td colSpan={10} className="bg-bg/50 px-3 py-2">
+                  <AddRowButton label={`Add field to ${e.id} · ${e.name}`} />
+                </td>
+              </tr>
+            );
+            return [entityHeader, ...fieldRows, addRow];
           })}
-          <tr>
-            <td colSpan={10} className="px-3 py-2">
-              <AddRowButton label="Add field" />
-            </td>
-          </tr>
         </tbody>
       </table>
     </div>
