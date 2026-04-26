@@ -418,7 +418,7 @@ function FieldTable({
     (r): r is Row & { kind: "entity" } => r.kind === "entity",
   );
   return (
-    <div className="w-[74.3%] space-y-4">
+    <div className="w-[76.5%] space-y-4">
       {entityRows.map((r) => {
         const visibleFields = fieldsForEntity(r);
         if (visibleFields.length === 0) return null;
@@ -440,14 +440,14 @@ function FieldTable({
               <thead>
                 <tr>
                   <Th className="w-[44px] text-right">#</Th>
-                  <Th className="w-[7.31%]">Field ID</Th>
-                  <Th>ADO Field</Th>
-                  <Th className="w-[8.27%]">Data type</Th>
-                  <Th className="w-[16.44%]">GitHub target</Th>
-                  <Th className="w-[18.27%]">Migration pattern</Th>
-                  <Th className="w-[7.31%]">Data preservation</Th>
-                  <Th className="w-[14.9%]">Preservation strategy</Th>
-                  <Th className="w-[17.6%]">Notes</Th>
+                  <Th className="w-[7.1%]">Field ID</Th>
+                  <Th className="w-[12.5%]">ADO Field</Th>
+                  <Th className="w-[8.03%]">Data type</Th>
+                  <Th className="w-[15.96%]">GitHub target</Th>
+                  <Th className="w-[17.74%]">Migration pattern</Th>
+                  <Th className="w-[7.1%]">Data preservation</Th>
+                  <Th className="w-[14.47%]">Preservation strategy</Th>
+                  <Th className="w-[17.09%]">Notes</Th>
                 </tr>
               </thead>
               <tbody>
