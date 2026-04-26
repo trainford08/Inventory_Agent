@@ -90,6 +90,154 @@ const STRATEGY_DESCRIPTION: Record<string, string> = {
     "Meta-strategy: drop the sync and adopt a third-party tool already in the estate.",
 };
 
+const STRATEGY_RATIONALE: Record<string, { lead: string; emphasis: string }> = {
+  C01: {
+    lead: "Blocker-level process-template fragmentation; lives on Boards surface the hybrid already preserves.",
+    emphasis: "Zero migration engineering.",
+  },
+  C02: {
+    lead: "GitHub Issue Types (GA 2025) provide enforced custom types at org level.",
+    emphasis: "Rebuild once per org; type schema maps cleanly.",
+  },
+  C03: {
+    lead: "Issue Fields + Project custom fields cover most use cases.",
+    emphasis: "Rebuild once per org; fields map field-for-field.",
+  },
+  C04: {
+    lead: "GitHub has no enforced state transitions; lives on Boards.",
+    emphasis: "Hybrid preserves the state machine as-is.",
+  },
+  C05: {
+    lead: "Migration reveals rule-based automation that mostly duplicates what Actions + IssueOps handle natively.",
+    emphasis: "Retire unused rules; rebuild only the load-bearing ones.",
+  },
+  C06: {
+    lead: "Iterations translate well to Projects Iteration fields; hierarchical Area paths become labels and lose rollup.",
+    emphasis: "Teams typically accept the simplification.",
+  },
+  C07: {
+    lead: "GitHub advanced search (GA 2025) supports AND/OR/parentheses.",
+    emphasis: "Queries translate; syntax differs from WIQL.",
+  },
+  C08: {
+    lead: "Hierarchical backlog model absent on GitHub; Boards stays.",
+    emphasis: "Preserved without rebuild.",
+  },
+  C09: {
+    lead: "Pipelines stays; YAML templates preserved as-is.",
+    emphasis: "No translation needed on the Pipelines side.",
+  },
+  C10: {
+    lead: "Task groups convert to YAML templates via tools like yamlizr; conversion is engineering work.",
+    emphasis: "Estimate 1–3 engineer-weeks for complex task groups.",
+  },
+  C11: {
+    lead: "Custom tasks continue in Pipelines.",
+    emphasis: "No migration needed for teams on the hybrid.",
+  },
+  C12: {
+    lead: "Agent pools continue in Pipelines.",
+    emphasis: "Configuration transfers unchanged.",
+  },
+  C13: {
+    lead: "Service connections remain in ADO.",
+    emphasis: "No rewiring on the pipeline side.",
+  },
+  C14: {
+    lead: "GitHub Branch Protection + org-level Rulesets cover this, arguably better.",
+    emphasis: "Rebuild once per org; often an upgrade.",
+  },
+  C15: {
+    lead: "Git hooks work identically on any Git-backed platform.",
+    emphasis: "Nothing to translate; carries over as-is.",
+  },
+  C16: {
+    lead: "CODEOWNERS with auto-request replaces required reviewers.",
+    emphasis: "Typically an upgrade over per-repo configuration.",
+  },
+  C17: {
+    lead: "GitHub Projects + Insights don't replicate dashboard widgets; lives on Boards.",
+    emphasis: "Dashboards stay functional.",
+  },
+  C18: {
+    lead: "Power BI connector exists for GitHub but is less mature; Analytics Views don't fully port.",
+    emphasis: "Rebuild reporting with thinner coverage; accept the reduction.",
+  },
+  C19: {
+    lead: "Custom dashboard widgets are typically team-specific displays that don't survive tool changes.",
+    emphasis: "Discovery surfaces which are actually watched.",
+  },
+  C20: {
+    lead: "Third-party extensions accumulate; many are installed but unused.",
+    emphasis: "Migration is permission to audit and drop.",
+  },
+  C21: {
+    lead: "In-house ADO extensions must be rebuilt as GitHub Apps or Actions.",
+    emphasis: "Rewrite against GitHub Apps framework; most expensive per unit.",
+  },
+  C22: {
+    lead: "REST/GraphQL endpoints differ; consumer scripts and bots need rewriting.",
+    emphasis: "Endpoint and auth rewrite per consumer.",
+  },
+  C23: {
+    lead: "GitHub webhooks map 1:1 for most event types; ADO Service Hooks already retired.",
+    emphasis: "Endpoint rewrite and re-auth.",
+  },
+  C24: {
+    lead: "GitHub notifications are user-centric; team-level subscription management is thinner.",
+    emphasis: "Accept the simpler model; users self-manage more.",
+  },
+  C25: {
+    lead: "Rulesets and Actions enforce naming; functional parity, different mechanics.",
+    emphasis: "Minor rebuild; no capability loss.",
+  },
+  C26: {
+    lead: "Tribal conventions are portable in concept but need re-teaching alongside new tool affordances.",
+    emphasis: "Accept friction during re-learning.",
+  },
+  C27: {
+    lead: "GitHub Enterprise Cloud supports custom org roles + 20 custom repo roles (40+ permissions).",
+    emphasis: "Mapping is conceptual work, not capability work.",
+  },
+  C28: {
+    lead: "No GitHub equivalent for path-scoped read/write access control; lives on Repos surface but hybrid keeps the ADO instance reachable.",
+    emphasis: "Preserved on ADO for teams that need it.",
+  },
+  C29: {
+    lead: "Pipelines stays in the hybrid; approvals and gates transfer unchanged.",
+    emphasis: "No rebuild required.",
+  },
+  C30: {
+    lead: "Built-in pipeline tasks have classic-only equivalents that need conversion if Pipelines moves.",
+    emphasis: "Per-pipeline rewrite; mostly mechanical.",
+  },
+  C31: {
+    lead: "External-system release gates depend on bespoke ITSM API integrations.",
+    emphasis:
+      "Hybrid keeps these in Pipelines; rebuild requires deep API knowledge.",
+  },
+  C32: {
+    lead: "Build numbering and versioning conventions translate via shared YAML templates.",
+    emphasis:
+      "Mechanical rewrite; downstream consumers may rely on the format.",
+  },
+  C33: {
+    lead: "On-prem signing and secret-fetch tasks rely on agent-resident credentials.",
+    emphasis:
+      "If Pipelines moves, redesign is significant — OIDC vs PAT decisions matter.",
+  },
+  C34: {
+    lead: "Pipeline-to-pipeline triggers map to workflow_run events.",
+    emphasis:
+      "Concept maps cleanly; cross-pipeline artifact passing differs in syntax.",
+  },
+  C35: {
+    lead: "Monorepo and LFS conventions migrate via GEI, with caveats.",
+    emphasis:
+      "GEI handles LFS pointers but not all object storage; verify per repo.",
+  },
+};
+
 const CATALOG_NOTES: Record<string, string> = {
   C01: "Process template is why Boards stays in the hybrid — not because GitHub has nothing, but because what it has doesn't compose.",
   C02: "Custom types now map cleanly; state transitions per type remain a gap.",
@@ -393,7 +541,16 @@ function Row({ row }: { row: CustomizationRow }) {
               </span>
             </div>
             <span className="text-[11px] leading-[1.45] text-ink-muted">
-              {STRATEGY_DESCRIPTION[row.strategy]}
+              {row.catalogCode && STRATEGY_RATIONALE[row.catalogCode] ? (
+                <>
+                  {STRATEGY_RATIONALE[row.catalogCode].lead}{" "}
+                  <em className="font-medium not-italic text-ink">
+                    {STRATEGY_RATIONALE[row.catalogCode].emphasis}
+                  </em>
+                </>
+              ) : (
+                STRATEGY_DESCRIPTION[row.strategy]
+              )}
             </span>
           </div>
         ) : (
