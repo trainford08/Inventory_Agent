@@ -186,6 +186,13 @@ function ChatBody({
     }
   }, [messages, status, storageKey]);
 
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, status]);
+
   const clear = () => {
     setMessages([]);
     if (typeof window !== "undefined") {
@@ -199,7 +206,10 @@ function ChatBody({
 
   return (
     <>
-      <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
+      <div
+        ref={scrollRef}
+        className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]"
+      >
         {messages.length === 0 ? (
           <>
             {fieldLabel ? <FieldOpenedBanner label={fieldLabel} /> : null}
@@ -290,9 +300,17 @@ function MessageTurn({
     .map((p) => (p as { type: "text"; text: string }).text)
     .join("");
   const proposal = extractProposal(message);
+  const toolCalls = extractToolCalls(message);
   const isBot = message.role !== "user";
   return (
     <>
+      {isBot && toolCalls.length > 0 ? (
+        <div className="flex flex-col gap-1 self-start">
+          {toolCalls.map((tc) => (
+            <ToolCallPill key={tc.id} call={tc} />
+          ))}
+        </div>
+      ) : null}
       <Turn
         speaker={message.role === "user" ? "You" : "Ada"}
         kind={isBot ? "bot" : "user"}
@@ -341,6 +359,71 @@ type Proposal = {
   confidence: "high" | "medium" | "low";
   reasoning: string;
 };
+
+type ToolCall = {
+  id: string;
+  name: string;
+  state: "running" | "done" | "error";
+};
+
+const TOOL_LABELS: Record<string, string> = {
+  getTeamSummary: "Looking up team profile",
+  listJtbds: "Listing JTBDs",
+  listFeatures: "Listing features",
+  listEntities: "Listing entities",
+  getItem: "Fetching item details",
+  getCustomizations: "Fetching customizations",
+  getProgramOverview: "Pulling program rollup",
+  listTeamsByFriction: "Ranking teams by friction",
+  proposeAnswer: "Drafting a proposed answer",
+};
+
+function extractToolCalls(message: UIMessage): ToolCall[] {
+  const calls: ToolCall[] = [];
+  for (const part of message.parts as Array<{
+    type: string;
+    toolCallId?: string;
+    toolName?: string;
+    state?: string;
+  }>) {
+    if (!part.type.startsWith("tool-")) continue;
+    if (part.type === "tool-input-error") continue;
+    const name =
+      part.toolName ??
+      (part.type.startsWith("tool-") ? part.type.slice(5) : "tool");
+    if (name === "tool" || name === "input") continue;
+    const id = part.toolCallId ?? `${name}-${calls.length}`;
+    let state: ToolCall["state"] = "running";
+    if (part.state === "output-available") state = "done";
+    else if (part.state === "output-error") state = "error";
+    // Dedupe by id, keeping the latest state
+    const existing = calls.findIndex((c) => c.id === id);
+    if (existing >= 0) calls[existing] = { id, name, state };
+    else calls.push({ id, name, state });
+  }
+  return calls;
+}
+
+function ToolCallPill({ call }: { call: ToolCall }) {
+  const label = TOOL_LABELS[call.name] ?? `Calling ${call.name}`;
+  const tone =
+    call.state === "done"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : call.state === "error"
+        ? "border-rose-200 bg-rose-50 text-rose-700"
+        : "border-indigo-200 bg-indigo-50 text-indigo-700";
+  const icon =
+    call.state === "done" ? "✓" : call.state === "error" ? "✗" : "⏳";
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[3px] font-mono text-[10.5px] ${tone}`}
+    >
+      <span className="text-[10px]">{icon}</span>
+      <span className="font-semibold">{label}</span>
+      <span className="text-[10px] opacity-60">· {call.name}</span>
+    </div>
+  );
+}
 
 function extractProposal(message: UIMessage): Proposal | null {
   for (const part of message.parts) {
