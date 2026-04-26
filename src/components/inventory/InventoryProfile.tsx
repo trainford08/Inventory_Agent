@@ -278,7 +278,7 @@ export function InventoryProfile({
       </div>
 
       <div className="flex items-center">
-        <span className="ml-auto font-mono text-[11px] text-ink-muted">
+        <span className="font-mono text-[11px] text-ink-muted">
           {rows.filter((r) => r.kind === "jtbd").length} JTBDs ·{" "}
           {rows.filter((r) => r.kind === "feature").length} features ·{" "}
           {rows.filter((r) => r.kind === "entity").length} entities ·{" "}
