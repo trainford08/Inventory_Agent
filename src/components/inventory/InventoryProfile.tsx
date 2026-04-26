@@ -443,81 +443,21 @@ function FieldTable({
     0,
   );
   return (
-    <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+    <div className="w-[61.875%] overflow-x-auto rounded-xl border border-border bg-bg-elevated">
       <div className="border-b border-border bg-bg-muted px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
         {totalFields} fields across{" "}
         {rows.filter((r) => r.kind === "entity").length} entities
-      </div>
-      <div className="grid grid-cols-1 gap-6 border-b border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
-        <div>
-          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Migration pattern
-          </div>
-          <ul className="space-y-1 text-ink-soft">
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P1" />
-              <span>Exact 1:1 mapping</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P2" />
-              <span>Lossy 1:1 mapping</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P3" />
-              <span>Compositional (many fields → one capability)</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P4" />
-              <span>Decompositional (one field → many)</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P5" />
-              <span>Capability substitution</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P6" />
-              <span>Gap (no preservation)</span>
-            </li>
-          </ul>
-        </div>
-        <div>
-          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Data presentation
-          </div>
-          <ul className="space-y-1 text-ink-soft">
-            <li className="flex items-baseline gap-2">
-              <FidelityBadge value="high" />
-              <span>Data and structure transfer intact</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <FidelityBadge value="medium" />
-              <span>Data transfers; some structure or semantics degrade</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <FidelityBadge value="low" />
-              <span>Significant loss of structure or fidelity</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <FidelityBadge value="gap" />
-              <span>No equivalent — capability not preserved</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <FidelityBadge value="na" />
-              <span>Not applicable</span>
-            </li>
-          </ul>
-        </div>
       </div>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
           <tr>
             <Th className="w-[44px] text-right">#</Th>
-            <Th className="w-[7%]">Field ID</Th>
+            <Th className="w-[26.6%]">Field ID</Th>
             <Th>ADO Field</Th>
             <Th className="w-[9%]">Data type</Th>
             <Th>GitHub target</Th>
             <Th className="w-[6%]">Migration pattern</Th>
-            <Th className="w-[8%]">Data presentation</Th>
+            <Th className="w-[8%]">Data preservation</Th>
             <Th>Strategy</Th>
             <Th>Notes</Th>
           </tr>
@@ -573,6 +513,66 @@ function FieldTable({
           </tr>
         </tbody>
       </table>
+      <div className="grid w-1/2 grid-cols-1 gap-6 border-t border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Migration pattern
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P1" />
+              <span>Exact 1:1 mapping</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P2" />
+              <span>Lossy 1:1 mapping</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P3" />
+              <span>Compositional (many fields → one capability)</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P4" />
+              <span>Decompositional (one field → many)</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P5" />
+              <span>Capability substitution</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P6" />
+              <span>Gap (no preservation)</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Data preservation
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="high" />
+              <span>Data and structure transfer intact</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="medium" />
+              <span>Data transfers; some structure or semantics degrade</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="low" />
+              <span>Significant loss of structure or fidelity</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="gap" />
+              <span>No equivalent — capability not preserved</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
