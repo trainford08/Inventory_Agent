@@ -353,7 +353,7 @@ export function InventoryProfile({
         </div>
       ) : null}
 
-      <Legend />
+      {layer !== "customization" ? <Legend /> : null}
     </div>
   );
 }
