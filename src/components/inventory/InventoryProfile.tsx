@@ -730,7 +730,7 @@ export function InventoryProfile({
           jtbdNameById={sharedRefs.jtbdNameById}
         />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+        <div className="rounded-xl border border-border bg-bg-elevated">
           <table
             className="w-full table-fixed border-collapse text-[12.5px]"
             style={{ minWidth: "1620px" }}
@@ -1081,7 +1081,7 @@ function EntityTable({
 
   let rowNum = 0;
   return (
-    <div className="w-4/5 space-y-4">
+    <div className="w-[80%] space-y-4">
       {order.map((key) => {
         const group = grouped.get(key)!;
         const catId = `entcat:${key}`;
@@ -1089,7 +1089,7 @@ function EntityTable({
         return (
           <div
             key={key}
-            className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
+            className="rounded-xl border border-border bg-bg-elevated"
           >
             <button
               type="button"
@@ -1106,7 +1106,10 @@ function EntityTable({
               </span>
             </button>
             {isOpen && (
-              <table className="w-full border-collapse text-[12.5px]">
+              <table
+                className="w-full border-collapse text-[12.5px]"
+                style={{ minWidth: "1258px" }}
+              >
                 <thead>
                   <tr>
                     <Th className="w-[44px] text-right">#</Th>
@@ -1116,6 +1119,7 @@ function EntityTable({
                     <Th className="w-[6.48%]">Data Preservation</Th>
                     <Th className="w-[6.48%]">Capability Preservation</Th>
                     <Th className="w-[16.2%]">Migration pattern</Th>
+                    <Th className="w-[80px]">Risk</Th>
                     <Th className="w-[10.63%]">Hybrid Approach</Th>
                     <Th>Migration Note</Th>
                   </tr>
@@ -1181,6 +1185,9 @@ function EntityTable({
                           <PatternBadge value={e.pattern} withDescription />
                         </Td>
                         <Td>
+                          <RiskBadge value={e.risk} />
+                        </Td>
+                        <Td>
                           <HybridApproachChip value={e.staysInAdo} />
                         </Td>
                         <Td className="text-[11.5px] italic leading-snug text-ink-soft">
@@ -1226,6 +1233,7 @@ function EntityTable({
                               )}
                             </Td>
                             <Td className="text-ink-faint">—</Td>
+                            <Td className="text-ink-faint">—</Td>
                             <Td className="text-[11.5px] italic leading-snug text-ink-soft">
                               {fld.strategy ?? "—"}
                             </Td>
@@ -1236,7 +1244,7 @@ function EntityTable({
                     return trs;
                   })}
                   <tr>
-                    <td colSpan={9} className="px-3 py-2">
+                    <td colSpan={10} className="px-3 py-2">
                       <AddRowButton label="Add entity" />
                     </td>
                   </tr>
@@ -1246,7 +1254,7 @@ function EntityTable({
           </div>
         );
       })}
-      <div className="grid w-1/2 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+      <div className="grid w-3/4 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-3">
         <div>
           <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
             Data preservation
@@ -1301,6 +1309,33 @@ function EntityTable({
             </li>
           </ul>
         </div>
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Risk
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="trivial" />
+              <span>Mechanical migration; very low chance of issue</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="low" />
+              <span>Well-understood path; minor unknowns</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="medium" />
+              <span>Some unknowns; needs validation per team</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="high" />
+              <span>Significant unknowns or breaking-change potential</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -1346,13 +1381,13 @@ function FeatureTable({
 
   let rowNum = 0;
   return (
-    <div className="w-4/5 space-y-4">
+    <div className="space-y-4" style={{ width: "2012px" }}>
       {groups.map((group) => {
         const isOpen = expanded.has(group.catId);
         return (
           <div
             key={group.catId}
-            className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
+            className="rounded-xl border border-border bg-bg-elevated"
           >
             <button
               type="button"
@@ -1369,21 +1404,21 @@ function FeatureTable({
             </button>
             {isOpen && (
               <table
-                className="w-full table-fixed border-collapse text-[12.5px]"
-                style={{ minWidth: "1478px" }}
+                className="table-fixed border-collapse text-[12.5px]"
+                style={{ width: "2012px" }}
               >
                 <thead>
                   <tr>
-                    <Th className="w-[44px] text-right">#</Th>
-                    <Th className="w-[80px]">ID</Th>
-                    <Th>Feature</Th>
-                    <Th className="w-[170px]">Depends on</Th>
-                    <Th className="w-[170px]">Hybrid Approach</Th>
-                    <Th className="w-[135px]">Migration pattern</Th>
-                    <Th className="w-[80px]">Capability preservation</Th>
-                    <Th className="w-[75px]">Risk</Th>
-                    <Th className="w-[270px]">Preservation strategy</Th>
-                    <Th className="w-[338px]">Shared with</Th>
+                    <Th className="w-[51px] text-right">#</Th>
+                    <Th className="w-[94px]">ID</Th>
+                    <Th className="w-[276px]">Feature</Th>
+                    <Th className="w-[246px]">Depends on</Th>
+                    <Th className="w-[238px]">Hybrid Approach</Th>
+                    <Th className="w-[201px]">Migration pattern</Th>
+                    <Th className="w-[113px]">Capability preservation</Th>
+                    <Th className="w-[87px]">Risk</Th>
+                    <Th className="w-[314px]">Preservation strategy</Th>
+                    <Th className="w-[392px]">Shared with</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1456,7 +1491,25 @@ function FeatureTable({
 
 function BadgeLegend() {
   return (
-    <div className="grid w-1/2 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+    <div className="grid w-3/4 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-3">
+      <div>
+        <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+          Migration pattern
+        </div>
+        <ul className="space-y-1 text-ink-soft">
+          {(["P1", "P2", "P3", "P4", "P5", "P6"] as const).map((p) => (
+            <li key={p} className="flex items-baseline gap-2">
+              <PatternBadge value={p} />
+              <span>
+                {PATTERN_DESCRIPTIONS[p]}
+                <span className="block text-[10.5px] italic text-ink-muted">
+                  {PATTERN_LEDES[p]}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
       <div>
         <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
           Capability preservation
@@ -2204,6 +2257,15 @@ const PATTERN_DESCRIPTIONS: Record<
   P6: "Gap (no preservation)",
 };
 
+const PATTERN_LEDES: Record<"P1" | "P2" | "P3" | "P4" | "P5" | "P6", string> = {
+  P1: "Same meaning, same shape, different name. The easy case.",
+  P2: "Data transfers, but structure or hierarchy is lost.",
+  P3: "No single field maps, but combining multiple GitHub fields reconstructs the capability.",
+  P4: "An ADO field carries multiple meanings that must be split across GitHub constructs.",
+  P5: "No data-level mapping exists, but a GitHub feature solves the same user problem differently.",
+  P6: "The capability cannot be preserved without the source system.",
+};
+
 function SharedCell({
   ids,
   nameById,
@@ -2293,10 +2355,8 @@ function PatternBadge({
   );
   if (!withDescription) return badge;
   return (
-    <span
-      className={`inline-flex flex-nowrap items-baseline gap-1.5 whitespace-nowrap ${faded ? "opacity-50" : ""}`}
-    >
-      {badge}
+    <span className={faded ? "opacity-50" : ""}>
+      {badge}{" "}
       <span className="text-[11px] leading-tight text-ink-soft">
         {PATTERN_DESCRIPTIONS[value]}
       </span>

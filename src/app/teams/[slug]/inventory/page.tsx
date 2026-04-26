@@ -82,7 +82,7 @@ export default async function TeamInventoryPage({
       </div>
 
       {tab === "profile" ? (
-        <div className="w-full pl-[64px] pr-[32px]">
+        <div className="min-w-[1720px] pl-[64px] pr-[32px]">
           <InventoryProfile groups={groups} customizations={customizations} />
         </div>
       ) : (
