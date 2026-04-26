@@ -263,9 +263,7 @@ export function InventoryProfile({
   };
 
   const collapseAll = () => {
-    const next = new Set<string>();
-    for (const r of rows) if (r.kind === "cat") next.add(r.id);
-    setExpanded(next);
+    setExpanded(new Set<string>());
   };
 
   const applyJtbdDepth = (depth: "jtbd" | "feature" | "entity") => {
@@ -274,23 +272,23 @@ export function InventoryProfile({
       const next = new Set(prev);
       // Strip jtbd-view-controlled ids first.
       for (const r of rows) {
+        if (r.kind === "jtbd") next.delete(r.id);
         if (r.kind === "feature" && !r.isRef) next.delete(r.rowKey);
         if (r.kind === "entity") next.delete(r.rowKey);
       }
-      // Always expand category headers + JTBD rows so JTBDs show.
+      // Always expand category headers so JTBDs show.
       for (const r of rows) {
         if (r.kind === "cat") next.add(r.id);
-        if (r.kind === "jtbd") next.add(r.id);
       }
       if (depth === "jtbd") return next;
-      // depth >= feature: expand each JTBD's features
+      // depth >= feature: expand each JTBD to reveal its features
       for (const r of rows) {
-        if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+        if (r.kind === "jtbd") next.add(r.id);
       }
       if (depth === "feature") return next;
-      // depth === entity: expand features so entities appear
+      // depth === entity: expand each feature so entities appear under it
       for (const r of rows) {
-        if (r.kind === "entity") next.add(r.rowKey);
+        if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
       }
       return next;
     });
@@ -713,18 +711,21 @@ export function InventoryProfile({
           jtbdNameById={sharedRefs.jtbdNameById}
         />
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
           <table
-            className="border-collapse text-[12.5px]"
-            style={{ minWidth: "1258px", width: "auto" }}
+            className="w-full table-fixed border-collapse text-[12.5px]"
+            style={{ minWidth: "1620px" }}
           >
             <thead>
               <tr>
                 <Th className="w-[44px] text-right">#</Th>
                 <Th className="w-[80px]">ID</Th>
-                <Th className="min-w-[260px]">Feature</Th>
+                <Th className="min-w-[260px]">Jobs To Be Done (user task)</Th>
+                <Th className="w-[110px]">Persona</Th>
+                <Th className="w-[90px]">Frequency</Th>
                 <Th className="w-[150px]">Depends on</Th>
                 <Th className="w-[150px]">Hybrid Approach</Th>
+                <Th className="w-[260px]">Migration impact</Th>
                 <Th className="w-[120px]">Migration pattern</Th>
                 <Th className="w-[68px]">Capability preservation</Th>
                 <Th className="w-[66px]">Risk</Th>
@@ -749,6 +750,7 @@ export function InventoryProfile({
                       rowNum={num}
                       expanded={expanded}
                       onToggle={toggle}
+                      extraCols={3}
                       featureToJtbds={sharedRefs.featureToJtbds}
                       entityToFeatures={sharedRefs.entityToFeatures}
                       featureNameById={sharedRefs.featureNameById}
@@ -758,7 +760,7 @@ export function InventoryProfile({
                 });
               })()}
               <tr>
-                <td colSpan={10} className="px-3 py-2">
+                <td colSpan={13} className="px-3 py-2">
                   <AddRowButton label={addLabelFor(layer)} />
                 </td>
               </tr>
@@ -1418,6 +1420,62 @@ function FeatureTable({
           </div>
         );
       })}
+      <div className="grid w-1/2 grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Capability preservation
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="high" />
+              <span>Workflow preserved with no redesign</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="medium" />
+              <span>Workflow preserved with some redesign</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="low" />
+              <span>Significant workflow redesign required</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="gap" />
+              <span>No equivalent — capability not preserved</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Risk
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="trivial" />
+              <span>Mechanical migration; very low chance of issue</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="low" />
+              <span>Well-understood path; minor unknowns</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="medium" />
+              <span>Some unknowns; needs validation per team</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="high" />
+              <span>Significant unknowns or breaking-change potential</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <RiskBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1542,6 +1600,7 @@ function RowView({
   expanded,
   onToggle,
   indentOffset = 0,
+  extraCols = 0,
   featureToJtbds,
   entityToFeatures,
   featureNameById,
@@ -1553,16 +1612,33 @@ function RowView({
   onToggle: (id: string) => void;
   /** Subtract from each row's nominal indent level (used in feature view). */
   indentOffset?: number;
+  /**
+   * Number of JTBD-only columns appended at the right (Persona, Frequency,
+   * Migration impact). 0 in feature/entity/field tables; 3 in the shared
+   * JTBD-layer table. Non-JTBD rows fill these with em-dashes.
+   */
+  extraCols?: number;
   featureToJtbds?: Map<string, string[]>;
   entityToFeatures?: Map<string, string[]>;
   featureNameById?: Map<string, string>;
   jtbdNameById?: Map<string, string>;
 }) {
+  // Slot 4-5: Persona + Frequency (JTBD-layer only). For non-JTBD rows, "—".
+  const personaFreqDashes =
+    extraCols > 0 ? (
+      <>
+        <Td className="text-ink-faint">—</Td>
+        <Td className="text-ink-faint">—</Td>
+      </>
+    ) : null;
+  // Slot 8: Migration impact (JTBD-layer only). For non-JTBD rows, "—".
+  const impactDash =
+    extraCols > 0 ? <Td className="text-ink-faint">—</Td> : null;
   if (row.kind === "cat") {
     const isOpen = expanded.has(row.id);
     return (
       <tr className="border-t-2 border-ink/60 bg-bg-muted">
-        <td colSpan={10} className="px-4 py-[9px]">
+        <td colSpan={10 + extraCols} className="px-4 py-[9px]">
           <button
             onClick={() => onToggle(row.id)}
             className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
@@ -1578,7 +1654,7 @@ function RowView({
   if (row.kind === "featadd") {
     return (
       <tr>
-        <td colSpan={10} className="px-3 py-2">
+        <td colSpan={10 + extraCols} className="px-3 py-2">
           <AddRowButton label="Add feature" />
         </td>
       </tr>
@@ -1591,10 +1667,10 @@ function RowView({
     return (
       <>
         <tr aria-hidden>
-          <td colSpan={10} className="h-3 p-0" />
+          <td colSpan={10 + extraCols} className="h-3 p-0" />
         </tr>
         <tr>
-          <td colSpan={10} className="p-0">
+          <td colSpan={10 + extraCols} className="p-0">
             <button
               type="button"
               onClick={() => onToggle(row.id)}
@@ -1635,10 +1711,47 @@ function RowView({
             <span className="font-semibold text-ink">{row.jtbd.name}</span>
           </IndentCell>
         </Td>
-        <Td className="text-ink-faint">—</Td>
-        <Td>
-          <StaysBadge value={row.jtbd.staysInAdo} />
+        {extraCols > 0 ? (
+          <>
+            <Td className="text-[11.5px] text-ink-soft">{row.jtbd.persona}</Td>
+            <Td className="font-mono text-[10.5px] text-ink-soft">
+              {row.jtbd.frequency}
+            </Td>
+          </>
+        ) : null}
+        <Td className="leading-snug text-ink-soft">
+          {row.jtbd.features.length > 0 ? (
+            <ul className="space-y-0.5">
+              {row.jtbd.features.map((fid) => (
+                <li key={fid} className="text-[11px]">
+                  <span className="font-mono text-[10px] text-ink-muted">
+                    {fid}
+                  </span>
+                  {featureNameById?.get(fid) ? (
+                    <span className="ml-1.5 text-ink">
+                      {featureNameById.get(fid)}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span className="text-ink-faint">—</span>
+          )}
         </Td>
+        <Td>
+          <HybridApproachChip value={row.jtbd.staysInAdo} />
+          {row.jtbd.staysReason ? (
+            <div className="mt-0.5 text-[10.5px] italic leading-snug text-ink-soft">
+              {row.jtbd.staysReason}
+            </div>
+          ) : null}
+        </Td>
+        {extraCols > 0 ? (
+          <Td className="text-[11.5px] italic leading-snug text-ink-soft">
+            {row.jtbd.impact}
+          </Td>
+        ) : null}
         <Td className="text-ink-faint">—</Td>
         <Td className="text-ink-faint">—</Td>
         <Td className="text-ink-faint">—</Td>
@@ -1675,6 +1788,7 @@ function RowView({
             </span>
           </IndentCell>
         </Td>
+        {personaFreqDashes}
         <Td
           className={muted(
             row.isRef,
@@ -1691,6 +1805,7 @@ function RowView({
             </div>
           ) : null}
         </Td>
+        {impactDash}
         <Td>
           {row.feature.pattern === "na" ? (
             <span
@@ -1758,10 +1873,12 @@ function RowView({
             </span>
           </IndentCell>
         </Td>
+        {personaFreqDashes}
         <Td className="text-ink-faint">—</Td>
         <Td>
           <HybridApproachChip value={row.entity.staysInAdo} />
         </Td>
+        {impactDash}
         <Td>
           <PatternBadge
             value={row.entity.pattern}
@@ -1811,8 +1928,10 @@ function RowView({
           </span>
         </IndentCell>
       </Td>
+      {personaFreqDashes}
       <Td className="text-ink-faint">—</Td>
       <Td className="text-ink-faint">—</Td>
+      {impactDash}
       <Td>
         {fld.pattern === "na" ? (
           <span className="font-mono text-[10px] text-ink-faint">N/A</span>
