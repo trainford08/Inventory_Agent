@@ -238,21 +238,18 @@ export function bravoConfig(orgId: string): CohortShape {
       customization("C13", { status: "AGENT_HANDLED" }),
       customization("C16", { status: "AGENT_HANDLED" }),
       customization("C24", { status: "UNKNOWN" }),
-      // Team-specific (not in catalog)
-      {
+      customization("C32", {
         name: "Custom semver tagger script",
-        category: "PIPELINES",
         description:
           "Custom semver tagger script invoked from release pipeline.",
         status: "UNKNOWN",
-      },
-      {
+      }),
+      customization("C13", {
         name: "Bravo keyvault variable group",
-        category: "PIPELINES",
         description:
           "Shared variable group 'bravo-keyvault-secrets' referenced by 3 pipelines.",
         status: "AGENT_HANDLED",
-      },
+      }),
     ],
     risks: [
       {

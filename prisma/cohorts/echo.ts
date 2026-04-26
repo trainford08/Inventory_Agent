@@ -144,21 +144,18 @@ export function echoConfig(orgId: string): CohortShape {
     customizations: [
       customization("C13", { status: "NEEDS_HUMAN" }),
       customization("C29", { status: "NEEDS_HUMAN" }),
-      // Team-specific (not in catalog)
-      {
+      customization("C31", {
         name: "Mobile release gate (mechanism unknown)",
-        category: "PIPELINES",
         description:
           "Mobile release gate — agent detected a gating step but could not identify the underlying mechanism (App Center? Internal?).",
         status: "NEEDS_HUMAN",
-      },
-      {
+      }),
+      customization("C33", {
         name: "iOS signing cert storage",
-        category: "PIPELINES",
         description:
           "iOS signing cert storage — inferred Azure Key Vault but Champion needs to confirm access pattern.",
         status: "NEEDS_HUMAN",
-      },
+      }),
     ],
     risks: [
       {

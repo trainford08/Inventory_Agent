@@ -151,7 +151,7 @@ export function customization(
   const cat = CATALOG_BY_CODE.get(catalogCode);
   if (!cat) {
     throw new Error(
-      `Unknown customization catalog code: ${catalogCode}. Valid codes: C01–C29.`,
+      `Unknown customization catalog code: ${catalogCode}. Valid codes: C01–C35.`,
     );
   }
   return {

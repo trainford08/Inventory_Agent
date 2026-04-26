@@ -24,7 +24,7 @@ export default async function TeamInventoryPage({
 
   const { team, totals, groups, coverage, customizations } = inventory;
 
-  const constrained = "mx-auto w-full max-w-[1200px] px-[32px]";
+  const constrained = "w-full max-w-[1200px] pl-[64px] pr-[32px]";
 
   return (
     <div className="space-y-6 py-[28px]">
@@ -67,8 +67,8 @@ export default async function TeamInventoryPage({
         />
       </div>
 
-      <div className={`${constrained} border-b border-border`}>
-        <nav className="-mb-px flex gap-1">
+      <div className="border-b border-border">
+        <nav className={`${constrained} -mb-px flex gap-1`}>
           <Tab href={`/teams/${slug}/inventory`} active={tab === "profile"}>
             Profile
           </Tab>
@@ -82,11 +82,11 @@ export default async function TeamInventoryPage({
       </div>
 
       {tab === "profile" ? (
-        <div className={constrained}>
+        <div className="w-full pl-[64px] pr-[32px]">
           <InventoryProfile groups={groups} customizations={customizations} />
         </div>
       ) : (
-        <div className="w-full px-[32px]">
+        <div className="w-full pl-[64px] pr-[32px]">
           <InventoryCoverage coverage={coverage} />
         </div>
       )}

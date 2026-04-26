@@ -44,13 +44,7 @@ type Row =
 
 type Destination = "all" | "ado" | "gh" | "both";
 type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
-type LayerFilter =
-  | "all"
-  | "jtbd"
-  | "feature"
-  | "entity"
-  | "field"
-  | "customization";
+type LayerFilter = "jtbd" | "feature" | "entity" | "field" | "customization";
 
 export function InventoryProfile({
   groups,
@@ -63,7 +57,7 @@ export function InventoryProfile({
 
   const [destination, setDestination] = useState<Destination>("all");
   const [patternFilter, setPatternFilter] = useState<PatternFilter>("all");
-  const [layer, setLayer] = useState<LayerFilter>("all");
+  const [layer, setLayer] = useState<LayerFilter>("jtbd");
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
@@ -143,17 +137,6 @@ export function InventoryProfile({
   // Each layer view shows the chosen layer + descendants (nested), except
   // Field which falls through to the flat FieldTable below.
   const visibleRows: Row[] = (() => {
-    if (layer === "all") {
-      return rows.filter((r) => {
-        if (!matchesFilters(r)) return false;
-        if (r.kind === "field") return false; // fields excluded from All view
-        if (r.kind === "cat") return true;
-        if (r.kind === "jtbd") return expanded.has(`cat:${r.jtbd.category}`);
-        if (r.kind === "feature") return expanded.has(r.parentId);
-        if (r.kind === "entity") return expanded.has(r.parentId);
-        return false;
-      });
-    }
     if (layer === "jtbd") {
       // Cat headers + JTBDs + nested feat/entity descendants (no fields)
       return rows.filter((r) => {
@@ -230,49 +213,44 @@ export function InventoryProfile({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-2 rounded-xl border border-border bg-bg-elevated p-3">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <ChipGroup
-            label="View"
-            value={layer}
-            onChange={(v) => setLayer(v as LayerFilter)}
-            options={[
-              { value: "all", label: "All layers" },
-              { value: "jtbd", label: "JTBDs" },
-              { value: "feature", label: "Features" },
-              { value: "entity", label: "Entities" },
-              { value: "field", label: "Fields" },
-              { value: "customization", label: "Customizations" },
-            ]}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <ChipGroup
-            label="Destination"
-            value={destination}
-            onChange={(v) => setDestination(v as Destination)}
-            options={[
-              { value: "all", label: "All" },
-              { value: "gh", label: "→ GitHub" },
-              { value: "ado", label: "→ ADO" },
-              { value: "both", label: "Hybrid" },
-            ]}
-          />
-          <ChipGroup
-            label="Pattern"
-            value={patternFilter}
-            onChange={(v) => setPatternFilter(v as PatternFilter)}
-            options={[
-              { value: "all", label: "All" },
-              { value: "P1", label: "P1" },
-              { value: "P2", label: "P2" },
-              { value: "P3", label: "P3" },
-              { value: "P4", label: "P4" },
-              { value: "P5", label: "P5" },
-              { value: "P6", label: "P6" },
-            ]}
-          />
-        </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-bg-elevated p-3">
+        <ChipGroup
+          label="View"
+          value={layer}
+          onChange={(v) => setLayer(v as LayerFilter)}
+          options={[
+            { value: "jtbd", label: "JTBDs" },
+            { value: "feature", label: "Features" },
+            { value: "entity", label: "Entities" },
+            { value: "field", label: "Fields" },
+            { value: "customization", label: "Customizations" },
+          ]}
+        />
+        <ChipGroup
+          label="Destination"
+          value={destination}
+          onChange={(v) => setDestination(v as Destination)}
+          options={[
+            { value: "all", label: "All" },
+            { value: "gh", label: "→ GitHub" },
+            { value: "ado", label: "→ ADO" },
+            { value: "both", label: "Hybrid" },
+          ]}
+        />
+        <ChipGroup
+          label="Pattern"
+          value={patternFilter}
+          onChange={(v) => setPatternFilter(v as PatternFilter)}
+          options={[
+            { value: "all", label: "All" },
+            { value: "P1", label: "P1" },
+            { value: "P2", label: "P2" },
+            { value: "P3", label: "P3" },
+            { value: "P4", label: "P4" },
+            { value: "P5", label: "P5" },
+            { value: "P6", label: "P6" },
+          ]}
+        />
       </div>
 
       <div className="flex items-center gap-2">
@@ -329,7 +307,7 @@ export function InventoryProfile({
         </div>
       )}
 
-      {layer === "all" && customizations.total > 0 ? (
+      {layer === "jtbd" && customizations.total > 0 ? (
         <div className="rounded-xl border border-border bg-bg-elevated">
           <button
             type="button"
@@ -949,17 +927,17 @@ function isMostlyExpanded(
   let openCount = 0;
   for (const r of rows) {
     if (r.kind === "cat") {
-      if (layer === "all" || layer === "jtbd") {
+      if (layer === "jtbd") {
         total++;
         if (expanded.has(r.id)) openCount++;
       }
     } else if (r.kind === "jtbd") {
-      if (layer === "all" || layer === "jtbd") {
+      if (layer === "jtbd") {
         total++;
         if (expanded.has(r.id)) openCount++;
       }
     } else if (r.kind === "feature" && !r.isRef) {
-      if (layer === "all" || layer === "jtbd" || layer === "feature") {
+      if (layer === "jtbd" || layer === "feature") {
         total++;
         if (expanded.has(r.rowKey)) openCount++;
       }
@@ -1000,7 +978,7 @@ function ChipGroup({
               onClick={() => onChange(o.value)}
               className={`rounded-md px-2.5 py-[4px] text-[12px] font-medium transition-colors ${
                 active
-                  ? "bg-bg-elevated text-ink shadow-[0_1px_2px_rgba(16,24,40,0.06)]"
+                  ? "bg-primary text-white shadow-[0_1px_2px_rgba(91,95,207,0.35)]"
                   : "text-ink-muted hover:text-ink"
               }`}
             >

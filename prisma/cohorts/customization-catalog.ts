@@ -452,6 +452,104 @@ export const CUSTOMIZATION_CATALOG: Prisma.CustomizationCatalogCreateInput[] = [
     githubEquivalent: "Approvals and gates remain in Pipelines.",
     notes: "Hybrid protects release gating.",
   },
+
+  // ---------- 08 · Discovered Extensions (C30–C35) ----------
+  {
+    catalogCode: "C30",
+    name: "Built-in task translation gaps",
+    category: "PIPELINES",
+    commonality: "SOME",
+    parity: "PARTIAL",
+    strategy: "S04_REBUILD_WITH_LOSS",
+    hybridPlacement: "STAYS",
+    jtbdPerformer: "Custom code",
+    jobsToBeDone:
+      "Uses ADO built-in tasks (FileTransform@1, replaceTokens, classic-only tasks) inside pipelines; tasks have no direct GitHub Actions equivalent and need translation when pipelines move.",
+    githubEquivalent:
+      "Composite Actions or marketplace replacements (envsubst, json-replace, etc.); 1:1 mapping rarely available.",
+    notes:
+      "Per-pipeline rewrites; classic-only tasks still need conversion if Pipelines ever moves.",
+  },
+  {
+    catalogCode: "C31",
+    name: "External-system release gates",
+    category: "SECURITY",
+    commonality: "SOME",
+    parity: "GAP",
+    strategy: "S05_BUILD_GLUE",
+    hybridPlacement: "STAYS",
+    jtbdPerformer: "Custom code",
+    jobsToBeDone:
+      "Calls into ITSM or change-advisory systems (ServiceNow, BMC Remedy) to gate production releases on external approvals; distinct from internal approval gates (C29) by virtue of the external system.",
+    githubEquivalent:
+      "Custom GitHub Action or webhook calling the external system; no first-class equivalent.",
+    notes:
+      "Hybrid keeps these in Pipelines; rebuilds require deep ITSM API knowledge.",
+  },
+  {
+    catalogCode: "C32",
+    name: "Build numbering & versioning conventions",
+    category: "PROCESS",
+    commonality: "SOME",
+    parity: "PARTIAL",
+    strategy: "S04_REBUILD_WITH_LOSS",
+    hybridPlacement: "STAYS",
+    jtbdPerformer: "Custom code",
+    jobsToBeDone:
+      "Encodes a team-specific build-number scheme — yy.mm.dd.build, semantic-version composition, custom run-name formats — for traceability and downstream consumption.",
+    githubEquivalent:
+      "GitHub Actions run-name expressions + format() functions; covers most schemes.",
+    notes:
+      "Translation is mechanical but pervasive; downstream consumers may rely on the format.",
+  },
+  {
+    catalogCode: "C33",
+    name: "On-prem signing & secret-fetch tasks",
+    category: "SECURITY",
+    commonality: "SOME",
+    parity: "GAP",
+    strategy: "S05_BUILD_GLUE",
+    hybridPlacement: "STAYS",
+    jtbdPerformer: "Custom code",
+    jobsToBeDone:
+      "Reaches from pipelines to corporate signing services, HSMs, or on-prem secret stores via custom tasks; preserves enterprise control of signing keys.",
+    githubEquivalent:
+      "Reusable workflow + OIDC federation or self-hosted runner with on-prem reachability.",
+    notes:
+      "If Pipelines moves, redesign is significant — OIDC vs PAT decisions matter.",
+  },
+  {
+    catalogCode: "C34",
+    name: "Pipeline-to-pipeline / resource triggers",
+    category: "PIPELINES",
+    commonality: "SOME",
+    parity: "MATCH",
+    strategy: "S02_TRANSLATE_TO_GITHUB",
+    hybridPlacement: "STAYS",
+    jtbdPerformer: "Custom code",
+    jobsToBeDone:
+      "Triggers downstream pipelines on upstream pipeline completion via ADO resource pipelines; chains build → release or build → deploy across separate definitions.",
+    githubEquivalent:
+      "GitHub Actions workflow_run trigger or repository_dispatch event.",
+    notes:
+      "Concept maps cleanly; cross-pipeline artifact passing differs in syntax.",
+  },
+  {
+    catalogCode: "C35",
+    name: "Monorepo & LFS conventions",
+    category: "REPOS",
+    commonality: "SOME",
+    parity: "MATCH",
+    strategy: "S02_TRANSLATE_TO_GITHUB",
+    hybridPlacement: "MOVES",
+    jtbdPerformer: "Custom code",
+    jobsToBeDone:
+      "Operates large repos with sparse-checkout, Git LFS lifecycle policies, or submodule URL conventions; supports monorepos and binary-heavy codebases.",
+    githubEquivalent:
+      "GitHub LFS + sparse-checkout support GA; submodule URLs need rewriting at cutover.",
+    notes:
+      "GEI handles LFS pointers but not all object storage; verify per repo. Submodule URL rewrites are mechanical.",
+  },
 ];
 
 /** Quick lookup by catalog code (C01..C29) */

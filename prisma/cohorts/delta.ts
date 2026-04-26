@@ -604,42 +604,36 @@ export function deltaConfig(orgId: string): CohortShape {
       customization("C14", { status: "AGENT_HANDLED" }),
       customization("C22", { status: "NEEDS_HUMAN" }),
       customization("C29", { status: "NEEDS_HUMAN" }),
-      // Team-specific (not in catalog)
-      {
+      customization("C35", {
         name: "LFS batching script",
-        category: "PIPELINES",
         description:
           "LFS batching script for delta-data-lfs — pushes LFS objects in chunks to avoid rate-limiting.",
         status: "AGENT_HANDLED",
-      },
-      {
+      }),
+      customization("C34", {
         name: "Canary deploy orchestrator",
-        category: "PIPELINES",
         description:
           "Canary deploy orchestrator coordinates staged rollouts across 4 services.",
         status: "AGENT_HANDLED",
-      },
-      {
+      }),
+      customization("C35", {
         name: "Monorepo change detection",
-        category: "PIPELINES",
         description:
           "Monorepo change detection script — selective rebuild based on changed paths.",
         status: "AGENT_HANDLED",
-      },
-      {
+      }),
+      customization("C34", {
         name: "Cross-region deploy dependency graph",
-        category: "PIPELINES",
         description:
           "Cross-region deploy dependency graph — ordering enforced via deployment environments.",
         status: "NEEDS_HUMAN",
-      },
-      {
+      }),
+      customization("C31", {
         name: "Schema compatibility gate",
-        category: "PIPELINES",
         description:
           "Schema compatibility gate — blocks canary if proto changes break consumer.",
         status: "NEEDS_HUMAN",
-      },
+      }),
     ],
     risks: [
       {
