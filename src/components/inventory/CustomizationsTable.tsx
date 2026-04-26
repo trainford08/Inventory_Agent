@@ -495,7 +495,10 @@ function Legend() {
     { key: "S05_BUILD_GLUE", short: "S05", def: "Build Glue" },
   ];
   return (
-    <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-bg-elevated p-4 text-[11.5px] text-ink-muted md:grid-cols-3">
+    <div
+      className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-bg-elevated p-4 text-[11.5px] text-ink-muted md:grid-cols-3"
+      style={{ width: "40%" }}
+    >
       <div className="flex flex-col gap-1.5">
         <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
           Parity
