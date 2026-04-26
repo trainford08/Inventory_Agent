@@ -241,21 +241,21 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
 
   return (
     <div className="space-y-3">
-      <div className="inline-block max-w-full overflow-x-auto rounded-xl border border-border bg-bg-elevated align-top">
+      <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
         <table
-          className="border-collapse text-[13px]"
-          style={{ width: "max-content" }}
+          className="w-full border-collapse text-[13px]"
+          style={{ minWidth: 1300 }}
         >
           <colgroup>
-            <col style={{ minWidth: 48 }} />
-            <col style={{ minWidth: 130 }} />
-            <col style={{ minWidth: 170 }} />
-            <col style={{ minWidth: 180 }} />
-            <col style={{ minWidth: 72 }} />
-            <col style={{ minWidth: 150 }} />
-            <col style={{ minWidth: 110 }} />
-            <col style={{ minWidth: 160 }} />
-            <col style={{ minWidth: 130 }} />
+            <col style={{ width: "3%", minWidth: 45 }} />
+            <col style={{ width: "11%", minWidth: 130 }} />
+            <col style={{ width: "14%", minWidth: 160 }} />
+            <col style={{ width: "16%", minWidth: 180 }} />
+            <col style={{ width: "7%", minWidth: 80 }} />
+            <col style={{ width: "13%", minWidth: 150 }} />
+            <col style={{ width: "13%", minWidth: 150 }} />
+            <col style={{ width: "14%", minWidth: 160 }} />
+            <col style={{ width: "9%", minWidth: 110 }} />
           </colgroup>
           <thead>
             <tr>
