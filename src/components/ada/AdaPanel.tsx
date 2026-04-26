@@ -364,6 +364,8 @@ type ToolCall = {
   id: string;
   name: string;
   state: "running" | "done" | "error";
+  input?: unknown;
+  output?: unknown;
 };
 
 const TOOL_LABELS: Record<string, string> = {
@@ -388,6 +390,9 @@ function extractToolCalls(message: UIMessage): ToolCall[] {
     toolCallId?: string;
     toolName?: string;
     state?: string;
+    input?: unknown;
+    output?: unknown;
+    result?: unknown;
   }>) {
     if (!part.type.startsWith("tool-")) continue;
     if (part.type === "tool-input-error") continue;
@@ -399,33 +404,91 @@ function extractToolCalls(message: UIMessage): ToolCall[] {
     let state: ToolCall["state"] = "running";
     if (part.state === "output-available") state = "done";
     else if (part.state === "output-error") state = "error";
-    // Dedupe by id, keeping the latest state
+    const next: ToolCall = {
+      id,
+      name,
+      state,
+      input: part.input,
+      output: part.output ?? part.result,
+    };
     const existing = calls.findIndex((c) => c.id === id);
-    if (existing >= 0) calls[existing] = { id, name, state };
-    else calls.push({ id, name, state });
+    if (existing >= 0) {
+      // Merge: keep input/output from whichever part has them
+      calls[existing] = {
+        ...calls[existing],
+        ...next,
+        input: next.input ?? calls[existing].input,
+        output: next.output ?? calls[existing].output,
+      };
+    } else {
+      calls.push(next);
+    }
   }
   return calls;
 }
 
 function ToolCallPill({ call }: { call: ToolCall }) {
+  const [open, setOpen] = useState(false);
   const label = TOOL_LABELS[call.name] ?? `Calling ${call.name}`;
   const tone =
     call.state === "done"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
       : call.state === "error"
-        ? "border-rose-200 bg-rose-50 text-rose-700"
-        : "border-indigo-200 bg-indigo-50 text-indigo-700";
+        ? "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+        : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100";
   const icon =
     call.state === "done" ? "✓" : call.state === "error" ? "✗" : "⏳";
+  const hasDetails = call.input !== undefined || call.output !== undefined;
   return (
-    <div
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[3px] font-mono text-[10.5px] ${tone}`}
-    >
-      <span className="text-[10px]">{icon}</span>
-      <span className="font-semibold">{label}</span>
-      <span className="text-[10px] opacity-60">· {call.name}</span>
+    <div className="flex flex-col gap-1">
+      <button
+        type="button"
+        disabled={!hasDetails}
+        onClick={() => setOpen((v) => !v)}
+        className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-[3px] font-mono text-[10.5px] transition-colors ${tone} ${hasDetails ? "cursor-pointer" : "cursor-default"}`}
+        aria-expanded={open}
+      >
+        <span className="text-[10px]">{icon}</span>
+        <span className="font-semibold">{label}</span>
+        <span className="text-[10px] opacity-60">· {call.name}</span>
+        {hasDetails ? (
+          <span className="text-[10px] opacity-60">{open ? "▾" : "▸"}</span>
+        ) : null}
+      </button>
+      {open && hasDetails ? (
+        <div className="max-w-[88%] overflow-hidden rounded-md border border-border bg-bg-elevated text-[10.5px] font-mono">
+          {call.input !== undefined ? (
+            <div className="border-b border-border">
+              <div className="bg-bg-muted px-2 py-1 text-[9.5px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+                Input
+              </div>
+              <pre className="overflow-x-auto whitespace-pre-wrap break-all p-2 text-ink-soft">
+                {safeJson(call.input)}
+              </pre>
+            </div>
+          ) : null}
+          {call.output !== undefined ? (
+            <div>
+              <div className="bg-bg-muted px-2 py-1 text-[9.5px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+                Output
+              </div>
+              <pre className="max-h-[280px] overflow-auto whitespace-pre-wrap break-all p-2 text-ink-soft">
+                {safeJson(call.output)}
+              </pre>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function safeJson(value: unknown): string {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
 }
 
 function extractProposal(message: UIMessage): Proposal | null {
