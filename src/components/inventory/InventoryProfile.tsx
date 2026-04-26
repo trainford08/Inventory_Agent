@@ -321,6 +321,11 @@ export function InventoryProfile({
                   );
                 });
               })()}
+              <tr>
+                <td colSpan={6} className="px-3 py-2">
+                  <AddRowButton label={addLabelFor(layer)} />
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -486,6 +491,11 @@ function FieldTable({
             });
             return [entityHeader, ...fieldRows];
           })}
+          <tr>
+            <td colSpan={10} className="px-3 py-2">
+              <AddRowButton label="Add field" />
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -940,6 +950,33 @@ function PatternBadge({
 function muted(isRef: boolean, baseText = ""): string {
   if (!isRef) return baseText;
   return `${baseText} text-ink-faint`;
+}
+
+function addLabelFor(layer: LayerFilter): string {
+  switch (layer) {
+    case "jtbd":
+      return "Add JTBD";
+    case "feature":
+      return "Add feature";
+    case "entity":
+      return "Add entity";
+    case "field":
+      return "Add field";
+    default:
+      return "Add row";
+  }
+}
+
+function AddRowButton({ label }: { label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => alert(`${label} (not wired yet)`)}
+      className="w-full rounded-md border border-dashed border-border px-3 py-2 text-left text-[11.5px] text-ink-muted transition-colors hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
+    >
+      + {label}
+    </button>
+  );
 }
 
 function Legend() {
