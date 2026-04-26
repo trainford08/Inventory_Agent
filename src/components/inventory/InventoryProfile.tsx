@@ -442,78 +442,100 @@ function FieldTable({
     (n, r) => (r.kind === "entity" ? n + fieldsForEntity(r).length : n),
     0,
   );
+  const entityRows = rows.filter(
+    (r): r is Row & { kind: "entity" } => r.kind === "entity",
+  );
+  const entityCount = entityRows.length;
   return (
-    <div className="w-[61.875%] overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-      <div className="border-b border-border bg-bg-muted px-4 py-2 font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
-        {totalFields} fields across{" "}
-        {rows.filter((r) => r.kind === "entity").length} entities
+    <div className="w-[61.875%] space-y-4">
+      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
+        {totalFields} fields across {entityCount}{" "}
+        {entityCount === 1 ? "entity" : "entities"}
       </div>
-      <table className="w-full border-collapse text-[12.5px]">
-        <thead>
-          <tr>
-            <Th className="w-[44px] text-right">#</Th>
-            <Th className="w-[26.6%]">Field ID</Th>
-            <Th>ADO Field</Th>
-            <Th className="w-[9%]">Data type</Th>
-            <Th>GitHub target</Th>
-            <Th className="w-[6%]">Migration pattern</Th>
-            <Th className="w-[8%]">Data preservation</Th>
-            <Th>Strategy</Th>
-            <Th>Notes</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => {
-            if (r.kind !== "entity") return null;
-            const visibleFields = fieldsForEntity(r);
-            if (visibleFields.length === 0) return null;
-            return visibleFields.map((fld) => {
-              const num = ++rowNum;
-              return (
-                <tr key={fld.id} className="bg-success/[0.03]">
-                  <NumTd>{num}</NumTd>
-                  <Td className="font-mono text-[10px] text-ink-muted">
-                    {fld.id}
-                  </Td>
-                  <Td>
-                    <span className="font-medium text-ink">{fld.name}</span>
-                  </Td>
-                  <Td className="font-mono text-[10.5px] text-ink-soft">
-                    {fld.dataType}
-                  </Td>
-                  <Td className="text-[11.5px] text-ink-soft">
-                    {renderGithubTarget(fld.githubTarget)}
-                  </Td>
-                  <Td>
-                    {fld.pattern === "na" ? (
-                      <span className="font-mono text-[10px] text-ink-faint">
-                        N/A
-                      </span>
-                    ) : (
-                      <PatternBadge value={fld.pattern} />
-                    )}
-                  </Td>
-                  <Td>
-                    <FidelityBadge value={fld.dataPreservation} />
-                  </Td>
-                  <Td className="text-[11.5px] italic leading-snug text-ink-soft">
-                    {fld.strategy}
-                  </Td>
-                  <Td className="text-[11.5px] leading-snug text-ink-soft">
-                    {fld.notes}
-                  </Td>
+      {entityRows.map((r) => {
+        const visibleFields = fieldsForEntity(r);
+        if (visibleFields.length === 0) return null;
+        return (
+          <div
+            key={r.entity.id}
+            className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
+          >
+            <div className="flex items-baseline gap-2 border-y border-border bg-bg-muted px-4 py-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink">
+              <span>
+                {r.entity.id} · {r.entity.name} fields
+              </span>
+              <span className="ml-auto font-normal text-ink-muted">
+                {visibleFields.length}{" "}
+                {visibleFields.length === 1 ? "field" : "fields"}
+              </span>
+            </div>
+            <table className="w-full border-collapse text-[12.5px]">
+              <thead>
+                <tr>
+                  <Th className="w-[44px] text-right">#</Th>
+                  <Th className="w-[8%]">Field ID</Th>
+                  <Th>ADO Field</Th>
+                  <Th className="w-[9%]">Data type</Th>
+                  <Th>GitHub target</Th>
+                  <Th className="w-[6%]">Migration pattern</Th>
+                  <Th className="w-[8%]">Data preservation</Th>
+                  <Th>Strategy</Th>
+                  <Th>Notes</Th>
                 </tr>
-              );
-            });
-          })}
-          <tr>
-            <td colSpan={9} className="px-3 py-2">
-              <AddRowButton label="Add field" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div className="grid w-1/2 grid-cols-1 gap-6 border-t border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+              </thead>
+              <tbody>
+                {visibleFields.map((fld) => {
+                  const num = ++rowNum;
+                  return (
+                    <tr
+                      key={fld.id}
+                      className="border-b border-border/60 hover:bg-bg-hover"
+                    >
+                      <NumTd>{num}</NumTd>
+                      <Td className="font-mono text-[10px] text-ink-muted">
+                        {fld.id}
+                      </Td>
+                      <Td>
+                        <span className="font-medium text-ink">{fld.name}</span>
+                      </Td>
+                      <Td className="font-mono text-[10.5px] text-ink-soft">
+                        {fld.dataType}
+                      </Td>
+                      <Td className="text-[11.5px] text-ink-soft">
+                        {renderGithubTarget(fld.githubTarget)}
+                      </Td>
+                      <Td>
+                        {fld.pattern === "na" ? (
+                          <span className="font-mono text-[10px] text-ink-faint">
+                            N/A
+                          </span>
+                        ) : (
+                          <PatternBadge value={fld.pattern} />
+                        )}
+                      </Td>
+                      <Td>
+                        <FidelityBadge value={fld.dataPreservation} />
+                      </Td>
+                      <Td className="text-[11.5px] italic leading-snug text-ink-soft">
+                        {fld.strategy}
+                      </Td>
+                      <Td className="text-[11.5px] leading-snug text-ink-soft">
+                        {fld.notes}
+                      </Td>
+                    </tr>
+                  );
+                })}
+                <tr>
+                  <td colSpan={9} className="px-3 py-2">
+                    <AddRowButton label="Add field" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+      <div className="grid grid-cols-1 gap-6 rounded-xl border border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
         <div>
           <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
             Migration pattern
