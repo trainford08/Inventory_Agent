@@ -42,7 +42,6 @@ type Row =
       field: Field;
     };
 
-type Destination = "all" | "ado" | "gh" | "both";
 type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
 type LayerFilter = "jtbd" | "feature" | "entity" | "field" | "customization";
 
@@ -55,7 +54,6 @@ export function InventoryProfile({
 }) {
   const rows = useMemo(() => buildRows(groups), [groups]);
 
-  const [destination, setDestination] = useState<Destination>("all");
   const [patternFilter, setPatternFilter] = useState<PatternFilter>("all");
   const [layer, setLayer] = useState<LayerFilter>("jtbd");
 
@@ -115,15 +113,6 @@ export function InventoryProfile({
       if (patternFilter !== "all" && r.field.pattern !== patternFilter)
         return false;
       return true;
-    }
-    if (destination !== "all") {
-      const stays =
-        r.kind === "jtbd"
-          ? r.jtbd.staysInAdo
-          : r.kind === "feature"
-            ? r.feature.staysInAdo
-            : r.entity.staysInAdo;
-      if (stays !== destination) return false;
     }
     if (patternFilter !== "all") {
       if (r.kind === "jtbd") {
@@ -206,15 +195,13 @@ export function InventoryProfile({
       }
       return out;
     }
-    // layer === "field" → flat view; filter by destination at entity level
-    // and pattern at field level (an entity is kept if it has any matching field).
+    // layer === "field" → flat view; filter by pattern at field level
+    // (an entity is kept if it has any matching field).
     const seenEnt = new Set<string>();
     const flat: Row[] = [];
     for (const r of rows) {
       if (r.kind !== "entity" || r.isRef) continue;
       if (seenEnt.has(r.entity.id)) continue;
-      if (destination !== "all" && r.entity.staysInAdo !== destination)
-        continue;
       const hasFieldMatch =
         patternFilter === "all" ||
         r.entity.fields.some((f) => f.pattern === patternFilter);
@@ -250,31 +237,22 @@ export function InventoryProfile({
             { value: "customization", label: "Customizations" },
           ]}
         />
-        <ChipGroup
-          label="Destination"
-          value={destination}
-          onChange={(v) => setDestination(v as Destination)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "gh", label: "→ GitHub" },
-            { value: "ado", label: "→ ADO" },
-            { value: "both", label: "Hybrid" },
-          ]}
-        />
-        <ChipGroup
-          label="Pattern"
-          value={patternFilter}
-          onChange={(v) => setPatternFilter(v as PatternFilter)}
-          options={[
-            { value: "all", label: "All" },
-            { value: "P1", label: "P1" },
-            { value: "P2", label: "P2" },
-            { value: "P3", label: "P3" },
-            { value: "P4", label: "P4" },
-            { value: "P5", label: "P5" },
-            { value: "P6", label: "P6" },
-          ]}
-        />
+        {layer !== "customization" ? (
+          <ChipGroup
+            label="Pattern"
+            value={patternFilter}
+            onChange={(v) => setPatternFilter(v as PatternFilter)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "P1", label: "P1" },
+              { value: "P2", label: "P2" },
+              { value: "P3", label: "P3" },
+              { value: "P4", label: "P4" },
+              { value: "P5", label: "P5" },
+              { value: "P6", label: "P6" },
+            ]}
+          />
+        ) : null}
       </div>
 
       {(() => {
@@ -315,9 +293,7 @@ export function InventoryProfile({
       })()}
 
       {layer === "customization" ? (
-        <CustomizationsTable
-          block={filterCustomizations(customizations, destination)}
-        />
+        <CustomizationsTable block={customizations} />
       ) : layer === "field" ? (
         <FieldTable rows={visibleRows} patternFilter={patternFilter} />
       ) : (
@@ -389,34 +365,6 @@ export function InventoryProfile({
       {layer !== "customization" ? <Legend /> : null}
     </div>
   );
-}
-
-function filterCustomizations(
-  block: CustomizationsBlock,
-  destination: Destination,
-): CustomizationsBlock {
-  if (destination === "all") return block;
-  const placementMatches = (placement: string | null): boolean => {
-    if (!placement) return false;
-    if (destination === "ado") return placement === "STAYS";
-    if (destination === "gh") return placement === "MOVES";
-    if (destination === "both")
-      return placement === "BOTH" || placement === "MIXED";
-    return true;
-  };
-  const byCategory = block.byCategory
-    .map((g) => ({
-      category: g.category,
-      rows: g.rows.filter((r) => placementMatches(r.hybridPlacement)),
-    }))
-    .filter((g) => g.rows.length > 0);
-  const allRows = byCategory.flatMap((g) => g.rows);
-  return {
-    total: allRows.length,
-    cataloged: allRows.filter((r) => r.catalogCode).length,
-    teamSpecific: allRows.filter((r) => !r.catalogCode).length,
-    byCategory,
-  };
 }
 
 function renderGithubTarget(s: string): ReactNode[] {
