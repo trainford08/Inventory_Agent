@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Field } from "@/lib/inventory-fields";
 import type {
   CategoryGroup,
@@ -391,6 +391,41 @@ function filterCustomizations(
   };
 }
 
+function renderGithubTarget(s: string): ReactNode[] {
+  // Split on backticks first to isolate code spans, then split remaining text on asterisks for italics.
+  const nodes: ReactNode[] = [];
+  const codeParts = s.split(/(`[^`]+`)/g);
+  let key = 0;
+  for (const part of codeParts) {
+    if (!part) continue;
+    if (part.startsWith("`") && part.endsWith("`")) {
+      nodes.push(
+        <code
+          key={key++}
+          className="font-mono text-[10.5px] not-italic bg-bg-muted px-1 py-px rounded text-ink border border-rule-soft"
+        >
+          {part.slice(1, -1)}
+        </code>,
+      );
+    } else {
+      const italicParts = part.split(/(\*[^*]+\*)/g);
+      for (const ip of italicParts) {
+        if (!ip) continue;
+        if (ip.startsWith("*") && ip.endsWith("*")) {
+          nodes.push(
+            <em key={key++} className="italic">
+              {ip.slice(1, -1)}
+            </em>,
+          );
+        } else {
+          nodes.push(<span key={key++}>{ip}</span>);
+        }
+      }
+    }
+  }
+  return nodes;
+}
+
 function FieldTable({
   rows,
   patternFilter,
@@ -413,17 +448,76 @@ function FieldTable({
         {totalFields} fields across{" "}
         {rows.filter((r) => r.kind === "entity").length} entities
       </div>
+      <div className="grid grid-cols-1 gap-6 border-b border-border bg-bg-elevated px-4 py-3 text-[11.5px] md:grid-cols-2">
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Migration pattern
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P1" />
+              <span>Exact 1:1 mapping</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P2" />
+              <span>Lossy 1:1 mapping</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P3" />
+              <span>Compositional (many fields → one capability)</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P4" />
+              <span>Decompositional (one field → many)</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P5" />
+              <span>Capability substitution</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <PatternBadge value="P6" />
+              <span>Gap (no preservation)</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <div className="mb-2 font-mono text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
+            Data presentation
+          </div>
+          <ul className="space-y-1 text-ink-soft">
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="high" />
+              <span>Data and structure transfer intact</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="medium" />
+              <span>Data transfers; some structure or semantics degrade</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="low" />
+              <span>Significant loss of structure or fidelity</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="gap" />
+              <span>No equivalent — capability not preserved</span>
+            </li>
+            <li className="flex items-baseline gap-2">
+              <FidelityBadge value="na" />
+              <span>Not applicable</span>
+            </li>
+          </ul>
+        </div>
+      </div>
       <table className="w-full border-collapse text-[12.5px]">
         <thead>
           <tr>
             <Th className="w-[44px] text-right">#</Th>
             <Th className="w-[7%]">Field ID</Th>
-            <Th className="w-[10%]">Entity</Th>
             <Th>ADO Field</Th>
             <Th className="w-[9%]">Data type</Th>
             <Th>GitHub target</Th>
-            <Th className="w-[6%]">Pattern</Th>
-            <Th className="w-[8%]">Preservation</Th>
+            <Th className="w-[6%]">Migration pattern</Th>
+            <Th className="w-[8%]">Data presentation</Th>
             <Th>Strategy</Th>
             <Th>Notes</Th>
           </tr>
@@ -431,24 +525,9 @@ function FieldTable({
         <tbody>
           {rows.map((r) => {
             if (r.kind !== "entity") return null;
-            const e = r.entity;
             const visibleFields = fieldsForEntity(r);
             if (visibleFields.length === 0) return null;
-            const entityHeader = (
-              <tr key={`hdr-${e.id}`} className="bg-bg-muted">
-                <td
-                  colSpan={10}
-                  className="px-4 py-[7px] font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-soft"
-                >
-                  {e.id} · {e.name} <span className="text-ink-faint">·</span>{" "}
-                  <span className="text-ink-muted">{e.serviceLabel}</span>{" "}
-                  <span className="ml-2 text-ink-faint">
-                    ({visibleFields.length} fields)
-                  </span>
-                </td>
-              </tr>
-            );
-            const fieldRows = visibleFields.map((fld) => {
+            return visibleFields.map((fld) => {
               const num = ++rowNum;
               return (
                 <tr key={fld.id} className="bg-success/[0.03]">
@@ -456,17 +535,14 @@ function FieldTable({
                   <Td className="font-mono text-[10px] text-ink-muted">
                     {fld.id}
                   </Td>
-                  <Td className="font-mono text-[10.5px] text-ink-soft">
-                    {fld.entityId}
-                  </Td>
                   <Td>
                     <span className="font-medium text-ink">{fld.name}</span>
                   </Td>
                   <Td className="font-mono text-[10.5px] text-ink-soft">
                     {fld.dataType}
                   </Td>
-                  <Td className="text-[11.5px] italic text-ink-soft">
-                    {fld.githubTarget}
+                  <Td className="text-[11.5px] text-ink-soft">
+                    {renderGithubTarget(fld.githubTarget)}
                   </Td>
                   <Td>
                     {fld.pattern === "na" ? (
@@ -489,10 +565,9 @@ function FieldTable({
                 </tr>
               );
             });
-            return [entityHeader, ...fieldRows];
           })}
           <tr>
-            <td colSpan={10} className="px-3 py-2">
+            <td colSpan={9} className="px-3 py-2">
               <AddRowButton label="Add field" />
             </td>
           </tr>
