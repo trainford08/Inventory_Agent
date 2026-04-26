@@ -245,6 +245,8 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
         {block.total} customizations
       </div>
 
+      <Legend />
+
       <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
         <table className="w-full border-collapse text-[13px]">
           <thead>
@@ -417,4 +419,54 @@ function Td({
   className?: string;
 }) {
   return <td className={`px-3 py-2 align-top ${className}`}>{children}</td>;
+}
+
+function Legend() {
+  const parityItems: Array<{ value: keyof typeof PARITY_TONE; def: string }> = [
+    { value: "MATCH", def: "Clean 1:1 equivalent" },
+    { value: "PARTIAL", def: "Equivalent exists, gaps remain" },
+    { value: "GAP", def: "No GitHub equivalent today" },
+    { value: "BETTER", def: "GitHub native is stronger" },
+  ];
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-border bg-bg-elevated px-4 py-2.5 text-[11.5px] text-ink-muted">
+      <span className="inline-flex items-center gap-2">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+          Parity
+        </span>
+        {parityItems.map((p) => (
+          <span key={p.value} className="inline-flex items-center gap-1.5">
+            <span
+              className={`inline-block rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${PARITY_TONE[p.value]}`}
+            >
+              {PARITY_LABEL[p.value]}
+            </span>
+            <span>{p.def}</span>
+          </span>
+        ))}
+      </span>
+      <span className="h-[18px] w-px bg-border" aria-hidden />
+      <span className="inline-flex items-center gap-2">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+          Meta
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block rounded-[3px] border border-dashed border-ink-muted/50 px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-soft">
+            S07 Third-Party
+          </span>
+          <span>Consolidate to a tool already in the estate</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block rounded-[3px] border border-dashed border-ink-muted/50 px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-soft">
+            S06 Upstream
+          </span>
+          <span>Build once centrally, reuse across teams</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="font-mono text-[11px] text-ink-faint">—</span>
+          <span>No meta-strategy applies</span>
+        </span>
+      </span>
+    </div>
+  );
 }
