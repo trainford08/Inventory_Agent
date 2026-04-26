@@ -277,14 +277,42 @@ export function InventoryProfile({
         />
       </div>
 
-      <div className="flex items-center">
-        <span className="font-mono text-[11px] text-ink-muted">
-          {rows.filter((r) => r.kind === "jtbd").length} JTBDs ·{" "}
-          {rows.filter((r) => r.kind === "feature").length} features ·{" "}
-          {rows.filter((r) => r.kind === "entity").length} entities ·{" "}
-          {customizations.total} customizations
-        </span>
-      </div>
+      {(() => {
+        let summary = "";
+        if (layer === "customization") {
+          summary = `${customizations.total} customizations`;
+        } else if (layer === "jtbd") {
+          summary = `${rows.filter((r) => r.kind === "jtbd").length} JTBDs`;
+        } else if (layer === "feature") {
+          const set = new Set<string>();
+          for (const r of rows)
+            if (r.kind === "feature" && !r.isRef) set.add(r.feature.id);
+          summary = `${set.size} features`;
+        } else if (layer === "entity") {
+          const set = new Set<string>();
+          for (const r of rows)
+            if (r.kind === "entity" && !r.isRef) set.add(r.entity.id);
+          summary = `${set.size} entities`;
+        } else {
+          // field
+          const entitySet = new Set<string>();
+          const fieldSet = new Set<string>();
+          for (const r of rows) {
+            if (r.kind === "entity" && !r.isRef) {
+              entitySet.add(r.entity.id);
+              for (const f of r.entity.fields) fieldSet.add(f.id);
+            }
+          }
+          summary = `${fieldSet.size} fields across ${entitySet.size} entities`;
+        }
+        return (
+          <div className="flex items-center">
+            <span className="font-mono text-[11px] text-ink-muted">
+              {summary}
+            </span>
+          </div>
+        );
+      })()}
 
       {layer === "customization" ? (
         <CustomizationsTable
@@ -301,7 +329,7 @@ export function InventoryProfile({
                 <Th>Item</Th>
                 <Th className="w-[13%]">Layer</Th>
                 <Th className="w-[13%]">Stays in ADO?</Th>
-                <Th className="w-[9%]">Pattern</Th>
+                <Th className="w-[30%]">Pattern</Th>
                 <Th className="w-[11%] text-right">Detail</Th>
               </tr>
             </thead>
@@ -438,20 +466,11 @@ function FieldTable({
     patternFilter === "all"
       ? e.entity.fields
       : e.entity.fields.filter((f) => f.pattern === patternFilter);
-  const totalFields = rows.reduce(
-    (n, r) => (r.kind === "entity" ? n + fieldsForEntity(r).length : n),
-    0,
-  );
   const entityRows = rows.filter(
     (r): r is Row & { kind: "entity" } => r.kind === "entity",
   );
-  const entityCount = entityRows.length;
   return (
-    <div className="w-[61.875%] space-y-4">
-      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
-        {totalFields} fields across {entityCount}{" "}
-        {entityCount === 1 ? "entity" : "entities"}
-      </div>
+    <div className="w-[74.3%] space-y-4">
       {entityRows.map((r) => {
         const visibleFields = fieldsForEntity(r);
         if (visibleFields.length === 0) return null;
@@ -473,14 +492,14 @@ function FieldTable({
               <thead>
                 <tr>
                   <Th className="w-[44px] text-right">#</Th>
-                  <Th className="w-[8%]">Field ID</Th>
+                  <Th className="w-[7.31%]">Field ID</Th>
                   <Th>ADO Field</Th>
-                  <Th className="w-[9%]">Data type</Th>
-                  <Th>GitHub target</Th>
-                  <Th className="w-[6%]">Migration pattern</Th>
-                  <Th className="w-[8%]">Data preservation</Th>
-                  <Th>Strategy</Th>
-                  <Th>Notes</Th>
+                  <Th className="w-[8.27%]">Data type</Th>
+                  <Th className="w-[16.44%]">GitHub target</Th>
+                  <Th className="w-[18.27%]">Migration pattern</Th>
+                  <Th className="w-[7.31%]">Data preservation</Th>
+                  <Th className="w-[14.9%]">Preservation strategy</Th>
+                  <Th className="w-[17.6%]">Notes</Th>
                 </tr>
               </thead>
               <tbody>
@@ -510,7 +529,7 @@ function FieldTable({
                             N/A
                           </span>
                         ) : (
-                          <PatternBadge value={fld.pattern} />
+                          <PatternBadge value={fld.pattern} withDescription />
                         )}
                       </Td>
                       <Td>
@@ -781,7 +800,11 @@ function RowView({
           <StaysBadge value={row.feature.staysInAdo} faded={row.isRef} />
         </Td>
         <Td>
-          <PatternBadge value={row.feature.pattern} faded={row.isRef} />
+          <PatternBadge
+            value={row.feature.pattern}
+            faded={row.isRef}
+            withDescription
+          />
         </Td>
         <Td className="text-right font-mono text-[11.5px] text-ink-muted">
           {row.isRef
@@ -827,7 +850,11 @@ function RowView({
           <StaysBadge value={row.entity.staysInAdo} faded={row.isRef} />
         </Td>
         <Td>
-          <PatternBadge value={row.entity.pattern} faded={row.isRef} />
+          <PatternBadge
+            value={row.entity.pattern}
+            faded={row.isRef}
+            withDescription
+          />
         </Td>
         <Td className="text-right font-mono text-[11.5px] text-ink-muted">
           {row.isRef ? "—" : `${row.entity.fieldCount} fields`}
@@ -859,7 +886,7 @@ function RowView({
         {fld.pattern === "na" ? (
           <span className="font-mono text-[10px] text-ink-faint">N/A</span>
         ) : (
-          <PatternBadge value={fld.pattern} />
+          <PatternBadge value={fld.pattern} withDescription />
         )}
       </Td>
       <Td className="text-right text-[11px] italic text-ink-soft">
@@ -1020,12 +1047,26 @@ function StaysBadge({
   );
 }
 
+const PATTERN_DESCRIPTIONS: Record<
+  "P1" | "P2" | "P3" | "P4" | "P5" | "P6",
+  string
+> = {
+  P1: "Exact 1:1 mapping",
+  P2: "Lossy 1:1 mapping",
+  P3: "Compositional (many fields → one capability)",
+  P4: "Decompositional (one field → many)",
+  P5: "Capability substitution",
+  P6: "Gap (no preservation)",
+};
+
 function PatternBadge({
   value,
   faded = false,
+  withDescription = false,
 }: {
   value: "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
   faded?: boolean;
+  withDescription?: boolean;
 }) {
   const map = {
     P1: "text-emerald-700 border-emerald-700",
@@ -1035,11 +1076,22 @@ function PatternBadge({
     P5: "text-rose-700 border-rose-700",
     P6: "text-rose-700 border-rose-700 bg-rose-50",
   }[value];
-  return (
+  const badge = (
     <span
       className={`inline-block rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${map} ${faded ? "opacity-50" : ""}`}
     >
       {value}
+    </span>
+  );
+  if (!withDescription) return badge;
+  return (
+    <span
+      className={`inline-flex flex-wrap items-baseline gap-1.5 ${faded ? "opacity-50" : ""}`}
+    >
+      {badge}
+      <span className="text-[11px] leading-tight text-ink-soft">
+        {PATTERN_DESCRIPTIONS[value]}
+      </span>
     </span>
   );
 }
