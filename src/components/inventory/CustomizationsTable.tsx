@@ -495,60 +495,58 @@ function Legend() {
     { key: "S05_BUILD_GLUE", short: "S05", def: "Build Glue" },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-border bg-bg-elevated px-4 py-2.5 text-[11.5px] text-ink-muted">
-      <span className="inline-flex items-center gap-2">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+    <div className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-bg-elevated p-4 text-[11.5px] text-ink-muted md:grid-cols-3">
+      <div className="flex flex-col gap-1.5">
+        <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
           Parity
-        </span>
+        </div>
         {parityItems.map((p) => (
-          <span key={p.value} className="inline-flex items-center gap-1.5">
+          <div key={p.value} className="flex items-baseline gap-2">
             <span
-              className={`inline-block rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${PARITY_TONE[p.value]}`}
+              className={`inline-block w-fit rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${PARITY_TONE[p.value]}`}
             >
               {PARITY_LABEL[p.value]}
             </span>
             <span>{p.def}</span>
-          </span>
+          </div>
         ))}
-      </span>
-      <span className="h-[18px] w-px bg-border" aria-hidden />
-      <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
           Strategy
-        </span>
+        </div>
         {strategyItems.map((s) => (
-          <span key={s.key} className="inline-flex items-center gap-1.5">
+          <div key={s.key} className="flex items-baseline gap-2">
             <span
-              className={`inline-block rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${STRATEGY_TONE[s.key]}`}
+              className={`inline-block w-fit rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${STRATEGY_TONE[s.key]}`}
             >
               {s.short}
             </span>
             <span>{s.def}</span>
-          </span>
+          </div>
         ))}
-      </span>
-      <span className="h-[18px] w-px bg-border" aria-hidden />
-      <span className="inline-flex items-center gap-2">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
           Meta
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block rounded-[3px] border border-dashed border-ink-muted/50 px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-soft">
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="inline-block w-fit rounded-[3px] border border-dashed border-ink-muted/50 px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-soft">
             S07 Third-Party
           </span>
           <span>Consolidate to a tool already in the estate</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block rounded-[3px] border border-dashed border-ink-muted/50 px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-soft">
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="inline-block w-fit rounded-[3px] border border-dashed border-ink-muted/50 px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-soft">
             S06 Upstream
           </span>
           <span>Build once centrally, reuse across teams</span>
-        </span>
-        <span className="inline-flex items-center gap-1.5">
+        </div>
+        <div className="flex items-baseline gap-2">
           <span className="font-mono text-[11px] text-ink-faint">—</span>
           <span>No meta-strategy applies</span>
-        </span>
-      </span>
+        </div>
+      </div>
     </div>
   );
 }
