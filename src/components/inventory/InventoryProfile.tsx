@@ -208,6 +208,17 @@ export function InventoryProfile({
         }
         return next;
       }
+      if (layer === "field") {
+        // Field view: open every entity's field section so fields are
+        // visible on first paint.
+        for (const r of rows) {
+          if (r.kind === "entity" && !r.isRef) {
+            next.add(`entcat:${r.entity.service}`);
+            next.add(`fldent:${r.entity.id}`);
+          }
+        }
+        return next;
+      }
       return next;
     });
     // Run only when layer changes; depth values are read snapshot-style.
