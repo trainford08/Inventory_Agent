@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multi-layer expand/collapse — mocks</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #6b7280;
+    --ink-faint: #9ca3af;
+    --border: #e5e7eb;
+    --border-soft: #f1f3f5;
+    --bg: #fafaf7;
+    --bg-card: #ffffff;
+    --bg-muted: #f5f5f1;
+    --bg-hover: #f0f0ec;
+    --primary: #2c5fa3;
+    --primary-soft: #e7eef8;
+    --warn-soft: #fef3e6;
+    --success-soft: #e6f6ee;
+    --slate-soft: #eef2f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 80px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  h1 {
+    font-family: Georgia, serif; font-weight: 400;
+    font-size: 28px; margin: 0 0 4px;
+  }
+  .lede { color: var(--ink-muted); margin-bottom: 40px; max-width: 720px; }
+  .mock {
+    margin-bottom: 56px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .mock-head {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-muted);
+  }
+  .mock-tag {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--primary); text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .mock-title { font-family: Georgia, serif; font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  .mock-desc { color: var(--ink-soft); font-size: 13px; max-width: 640px; }
+  .mock-body { padding: 24px; }
+
+  /* Control bar shared */
+  .ctrl-bar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: var(--bg-muted);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 12.5px;
+  }
+  .ctrl-label {
+    font-family: ui-monospace, monospace;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--ink-muted); text-transform: uppercase;
+  }
+
+  /* Option A — depth stepper */
+  .stepper {
+    display: inline-flex; gap: 0;
+    border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+    background: var(--bg-card);
+  }
+  .stepper button {
+    border: 0; background: transparent; padding: 6px 14px;
+    font-size: 12px; cursor: pointer;
+    font-family: inherit; color: var(--ink-soft);
+    border-right: 1px solid var(--border);
+  }
+  .stepper button:last-child { border-right: 0; }
+  .stepper button.on {
+    background: var(--primary); color: white; font-weight: 500;
+  }
+
+  /* Option B — per-layer chips */
+  .chip-btn {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 12px; cursor: pointer;
+    font-family: inherit; color: var(--ink-soft);
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .chip-btn:hover { background: var(--bg-hover); color: var(--ink); }
+  .chip-btn.muted { color: var(--ink-muted); }
+
+  /* Option C — subtree action */
+  .subtree-icon {
+    display: inline-block; width: 18px; height: 18px;
+    border: 1px solid var(--border); border-radius: 4px;
+    background: var(--bg-card);
+    text-align: center; line-height: 16px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px; color: var(--ink-muted);
+    margin-left: 8px;
+    cursor: pointer;
+  }
+  .subtree-icon:hover { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
+
+  /* The shared "table" mock */
+  .row {
+    display: flex; align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .row:last-child { border-bottom: 0; }
+  .caret {
+    display: inline-block; width: 14px; color: var(--ink-muted);
+    font-family: ui-monospace, monospace; font-size: 11px;
+    margin-right: 4px; cursor: pointer; user-select: none;
+  }
+  .indent-0 { padding-left: 0; }
+  .indent-1 { padding-left: 24px; }
+  .indent-2 { padding-left: 56px; }
+  .indent-3 { padding-left: 88px; }
+  .layer-tag {
+    display: inline-block; min-width: 36px;
+    padding: 2px 6px; margin-right: 8px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-align: center; text-transform: uppercase;
+  }
+  .layer-cat { background: var(--bg-muted); color: var(--ink); }
+  .layer-feat { background: var(--warn-soft); color: #8a5a1a; }
+  .layer-ent { background: var(--success-soft); color: #1f5a3a; }
+  .layer-fld { background: var(--slate-soft); color: var(--ink-muted); }
+  .id-mono {
+    font-family: ui-monospace, monospace; font-size: 10.5px;
+    color: var(--ink-muted); margin-right: 8px; min-width: 36px;
+  }
+  .row-name { color: var(--ink); }
+  .row-meta { margin-left: auto; color: var(--ink-muted); font-size: 11.5px; }
+  .row-cat { background: var(--bg-muted); font-weight: 500; }
+  .row-cat .row-name {
+    font-family: ui-monospace, monospace; font-size: 10.5px;
+    font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .takeaway {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--primary-soft);
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .takeaway b { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<h1>Multi-layer expand / collapse — three mocks</h1>
+<p class="lede">Three patterns for navigating Category → Feature → Entity → Field. The shared table mock below each control bar shows the resulting state.</p>
+
+<!-- ========== OPTION A ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">Option A · Depth stepper</div>
+    <div class="mock-title">A single 4-step control sets the visible depth globally.</div>
+    <div class="mock-desc">Click a step → the table opens to that level everywhere. Per-row carets still work for selectively collapsing one branch.</div>
+  </div>
+  <div class="mock-body">
+    <div class="ctrl-bar">
+      <span class="ctrl-label">Show depth</span>
+      <div class="stepper">
+        <button>Categories</button>
+        <button class="on">Features</button>
+        <button>Entities</button>
+        <button>Fields</button>
+      </div>
+    </div>
+    <div class="row row-cat indent-0"><span class="caret">▼</span><span class="row-name">Source Control & Collaboration</span><span class="row-meta">16 features</span></div>
+    <div class="row indent-1"><span class="caret">▶</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F01</span><span class="row-name">Git commit & push</span><span class="row-meta">1 entity</span></div>
+    <div class="row indent-1"><span class="caret">▶</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F02</span><span class="row-name">Branch management</span><span class="row-meta">1 entity</span></div>
+    <div class="row indent-1"><span class="caret">▶</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F03</span><span class="row-name">Branch policies</span><span class="row-meta">3 entities</span></div>
+    <div class="row row-cat indent-0"><span class="caret">▼</span><span class="row-name">Work Planning & Tracking</span><span class="row-meta">10 features</span></div>
+    <div class="row indent-1"><span class="caret">▶</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F14</span><span class="row-name">Work item creation</span><span class="row-meta">1 entity</span></div>
+    <div class="takeaway"><b>Pros:</b> one control, immediate. <b>Cons:</b> can't be partial — clicking "Entities" opens every category to entities.</div>
+  </div>
+</section>
+
+<!-- ========== OPTION B ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">Option B · Per-level expand chips</div>
+    <div class="mock-title">A button per layer plus a single Collapse-all.</div>
+    <div class="mock-desc">"Expand to entities" opens features+entities globally. Carets still let you collapse a single row. More flexible; busier control bar.</div>
+  </div>
+  <div class="mock-body">
+    <div class="ctrl-bar">
+      <span class="ctrl-label">Expand</span>
+      <button class="chip-btn">+ Categories</button>
+      <button class="chip-btn">+ Features</button>
+      <button class="chip-btn">+ Entities</button>
+      <button class="chip-btn muted">+ Fields</button>
+      <span style="border-left: 1px solid var(--border); padding-left: 14px;"><span class="ctrl-label">Collapse</span> <button class="chip-btn" style="margin-left: 6px;">All</button></span>
+    </div>
+    <div class="row row-cat indent-0"><span class="caret">▼</span><span class="row-name">Source Control & Collaboration</span><span class="row-meta">16 features</span></div>
+    <div class="row indent-1"><span class="caret">▼</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F01</span><span class="row-name">Git commit & push</span><span class="row-meta">1 entity</span></div>
+    <div class="row indent-2"><span class="caret">▶</span><span class="layer-tag layer-ent">Ent</span><span class="id-mono">E15</span><span class="row-name">Repository</span><span class="row-meta">16 fields</span></div>
+    <div class="row indent-1"><span class="caret">▼</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F02</span><span class="row-name">Branch management</span><span class="row-meta">1 entity</span></div>
+    <div class="row indent-2"><span class="caret">▶</span><span class="layer-tag layer-ent">Ent</span><span class="id-mono">E15</span><span class="row-name">Repository <span style="color:var(--ink-faint); font-size:10.5px;">(shared)</span></span><span class="row-meta">16 fields</span></div>
+    <div class="row indent-1"><span class="caret">▼</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F03</span><span class="row-name">Branch policies</span><span class="row-meta">3 entities</span></div>
+    <div class="row indent-2"><span class="caret">▶</span><span class="layer-tag layer-ent">Ent</span><span class="id-mono">E15</span><span class="row-name">Repository <span style="color:var(--ink-faint); font-size:10.5px;">(shared)</span></span><span class="row-meta">16 fields</span></div>
+    <div class="takeaway"><b>Pros:</b> most flexible — open features without entities, or entities without fields. <b>Cons:</b> four buttons add visual weight.</div>
+  </div>
+</section>
+
+<!-- ========== OPTION C ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">Option C · Per-row "expand subtree"</div>
+    <div class="mock-title">A small <code>⇲</code> on each row opens everything beneath it.</div>
+    <div class="mock-desc">Hover a category → click <code>⇲</code> → its features, entities, and fields all open. Same icon at the feature level scopes to that one feature. Top-bar Expand-all still exists for global.</div>
+  </div>
+  <div class="mock-body">
+    <div class="ctrl-bar">
+      <span class="ctrl-label">Globally</span>
+      <button class="chip-btn">Expand all</button>
+      <button class="chip-btn">Collapse all</button>
+    </div>
+    <div class="row row-cat indent-0"><span class="caret">▼</span><span class="row-name">Source Control & Collaboration</span><span class="subtree-icon" title="Open everything in this category">⇲</span><span class="row-meta">16 features</span></div>
+    <div class="row indent-1"><span class="caret">▼</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F01</span><span class="row-name">Git commit & push</span><span class="subtree-icon" title="Open this feature's entities + fields">⇲</span><span class="row-meta">1 entity</span></div>
+    <div class="row indent-2"><span class="caret">▼</span><span class="layer-tag layer-ent">Ent</span><span class="id-mono">E15</span><span class="row-name">Repository</span><span class="subtree-icon" title="Open this entity's fields">⇲</span><span class="row-meta">16 fields</span></div>
+    <div class="row indent-3"><span class="layer-tag layer-fld">Fld</span><span class="id-mono">FLD-1</span><span class="row-name">Default branch</span><span class="row-meta">→ Repo.default_branch</span></div>
+    <div class="row indent-3"><span class="layer-tag layer-fld">Fld</span><span class="id-mono">FLD-2</span><span class="row-name">Visibility</span><span class="row-meta">→ Repo.visibility</span></div>
+    <div class="row indent-3"><span class="layer-tag layer-fld">Fld</span><span class="id-mono">FLD-3</span><span class="row-name">Default merge type</span><span class="row-meta">→ Repo.merge_method</span></div>
+    <div class="row indent-1"><span class="caret">▶</span><span class="layer-tag layer-feat">Feat</span><span class="id-mono">F02</span><span class="row-name">Branch management</span><span class="subtree-icon">⇲</span><span class="row-meta">1 entity</span></div>
+    <div class="takeaway"><b>Pros:</b> drill into one branch deeply without flooding the whole page. <b>Cons:</b> users have to discover the <code>⇲</code> icon — needs a one-time tooltip.</div>
+  </div>
+</section>
+
+<section style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+  <div style="font-family: ui-monospace, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; color: var(--primary); text-transform: uppercase; margin-bottom: 8px;">Recommendation</div>
+  <div style="font-family: Georgia, serif; font-size: 18px; line-height: 1.45;">
+    Ship <b>Option A (depth stepper)</b> first — cheapest to build, communicates the four-layer model visually, and matches how most data-explorer UIs handle depth.
+    Add <b>Option C's <code>⇲</code></b> later for power users who need to dig into one branch.
+    <b>Option B</b> only if you find users routinely want to see, say, all features but no entities.
+  </div>
+</section>
+
+</body>
+</html>

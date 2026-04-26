@@ -62,6 +62,12 @@ export function InventoryProfile({
   const [capabilityFilter, setCapabilityFilter] =
     useState<FidelityFilter>("all");
   const [layer, setLayer] = useState<LayerFilter>("jtbd");
+  const [featureDepth, setFeatureDepth] = useState<
+    "category" | "feature" | "entity" | "field"
+  >("field");
+  const [entityDepth, setEntityDepth] = useState<
+    "category" | "entity" | "field"
+  >("field");
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
@@ -70,10 +76,14 @@ export function InventoryProfile({
     for (const r of rows) {
       if (r.kind === "cat" || r.kind === "jtbd") set.add(r.id);
       else if (r.kind === "feature" && !r.isRef) set.add(r.rowKey);
-      else if (r.kind === "entity" && !r.isRef) {
+      else if (r.kind === "entity") {
+        // Expand all entity instances (including refs) so fields show
+        // under entities listed in the feature view as well.
         set.add(r.rowKey);
-        set.add(`entcat:${r.entity.service}`);
-        set.add(`fldent:${r.entity.id}`);
+        if (!r.isRef) {
+          set.add(`entcat:${r.entity.service}`);
+          set.add(`fldent:${r.entity.id}`);
+        }
       }
       if (r.kind === "feature" && !r.isRef) {
         set.add(`featcat:${r.feature.category}`);
@@ -128,6 +138,67 @@ export function InventoryProfile({
     const next = new Set<string>();
     for (const r of rows) if (r.kind === "cat") next.add(r.id);
     setExpanded(next);
+  };
+
+  const applyEntityDepth = (depth: "category" | "entity" | "field") => {
+    setEntityDepth(depth);
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      // Strip entity-view ids first.
+      for (const r of rows) {
+        if (r.kind === "entity" && !r.isRef) {
+          next.delete(`entcat:${r.entity.service}`);
+          next.delete(`fldent:${r.entity.id}`);
+        }
+      }
+      if (depth === "category") return next;
+      // depth >= entity: open all service category cards
+      for (const r of rows) {
+        if (r.kind === "entity" && !r.isRef)
+          next.add(`entcat:${r.entity.service}`);
+      }
+      if (depth === "entity") return next;
+      // depth === field: open entities so fields surface
+      for (const r of rows) {
+        if (r.kind === "entity" && !r.isRef) next.add(`fldent:${r.entity.id}`);
+      }
+      return next;
+    });
+  };
+
+  const applyFeatureDepth = (
+    depth: "category" | "feature" | "entity" | "field",
+  ) => {
+    setFeatureDepth(depth);
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      // Strip all feature-view ids first, then re-add per chosen depth.
+      for (const r of rows) {
+        if (r.kind === "feature" && !r.isRef) {
+          next.delete(`featcat:${r.feature.category}`);
+          next.delete(r.rowKey);
+        } else if (r.kind === "entity") {
+          next.delete(r.rowKey);
+        }
+      }
+      if (depth === "category") return next;
+      // depth >= feature: open all category cards
+      for (const r of rows) {
+        if (r.kind === "feature" && !r.isRef)
+          next.add(`featcat:${r.feature.category}`);
+      }
+      if (depth === "feature") return next;
+      // depth >= entity: open features so entities surface
+      for (const r of rows) {
+        if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+      }
+      if (depth === "entity") return next;
+      // depth === field: open entities so fields surface
+      for (const r of rows) {
+        if (r.kind === "entity") next.add(r.rowKey);
+      }
+      return next;
+    });
   };
 
   const matchesFilters = (r: Row): boolean => {
@@ -234,7 +305,6 @@ export function InventoryProfile({
           featureRowsByCat.get(cat)!.push(r);
         } else if (
           r.kind === "entity" &&
-          !r.isRef &&
           matchesFilters(r) &&
           expanded.has(r.parentId)
         ) {
@@ -336,6 +406,37 @@ export function InventoryProfile({
             { value: "customization", label: "Customizations" },
           ]}
         />
+        {layer === "feature" ? (
+          <ChipGroup
+            label="Show depth"
+            value={featureDepth}
+            onChange={(v) =>
+              applyFeatureDepth(
+                v as "category" | "feature" | "entity" | "field",
+              )
+            }
+            options={[
+              { value: "category", label: "Categories" },
+              { value: "feature", label: "Features" },
+              { value: "entity", label: "Entities" },
+              { value: "field", label: "Fields" },
+            ]}
+          />
+        ) : null}
+        {layer === "entity" ? (
+          <ChipGroup
+            label="Show depth"
+            value={entityDepth}
+            onChange={(v) =>
+              applyEntityDepth(v as "category" | "entity" | "field")
+            }
+            options={[
+              { value: "category", label: "Categories" },
+              { value: "entity", label: "Entities" },
+              { value: "field", label: "Fields" },
+            ]}
+          />
+        ) : null}
         {layer !== "customization" ? (
           <ChipGroup
             label="Pattern"
@@ -445,12 +546,12 @@ export function InventoryProfile({
             <thead>
               <tr>
                 <Th className="w-[44px] text-right">#</Th>
-                <Th className="w-[5%]">ID</Th>
+                <Th className="w-[5.63%]">ID</Th>
                 <Th>Feature</Th>
-                <Th className="w-[11%]">Depends on</Th>
-                <Th className="w-[11%]">Stays in ADO?</Th>
-                <Th className="w-[9%]">Pattern</Th>
-                <Th className="w-[8%]">Preservation</Th>
+                <Th className="w-[13.75%]">Depends on</Th>
+                <Th className="w-[13.75%]">Hybrid Approach</Th>
+                <Th className="w-[10.8%]">Migration pattern</Th>
+                <Th className="w-[6.2%]">Capability preservation</Th>
                 <Th className="w-[6%]">Risk</Th>
                 <Th className="w-[22%]">Preservation strategy</Th>
               </tr>
@@ -607,7 +708,7 @@ function FieldTable({
                 <thead>
                   <tr>
                     <Th className="w-[44px] text-right">#</Th>
-                    <Th className="w-[7.1%]">Field ID</Th>
+                    <Th className="w-[7.99%]">Field ID</Th>
                     <Th className="w-[12.5%]">ADO Field</Th>
                     <Th className="w-[8.03%]">Data type</Th>
                     <Th className="w-[15.96%]">GitHub target</Th>
@@ -798,23 +899,27 @@ function EntityTable({
                 <thead>
                   <tr>
                     <Th className="w-[44px] text-right">#</Th>
-                    <Th className="w-[4.05%]">ID</Th>
+                    <Th className="w-[4.56%]">ID</Th>
                     <Th className="w-[11.34%]">Entity</Th>
                     <Th className="w-[11.34%]">GitHub Target</Th>
                     <Th className="w-[6.48%]">Data Preservation</Th>
                     <Th className="w-[6.48%]">Capability Preservation</Th>
-                    <Th className="w-[16.2%]">Migration Pattern</Th>
-                    <Th className="w-[8.5%]">Hybrid Approach</Th>
+                    <Th className="w-[16.2%]">Migration pattern</Th>
+                    <Th className="w-[10.63%]">Hybrid Approach</Th>
                     <Th>Migration Note</Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {group.entities.map((e) => {
+                  {group.entities.flatMap((e) => {
                     const num = ++rowNum;
                     const isNoTarget = /^no direct target$/i.test(
                       e.githubTarget,
                     );
-                    return (
+                    const fldentId = `fldent:${e.id}`;
+                    const fieldsOpen =
+                      expanded.has(fldentId) && e.fields.length > 0;
+                    const trs: ReactNode[] = [];
+                    trs.push(
                       <tr
                         key={e.id}
                         className="border-b border-border/60 hover:bg-bg-hover"
@@ -824,7 +929,27 @@ function EntityTable({
                           {e.id}
                         </Td>
                         <Td>
-                          <span className="font-medium text-ink">{e.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => onToggle(fldentId)}
+                            className="flex items-center gap-1.5 text-left"
+                          >
+                            <span className="inline-block w-3 font-mono text-[11px] text-ink-muted">
+                              {e.fields.length === 0
+                                ? ""
+                                : fieldsOpen
+                                  ? "▼"
+                                  : "▶"}
+                            </span>
+                            <span className="font-medium text-ink">
+                              {e.name}
+                            </span>
+                            {e.fields.length > 0 ? (
+                              <span className="ml-1 font-mono text-[10px] text-ink-faint">
+                                ({e.fields.length})
+                              </span>
+                            ) : null}
+                          </button>
                         </Td>
                         <Td
                           className={
@@ -850,8 +975,54 @@ function EntityTable({
                         <Td className="text-[11.5px] italic leading-snug text-ink-soft">
                           {e.note}
                         </Td>
-                      </tr>
+                      </tr>,
                     );
+                    if (fieldsOpen) {
+                      for (const fld of e.fields) {
+                        const fnum = ++rowNum;
+                        trs.push(
+                          <tr
+                            key={`${e.id}:${fld.id}`}
+                            className="border-b border-border/60 bg-bg-muted/40"
+                          >
+                            <NumTd>{fnum}</NumTd>
+                            <Td className="font-mono text-[10.5px] text-ink-muted">
+                              {fld.id}
+                            </Td>
+                            <Td className="pl-8">
+                              <span className="text-ink">{fld.name}</span>
+                              <span className="ml-2 font-mono text-[10px] text-ink-faint">
+                                {fld.dataType}
+                              </span>
+                            </Td>
+                            <Td className="text-[11.5px] text-ink-soft">
+                              {renderGithubTarget(fld.githubTarget)}
+                            </Td>
+                            <Td>
+                              <FidelityBadge value={fld.dataPreservation} />
+                            </Td>
+                            <Td className="text-ink-faint">—</Td>
+                            <Td>
+                              {fld.pattern === "na" ? (
+                                <span className="font-mono text-[10px] text-ink-faint">
+                                  N/A
+                                </span>
+                              ) : (
+                                <PatternBadge
+                                  value={fld.pattern}
+                                  withDescription
+                                />
+                              )}
+                            </Td>
+                            <Td className="text-ink-faint">—</Td>
+                            <Td className="text-[11.5px] italic leading-snug text-ink-soft">
+                              {fld.strategy ?? "—"}
+                            </Td>
+                          </tr>,
+                        );
+                      }
+                    }
+                    return trs;
                   })}
                   <tr>
                     <td colSpan={9} className="px-3 py-2">
@@ -978,32 +1149,63 @@ function FeatureTable({
               </span>
             </button>
             {isOpen && (
-              <table className="w-full border-collapse text-[12.5px]">
+              <table className="w-full table-fixed border-collapse text-[12.5px]">
                 <thead>
                   <tr>
                     <Th className="w-[44px] text-right">#</Th>
-                    <Th className="w-[5%]">ID</Th>
+                    <Th className="w-[5.63%]">ID</Th>
                     <Th>Feature</Th>
-                    <Th className="w-[11%]">Depends on</Th>
-                    <Th className="w-[11%]">Stays in ADO?</Th>
-                    <Th className="w-[9%]">Pattern</Th>
-                    <Th className="w-[8%]">Preservation</Th>
+                    <Th className="w-[13.75%]">Depends on</Th>
+                    <Th className="w-[13.75%]">Hybrid Approach</Th>
+                    <Th className="w-[10.8%]">Migration pattern</Th>
+                    <Th className="w-[6.2%]">Capability preservation</Th>
                     <Th className="w-[6%]">Risk</Th>
                     <Th className="w-[22%]">Preservation strategy</Th>
                   </tr>
                 </thead>
                 <tbody>
-                  {group.children.map((r) => {
+                  {group.children.flatMap((r) => {
+                    const out: ReactNode[] = [];
                     const num = ++rowNum;
-                    return (
+                    out.push(
                       <RowView
                         key={rowKey(r)}
                         row={r}
                         rowNum={num}
                         expanded={expanded}
                         onToggle={onToggle}
-                      />
+                        indentOffset={1}
+                      />,
                     );
+                    // Drill into entity → fields directly from entity.fields
+                    // (works for both first-seen and "ref" entities).
+                    if (
+                      r.kind === "entity" &&
+                      expanded.has(r.rowKey) &&
+                      r.entity.fields.length > 0
+                    ) {
+                      for (const fld of r.entity.fields) {
+                        const fnum = ++rowNum;
+                        const fldRow: Row = {
+                          kind: "field",
+                          id: fld.id,
+                          rowKey: `${r.rowKey}:fld:${fld.id}`,
+                          parentId: r.rowKey,
+                          field: fld,
+                        };
+                        out.push(
+                          <RowView
+                            key={fldRow.rowKey}
+                            row={fldRow}
+                            rowNum={fnum}
+                            expanded={expanded}
+                            onToggle={onToggle}
+                            indentOffset={1}
+                          />,
+                        );
+                      }
+                    }
+                    return out;
                   })}
                   <tr>
                     <td colSpan={9} className="px-3 py-2">
@@ -1139,11 +1341,14 @@ function RowView({
   rowNum,
   expanded,
   onToggle,
+  indentOffset = 0,
 }: {
   row: Row;
   rowNum: number | null;
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  /** Subtract from each row's nominal indent level (used in feature view). */
+  indentOffset?: number;
 }) {
   if (row.kind === "cat") {
     const isOpen = expanded.has(row.id);
@@ -1209,7 +1414,9 @@ function RowView({
         <NumTd>{rowNum}</NumTd>
         <Td className="font-mono text-[10px] text-ink-muted">{row.jtbd.id}</Td>
         <Td>
-          <IndentCell level={1}>
+          <IndentCell
+            level={Math.max(0, 1 - indentOffset) as 0 | 1 | 2 | 3 | 4}
+          >
             <ToggleButton
               onClick={() => onToggle(`jtbd:${row.jtbd.id}`)}
               open={isOpen}
@@ -1244,7 +1451,9 @@ function RowView({
           {row.feature.id}
         </Td>
         <Td>
-          <IndentCell level={2}>
+          <IndentCell
+            level={Math.max(0, 2 - indentOffset) as 0 | 1 | 2 | 3 | 4}
+          >
             <ToggleButton
               onClick={() => onToggle(row.rowKey)}
               open={isOpen}
@@ -1271,7 +1480,7 @@ function RowView({
           {!row.isRef && row.feature.dependsOn ? row.feature.dependsOn : "—"}
         </Td>
         <Td>
-          <StaysBadge value={row.feature.staysInAdo} faded={row.isRef} />
+          <HybridApproachChip value={row.feature.staysInAdo} />
           {!row.isRef && row.feature.staysReason ? (
             <div className="mt-0.5 text-[10.5px] italic leading-snug text-ink-soft">
               {row.feature.staysReason}
@@ -1323,7 +1532,9 @@ function RowView({
           {row.entity.id}
         </Td>
         <Td>
-          <IndentCell level={3}>
+          <IndentCell
+            level={Math.max(0, 3 - indentOffset) as 0 | 1 | 2 | 3 | 4}
+          >
             <ToggleButton
               onClick={() => onToggle(row.rowKey)}
               open={isOpen}
@@ -1343,7 +1554,7 @@ function RowView({
         </Td>
         <Td className="text-ink-faint">—</Td>
         <Td>
-          <StaysBadge value={row.entity.staysInAdo} faded={row.isRef} />
+          <HybridApproachChip value={row.entity.staysInAdo} />
         </Td>
         <Td>
           <PatternBadge
@@ -1375,7 +1586,7 @@ function RowView({
       <NumTd>{rowNum}</NumTd>
       <Td className="font-mono text-[10px] text-ink-muted">{fld.id}</Td>
       <Td>
-        <IndentCell level={4}>
+        <IndentCell level={Math.max(0, 4 - indentOffset) as 0 | 1 | 2 | 3 | 4}>
           <span className="inline-block w-[18px]" aria-hidden />
           <LayerTag kind="field" />
           <span className="text-ink">
@@ -1452,10 +1663,10 @@ function IndentCell({
   level,
   children,
 }: {
-  level: 1 | 2 | 3 | 4;
+  level: 0 | 1 | 2 | 3 | 4;
   children: React.ReactNode;
 }) {
-  const pad = { 1: 0, 2: 40, 3: 80, 4: 120 }[level];
+  const pad = { 0: 0, 1: 0, 2: 24, 3: 48, 4: 72 }[level];
   return (
     <div
       className="relative flex items-center gap-1.5"
@@ -1622,7 +1833,7 @@ function PatternBadge({
   if (!withDescription) return badge;
   return (
     <span
-      className={`inline-flex flex-wrap items-baseline gap-1.5 ${faded ? "opacity-50" : ""}`}
+      className={`inline-flex flex-nowrap items-baseline gap-1.5 whitespace-nowrap ${faded ? "opacity-50" : ""}`}
     >
       {badge}
       <span className="text-[11px] leading-tight text-ink-soft">

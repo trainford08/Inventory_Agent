@@ -78,7 +78,7 @@ export type Feature = {
   risk: "trivial" | "low" | "medium" | "high" | "na";
   /** Full canonical preservation strategy paragraph. */
   preservationStrategy: string;
-  /** Raw "Depends on" text from canonical, e.g. "E15 Repository · User". */
+  /** Raw "Depends on" text from canonical, e.g. "E15 Repository · E49 User". */
   dependsOn: string;
   /** Entity IDs this feature depends on (parsed from dependsOn). */
   entities: string[];
@@ -950,8 +950,8 @@ export const FEATURES: Feature[] = [
     preservation: "high",
     risk: "trivial",
     preservationStrategy: "GEI migrates history 1:1. Commit SHAs preserved.",
-    dependsOn: "E15 Repository · User",
-    entities: ["E15"],
+    dependsOn: "E15 Repository · E49 User",
+    entities: ["E15", "E49"],
   },
   {
     id: "F02",
@@ -1005,8 +1005,8 @@ export const FEATURES: Feature[] = [
     risk: "trivial",
     preservationStrategy:
       "GEI migrates PR history including threads, iterations, and reviewer assignments.",
-    dependsOn: "E14 Pull Request · User",
-    entities: ["E14"],
+    dependsOn: "E14 Pull Request · E49 User",
+    entities: ["E14", "E49"],
   },
   {
     id: "F06",
@@ -1537,8 +1537,8 @@ export const FEATURES: Feature[] = [
     risk: "medium",
     preservationStrategy:
       "GitHub Enterprise audit log streams to Azure; retention policy and event taxonomy differ from ADO.",
-    dependsOn: "E51 Organization · User",
-    entities: ["E51"],
+    dependsOn: "E51 Organization · E49 User",
+    entities: ["E51", "E49"],
   },
   {
     id: "F41",
@@ -1759,8 +1759,8 @@ export const FEATURES: Feature[] = [
     risk: "low",
     preservationStrategy:
       "New capability enabled by the move. Copilot Chat answers codebase questions; requires Copilot license and repo indexed on GitHub.",
-    dependsOn: "E15 Repository · User",
-    entities: ["E15"],
+    dependsOn: "E15 Repository · E49 User",
+    entities: ["E15", "E49"],
   },
 
   // ─── Knowledge & Documentation ──────────────────────────────────────────
@@ -2017,8 +2017,8 @@ export const FEATURES: Feature[] = [
     risk: "low",
     preservationStrategy:
       "GitHub Insights provides richer code-level analytics.",
-    dependsOn: "E15 Repository · User",
-    entities: ["E15"],
+    dependsOn: "E15 Repository · E49 User",
+    entities: ["E15", "E49"],
   },
   {
     id: "F73",
