@@ -271,7 +271,7 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
             <col style={{ width: "13%", minWidth: 150 }} />
             <col style={{ width: "8%", minWidth: 90 }} />
             <col style={{ width: "14%", minWidth: 160 }} />
-            <col style={{ width: "9%", minWidth: 110 }} />
+            <col style={{ width: "11.25%", minWidth: 138 }} />
           </colgroup>
           <thead>
             <tr>
