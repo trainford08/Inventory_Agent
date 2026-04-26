@@ -9,7 +9,6 @@
 
 export type ReviewSectionSlug =
   | "code-and-repos"
-  | "pipelines-and-releases"
   | "customizations-and-integrations"
   | "identity-and-access"
   | "risks-and-mitigations";
@@ -31,29 +30,22 @@ export const REVIEW_SECTIONS: ReviewSectionDef[] = [
       "Confirm or correct each item below. The agents found these from Azure DevOps — you decide what's right.",
   },
   {
-    slug: "pipelines-and-releases",
-    number: 2,
-    label: "Pipelines & releases",
-    subtitle:
-      "Confirm your build, release, and deployment picture. What stays, what moves, what needs to be rebuilt.",
-  },
-  {
     slug: "customizations-and-integrations",
-    number: 3,
+    number: 2,
     label: "Customizations & integrations",
     subtitle:
       "Team-specific tooling the agents flagged — tasks, extensions, and third-party bridges that need a call.",
   },
   {
     slug: "identity-and-access",
-    number: 4,
+    number: 3,
     label: "Identity & access",
     subtitle:
       "Users, teams, permissions, and CODEOWNERS. Who has access to what after cutover.",
   },
   {
     slug: "risks-and-mitigations",
-    number: 5,
+    number: 4,
     label: "Risks & mitigations",
     subtitle: "Open risks, owners, and mitigation plans. Sign off or flag.",
   },
