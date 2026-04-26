@@ -12,6 +12,7 @@ import {
   computeProgramOverview,
   computeTeamFriction,
 } from "@/server/program-overview";
+import { prisma } from "@/server/db";
 import {
   ENTITY_BY_ID,
   FEATURE_BY_ID,
@@ -46,7 +47,7 @@ Migration patterns:
 
 Hybrid model: some ADO services move to GitHub (Repos, Pipelines), some stay in ADO (Boards, Test Plans). Hybrid friction lives at the boundary (e.g. linking PRs to work items via AB#123 syntax).
 
-You have tools available to query the framework, the active team's inventory, and program-wide rollups across ALL teams. Use them whenever the user asks anything specific — never guess numbers or names. For program/portfolio questions ("how many teams scanned?", "what % of features stay in ADO across the program?", "what migration approaches are most common?"), call getProgramOverview. For cross-team comparisons or rankings ("which team has the most friction?", "rank teams by complexity"), call listTeamsByFriction. For team-specific questions, use the team-scoped tools. If you can answer from general knowledge of the framework alone, you can skip the tools.
+You have tools available to query the framework, the active team's inventory, and program-wide rollups across ALL teams. Use them whenever the user asks anything specific — never guess numbers or names. For program/portfolio questions ("how many teams scanned?", "what % of features stay in ADO across the program?", "what migration approaches are most common?"), call getProgramOverview. For cross-team comparisons or rankings ("which team has the most friction?", "rank teams by complexity"), call listTeamsByFriction. For cohort-level patterns ("which cohort has the most gaps?"), call getCohortBreakdown. For "what did the agent find?" or evidence questions, call searchFindings. For "how far along are we / what's left to review?", call getReviewProgress. For team-specific questions, use the team-scoped tools. If you can answer from general knowledge of the framework alone, you can skip the tools.
 
 Response style:
 - Default to 2–4 sentences. Only go longer when the user asks "explain", "walk me through", or follows up.
@@ -280,6 +281,150 @@ export async function POST(req: Request) {
           };
         }
         return { error: `Unknown ID prefix: ${id}` };
+      },
+    }),
+    searchFindings: tool({
+      description:
+        "Search the agent's discovery findings for a team — the structured evidence rows the agent produced (field label, value, source, confidence, triedNote). Use this when the user asks 'what did the agent find about X?', 'what's the evidence for Y?', or wants to see raw discovery data. Returns findings where the field label, path, value, or triedNote matches the query (case-insensitive substring).",
+      inputSchema: z.object({
+        slug: z
+          .string()
+          .describe("Team slug. Falls back to the active team if omitted."),
+        query: z
+          .string()
+          .describe(
+            "Substring to match against fieldLabel/fieldPath/value/triedNote.",
+          ),
+        limit: z.number().int().positive().max(25).optional(),
+      }),
+      execute: async ({ slug, query, limit }) => {
+        const team = await prisma.team.findUnique({
+          where: { slug },
+          select: { id: true, latestFindingsId: true },
+        });
+        if (!team) return { error: `Team '${slug}' not found.` };
+        if (!team.latestFindingsId)
+          return { count: 0, findings: [], note: "No agent run on file." };
+        const q = query.toLowerCase();
+        const findings = await prisma.finding.findMany({
+          where: { agentRunId: team.latestFindingsId },
+          select: {
+            fieldLabel: true,
+            fieldPath: true,
+            category: true,
+            value: true,
+            source: true,
+            confidence: true,
+            status: true,
+            triedNote: true,
+          },
+        });
+        const matches = findings
+          .filter(
+            (f) =>
+              f.fieldLabel.toLowerCase().includes(q) ||
+              f.fieldPath.toLowerCase().includes(q) ||
+              (f.value ?? "").toLowerCase().includes(q) ||
+              (f.triedNote ?? "").toLowerCase().includes(q),
+          )
+          .slice(0, limit ?? 10);
+        return { count: matches.length, findings: matches };
+      },
+    }),
+    getReviewProgress: tool({
+      description:
+        "Get a team's review progress — how many findings are PENDING vs ACCEPTED vs CORRECTED vs OVERRIDDEN, broken down by category (Code & repos, Pipelines, Organization, etc). Use this for 'what's left to review?', 'how far along are we?', 'which sections are done?'.",
+      inputSchema: z.object({ slug: z.string() }),
+      execute: async ({ slug }) => {
+        const team = await prisma.team.findUnique({
+          where: { slug },
+          select: { latestFindingsId: true },
+        });
+        if (!team?.latestFindingsId)
+          return { error: `No agent run for team '${slug}'.` };
+        const findings = await prisma.finding.findMany({
+          where: { agentRunId: team.latestFindingsId },
+          select: { category: true, status: true },
+        });
+        const total = findings.length;
+        const byStatus: Record<string, number> = {};
+        const byCategory: Record<
+          string,
+          { total: number; reviewed: number; pending: number }
+        > = {};
+        for (const f of findings) {
+          byStatus[f.status] = (byStatus[f.status] ?? 0) + 1;
+          const c = (byCategory[f.category] ??= {
+            total: 0,
+            reviewed: 0,
+            pending: 0,
+          });
+          c.total++;
+          if (f.status === "PENDING") c.pending++;
+          else c.reviewed++;
+        }
+        const reviewed = (byStatus.ACCEPTED ?? 0) + (byStatus.CORRECTED ?? 0);
+        return {
+          total,
+          reviewed,
+          pending: byStatus.PENDING ?? 0,
+          completionPct: total > 0 ? Math.round((reviewed / total) * 100) : 0,
+          byStatus,
+          byCategory,
+        };
+      },
+    }),
+    getCohortBreakdown: tool({
+      description:
+        "Aggregate friction metrics across teams grouped by cohort (Alpha, Bravo, Charlie, Delta, Echo, Foxtrot, Unassigned). Use this when the user asks about cohort-level patterns, e.g. 'which cohort has the most friction?', 'are mobile-heavy teams (Echo) different from data teams (Delta)?'.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const all = await computeTeamFriction();
+        const byCohort = new Map<
+          string,
+          {
+            cohort: string;
+            teamCount: number;
+            avgFrictionScore: number;
+            totalCustomizations: number;
+            totalGapCustomizations: number;
+            totalIntegrations: number;
+            highestFrictionTeam: string;
+            highestFrictionScore: number;
+          }
+        >();
+        for (const t of all) {
+          let entry = byCohort.get(t.cohort);
+          if (!entry) {
+            entry = {
+              cohort: t.cohort,
+              teamCount: 0,
+              avgFrictionScore: 0,
+              totalCustomizations: 0,
+              totalGapCustomizations: 0,
+              totalIntegrations: 0,
+              highestFrictionTeam: t.name,
+              highestFrictionScore: t.frictionScore,
+            };
+            byCohort.set(t.cohort, entry);
+          }
+          entry.teamCount++;
+          entry.avgFrictionScore += t.frictionScore;
+          entry.totalCustomizations += t.customizationsTotal;
+          entry.totalGapCustomizations += t.customizationsGap;
+          entry.totalIntegrations += t.integrations;
+          if (t.frictionScore > entry.highestFrictionScore) {
+            entry.highestFrictionScore = t.frictionScore;
+            entry.highestFrictionTeam = t.name;
+          }
+        }
+        const result = [...byCohort.values()]
+          .map((c) => ({
+            ...c,
+            avgFrictionScore: Math.round(c.avgFrictionScore / c.teamCount),
+          }))
+          .sort((a, b) => b.avgFrictionScore - a.avgFrictionScore);
+        return { count: result.length, cohorts: result };
       },
     }),
     listTeamsByFriction: tool({

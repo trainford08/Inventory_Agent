@@ -375,6 +375,9 @@ const TOOL_LABELS: Record<string, string> = {
   getCustomizations: "Fetching customizations",
   getProgramOverview: "Pulling program rollup",
   listTeamsByFriction: "Ranking teams by friction",
+  searchFindings: "Searching agent findings",
+  getReviewProgress: "Checking review progress",
+  getCohortBreakdown: "Aggregating by cohort",
   proposeAnswer: "Drafting a proposed answer",
 };
 
