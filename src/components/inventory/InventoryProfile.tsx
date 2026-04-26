@@ -228,6 +228,16 @@ export function InventoryProfile({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-bg-elevated p-3">
+        {layer !== "customization" && layer !== "field" ? (
+          <ExpandToggle
+            isExpanded={isMostlyExpanded(rows, expanded, layer)}
+            onClick={() =>
+              isMostlyExpanded(rows, expanded, layer)
+                ? collapseAll()
+                : expandAll()
+            }
+          />
+        ) : null}
         <ChipGroup
           label="View"
           value={layer}
@@ -265,18 +275,6 @@ export function InventoryProfile({
             { value: "P6", label: "P6" },
           ]}
         />
-        {layer !== "customization" && layer !== "field" ? (
-          <div className="ml-auto">
-            <ExpandToggle
-              isExpanded={isMostlyExpanded(rows, expanded, layer)}
-              onClick={() =>
-                isMostlyExpanded(rows, expanded, layer)
-                  ? collapseAll()
-                  : expandAll()
-              }
-            />
-          </div>
-        ) : null}
       </div>
 
       <div className="flex items-center">
