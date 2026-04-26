@@ -21,7 +21,7 @@ import {
   FEATURES_BY_ENTITY,
 } from "@/lib/inventory-framework";
 import { getTeamInventory } from "@/server/inventory";
-import { listTeams } from "@/server/teams";
+import { getTeamBySlug, listTeams } from "@/server/teams";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,19 +79,35 @@ export async function POST(req: Request) {
   const tools = {
     getTeamSummary: tool({
       description:
-        "Get totals AND schedule info for a team: JTBDs in scope, features touched, entities touched, customization counts, orphan features, cohort, wave, migration state, health, target cutover date, engineer count. Use this for any 'when does X cutover', 'what wave is Y in', 'what's the health of Z' question.",
+        "Get totals, schedule, AND ownership for a team: JTBDs in scope, features touched, entities touched, customization counts, orphan features, cohort, wave, migration state, health, target cutover date, engineer count, the team's Champion (lead engineer shepherding the migration), and team members. Use this for any 'when does X cutover', 'what wave is Y in', 'who is the Champion for Z', 'who's on the team' question.",
       inputSchema: z.object({
         slug: z.string().describe("Team slug, e.g. 'echo'"),
       }),
       execute: async ({ slug }) => {
-        const [inv, teams] = await Promise.all([
+        const [inv, teams, profile] = await Promise.all([
           getTeamInventory(slug),
           listTeams(),
+          getTeamBySlug(slug),
         ]);
         if (!inv) return { error: `Team '${slug}' not found.` };
         const t = teams.find((x) => x.slug === slug);
+        const champion = profile?.champion
+          ? {
+              name: profile.champion.name,
+              email: profile.champion.email ?? null,
+              role: profile.champion.role ?? null,
+            }
+          : null;
+        const members =
+          profile?.members?.map((m) => ({
+            name: m.name,
+            email: m.email ?? null,
+            role: m.role ?? null,
+          })) ?? [];
         return {
           team: inv.team,
+          champion,
+          members,
           totals: inv.totals,
           customizations: {
             total: inv.customizations.total,
