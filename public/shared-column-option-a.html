@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Option A — expanded state (real data)</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #6b7280;
+    --ink-faint: #9ca3af;
+    --border: #e5e7eb;
+    --border-soft: #f1f3f5;
+    --bg: #fafaf7;
+    --bg-card: #ffffff;
+    --bg-muted: #f5f5f1;
+    --primary: #2c5fa3;
+    --primary-soft: #e7eef8;
+    --success-soft: #e6f6ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 80px;
+    background: var(--bg); color: var(--ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  h1 { font-family: Georgia, serif; font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+  .lede { color: var(--ink-muted); margin-bottom: 32px; max-width: 760px; }
+  .lede b { color: var(--ink); font-weight: 600; }
+
+  .label-row {
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.12em; color: var(--primary);
+    text-transform: uppercase;
+    margin: 32px 0 8px;
+  }
+
+  .mock {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: visible;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 36px 60px 1fr 280px 200px;
+    gap: 12px;
+    align-items: start;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .grid:last-child { border-bottom: 0; }
+  .head {
+    background: var(--bg-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em;
+    color: var(--ink-muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding: 9px 14px;
+    align-items: center;
+  }
+  .num { font-family: ui-monospace, monospace; color: var(--ink-faint); text-align: right; font-size: 11px; padding-top: 2px; }
+  .id { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--ink-muted); padding-top: 2px; }
+  .name { display: inline-flex; align-items: center; gap: 8px; padding-top: 1px; }
+  .meta { color: var(--ink-muted); font-size: 11.5px; text-align: right; padding-top: 2px; }
+  .layer-tag {
+    display: inline-block; min-width: 36px;
+    padding: 2px 6px; margin-right: 4px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-align: center; text-transform: uppercase;
+    background: var(--success-soft); color: #1f5a3a;
+  }
+
+  .shared {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--ink);
+    line-height: 1.6;
+  }
+  .shared.collapsed { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .shared.expanded { white-space: normal; word-spacing: 1px; }
+  .shared .more, .shared .less {
+    color: var(--primary); cursor: pointer;
+    margin-left: 6px;
+    font-weight: 500;
+    font-family: -apple-system, sans-serif;
+    font-size: 10.5px;
+  }
+  .shared .more:hover, .shared .less:hover { text-decoration: underline; }
+
+  .row-expanded { background: var(--primary-soft); }
+  .row-expanded .shared { color: var(--ink); }
+
+  .takeaway {
+    margin-top: 18px;
+    padding: 12px 16px;
+    background: var(--primary-soft);
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+  .takeaway b { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<h1>Option A — expanded state with our largest shared list</h1>
+<p class="lede">
+  Pulled from the live data: <b>E15 Repository</b> is the most-shared entity in the framework — referenced by <b>32 features</b>. Below shows what Option A looks like collapsed (default) vs. expanded (after clicking <em>+29 more</em>).
+</p>
+
+<div class="label-row">Default (collapsed) — first 3 IDs + "+29 more"</div>
+<div class="mock">
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid">
+    <div class="num">12</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared collapsed">F01, F02, F03 <span class="more">+29 more</span></div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid">
+    <div class="num">13</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared">F03, F07</div>
+    <div class="meta">Direct git mapping</div>
+  </div>
+  <div class="grid">
+    <div class="num">14</div><div class="id">E50</div>
+    <div class="name"><span class="layer-tag">Ent</span>Team</div>
+    <div class="shared collapsed">F44, F45, F46 <span class="more">+5 more</span></div>
+    <div class="meta">Re-create as GitHub team</div>
+  </div>
+</div>
+
+<div class="label-row">Expanded — click "+29 more" → row grows in place</div>
+<div class="mock">
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid row-expanded">
+    <div class="num">12</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared expanded">
+      F01, F02, F03, F07, F11, F12, F13, F24, F26, F28, F34, F35, F36, F37, F38, F39, F41, F42, F45, F46, F49, F51, F54, F56, F57, F62, F72, F75, F76, F77, F78, F79
+      <span class="less">show less</span>
+    </div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid">
+    <div class="num">13</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared">F03, F07</div>
+    <div class="meta">Direct git mapping</div>
+  </div>
+  <div class="grid">
+    <div class="num">14</div><div class="id">E50</div>
+    <div class="name"><span class="layer-tag">Ent</span>Team</div>
+    <div class="shared collapsed">F44, F45, F46 <span class="more">+5 more</span></div>
+    <div class="meta">Re-create as GitHub team</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  <b>Notes on the expanded state:</b><br>
+  · Row gets a soft blue background tint to show "this row is currently expanded".<br>
+  · IDs wrap to as many lines as needed (32 IDs &asymp; 4 lines at this column width).<br>
+  · "show less" link sits at the end of the wrapped text — easy to find after reading.<br>
+  · Other rows in the table stay collapsed and unaffected.
+</div>
+
+</body>
+</html>

@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Shared-with marker — mocks</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #6b7280;
+    --ink-faint: #9ca3af;
+    --border: #e5e7eb;
+    --border-soft: #f1f3f5;
+    --bg: #fafaf7;
+    --bg-card: #ffffff;
+    --bg-muted: #f5f5f1;
+    --bg-hover: #f0f0ec;
+    --primary: #2c5fa3;
+    --primary-soft: #e7eef8;
+    --warn-soft: #fef3e6;
+    --success-soft: #e6f6ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 80px;
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  h1 { font-family: Georgia, serif; font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+  .lede { color: var(--ink-muted); margin-bottom: 40px; max-width: 720px; }
+
+  .mock {
+    margin-bottom: 56px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: visible;
+  }
+  .mock-head {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-muted);
+  }
+  .mock-tag {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--primary); text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .mock-title { font-family: Georgia, serif; font-size: 20px; font-weight: 500; margin-bottom: 6px; }
+  .mock-desc { color: var(--ink-soft); font-size: 13px; max-width: 640px; }
+  .mock-body { padding: 24px; }
+
+  /* Table mock */
+  .row {
+    display: grid;
+    grid-template-columns: 36px 60px 1fr 200px;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row-num { font-family: ui-monospace, monospace; color: var(--ink-faint); text-align: right; font-size: 11px; }
+  .row-id { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--ink-muted); }
+  .row-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .row-meta { color: var(--ink-muted); font-size: 11.5px; text-align: right; }
+  .layer-tag {
+    display: inline-block; min-width: 36px;
+    padding: 2px 6px; margin-right: 4px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-align: center; text-transform: uppercase;
+  }
+  .layer-ent { background: var(--success-soft); color: #1f5a3a; }
+
+  /* === Mock A — current (for reference) === */
+  .crowded {
+    color: var(--ink-faint);
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    margin-left: 6px;
+  }
+
+  /* === Mock B — count badge with click-to-expand popover === */
+  .shared-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 1px 7px;
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    background: var(--primary-soft);
+    border-radius: 999px;
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.04em;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .shared-pill:hover { background: var(--primary); color: white; }
+  .popover {
+    position: absolute;
+    z-index: 5;
+    background: white;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    white-space: nowrap;
+    min-width: 160px;
+  }
+  .popover-head {
+    font-family: -apple-system, sans-serif;
+    font-size: 10px; font-weight: 600; color: var(--ink-muted);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 4px;
+  }
+  .popover-id {
+    display: block; padding: 2px 0;
+    color: var(--ink); font-weight: 500;
+  }
+  .popover-id em {
+    font-style: normal; color: var(--ink-muted);
+    font-family: -apple-system, sans-serif; font-size: 11.5px;
+    margin-left: 8px;
+  }
+
+  /* === Mock C — chain icon + tooltip === */
+  .chain-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px;
+    color: var(--ink-muted);
+    cursor: help;
+    border-radius: 3px;
+    position: relative;
+  }
+  .chain-icon:hover { background: var(--primary-soft); color: var(--primary); }
+  .chain-icon svg { width: 11px; height: 11px; fill: currentColor; }
+  .tooltip {
+    position: absolute;
+    bottom: 100%; left: 50%; transform: translateX(-50%) translateY(-4px);
+    background: var(--ink); color: white;
+    padding: 6px 10px; border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 1;
+    z-index: 5;
+  }
+  .tooltip::after {
+    content: '';
+    position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-top-color: var(--ink);
+  }
+  .tooltip-list { display: block; margin-top: 3px; color: #d4d4d4; }
+
+  /* === Mock D — superscript count + footnote === */
+  .superscript {
+    display: inline-block;
+    color: var(--primary);
+    font-size: 9px;
+    vertical-align: super;
+    margin-left: 2px;
+    cursor: pointer;
+    font-weight: 600;
+    font-family: ui-monospace, monospace;
+  }
+  .superscript:hover { text-decoration: underline; }
+  .footnote-bar {
+    margin-top: 8px;
+    padding: 8px 14px;
+    background: var(--bg-muted);
+    border-top: 1px solid var(--border);
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    border-radius: 0 0 12px 12px;
+  }
+  .footnote-bar b { color: var(--primary); margin-right: 4px; }
+
+  /* === Mock E — row-level subtle highlight + reveal on hover === */
+  .row-shared { background: linear-gradient(to right, rgba(44,95,163,0.04), transparent 80%); }
+  .row-shared .reveal {
+    color: transparent;
+    transition: color 0.15s;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    margin-left: 8px;
+  }
+  .row-shared:hover .reveal { color: var(--ink-muted); }
+  .row-shared .reveal::before { content: 'shared with: '; color: var(--ink-faint); }
+
+  /* === Mock F — column-style detail (move shared list to its own column) === */
+  .row-with-shared {
+    display: grid;
+    grid-template-columns: 36px 60px 1fr 180px 200px;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .row-with-shared:last-child { border-bottom: 0; }
+  .row-with-shared .shared-col {
+    font-family: ui-monospace, monospace;
+    font-size: 10px; color: var(--ink-faint);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .row-with-shared .shared-col b { color: var(--ink-muted); font-weight: 500; }
+
+  /* Common takeaway box */
+  .takeaway {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--primary-soft);
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+    font-size: 12.5px;
+    color: var(--ink);
+  }
+  .takeaway b { color: var(--primary); }
+
+  .header-row {
+    display: grid;
+    grid-template-columns: 36px 60px 1fr 200px;
+    gap: 12px;
+    padding: 9px 14px;
+    background: var(--bg-muted);
+    border-bottom: 1px solid var(--border);
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.1em; color: var(--ink-muted);
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<h1>Shared-with markers — five alternatives</h1>
+<p class="lede">
+  Today: <code>(also under: F02, F03, F12, F38, F49)</code> right in the cell. It crowds the row.
+  Five quieter approaches below — each shows the same data with less visual weight.
+</p>
+
+<!-- ========== A — current ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">A · current — for reference</div>
+    <div class="mock-title">Inline list, always visible.</div>
+    <div class="mock-desc">Information density: high. Visual weight: high. Works for 1–2 references; falls apart at 5+.</div>
+  </div>
+  <div class="mock-body" style="padding: 0;">
+    <div class="header-row"><div></div><div>ID</div><div>Entity</div><div>Migration note</div></div>
+    <div class="row">
+      <div class="row-num">1</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository</div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row">
+      <div class="row-num">2</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository<span class="crowded">(also under: F02, F03, F12, F38, F49, F75, F77)</span></div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== B — count pill + popover ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">B · count pill + popover</div>
+    <div class="mock-title">Small count badge; click to expand a popover with names.</div>
+    <div class="mock-desc">Most compact. Always-visible signal that an item is shared (and how widely), with detail on demand. Same pattern many devtools use for "+3 more".</div>
+  </div>
+  <div class="mock-body" style="padding: 0;">
+    <div class="header-row"><div></div><div>ID</div><div>Entity</div><div>Migration note</div></div>
+    <div class="row">
+      <div class="row-num">1</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository</div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row" style="position: relative;">
+      <div class="row-num">2</div>
+      <div class="row-id">E15</div>
+      <div class="row-name">
+        <span class="layer-tag layer-ent">Ent</span>Repository
+        <span class="shared-pill" title="Click to see other features">↗ 7 features</span>
+      </div>
+      <div class="row-meta">Migrates via GEI</div>
+      <div class="popover" style="left: 250px; top: 30px;">
+        <div class="popover-head">Also under</div>
+        <span class="popover-id">F02 <em>Branch management</em></span>
+        <span class="popover-id">F03 <em>Branch policies</em></span>
+        <span class="popover-id">F12 <em>Repository forks</em></span>
+        <span class="popover-id">F38 <em>SBOM generation</em></span>
+        <span class="popover-id">F49 <em>Webhooks</em></span>
+        <span class="popover-id">F75 <em>Code search</em></span>
+        <span class="popover-id">F77 <em>GitHub Releases</em></span>
+      </div>
+    </div>
+    <div class="row" style="margin-top: 200px;">
+      <div class="row-num">3</div>
+      <div class="row-id">E16</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Branch <span class="shared-pill">↗ 2</span></div>
+      <div class="row-meta">Direct git mapping</div>
+    </div>
+  </div>
+  <div class="takeaway" style="margin: 0 24px 24px;"><b>Best for:</b> the default. Quietest signal that scales — works for 2 shared references or 20.</div>
+</section>
+
+<!-- ========== C — chain icon + tooltip ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">C · chain icon + hover tooltip</div>
+    <div class="mock-title">Tiny <code>🔗</code> icon next to the name. Hover reveals the list.</div>
+    <div class="mock-desc">Minimal visual footprint. No count visible (just presence/absence). Discovery cost: users may not notice the icon until they hover.</div>
+  </div>
+  <div class="mock-body" style="padding: 0;">
+    <div class="header-row"><div></div><div>ID</div><div>Entity</div><div>Migration note</div></div>
+    <div class="row">
+      <div class="row-num">1</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository</div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row" style="position: relative;">
+      <div class="row-num">2</div>
+      <div class="row-id">E15</div>
+      <div class="row-name">
+        <span class="layer-tag layer-ent">Ent</span>Repository
+        <span class="chain-icon" style="position: relative;">
+          <svg viewBox="0 0 16 16"><path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/><path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/></svg>
+          <span class="tooltip">also under
+            <span class="tooltip-list">F02 · F03 · F12 · F38<br>F49 · F75 · F77</span>
+          </span>
+        </span>
+      </div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+  </div>
+  <div class="takeaway" style="margin: 0 24px 24px;"><b>Best for:</b> minimalist designs where shared status is secondary info.</div>
+</section>
+
+<!-- ========== D — superscript + footnote ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">D · superscript + footnote bar</div>
+    <div class="mock-title">Tiny superscript number; full list collected at the bottom of the card.</div>
+    <div class="mock-desc">Academic-paper feel. Multiple shared rows reference one footnote bar at the bottom. Compact rows; reader scans down to decode.</div>
+  </div>
+  <div class="mock-body" style="padding: 0;">
+    <div class="header-row"><div></div><div>ID</div><div>Entity</div><div>Migration note</div></div>
+    <div class="row">
+      <div class="row-num">1</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository<span class="superscript">¹</span></div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row">
+      <div class="row-num">2</div>
+      <div class="row-id">E16</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Branch<span class="superscript">²</span></div>
+      <div class="row-meta">Direct git mapping</div>
+    </div>
+    <div class="row">
+      <div class="row-num">3</div>
+      <div class="row-id">E50</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Team</div>
+      <div class="row-meta">Re-create as GitHub team</div>
+    </div>
+  </div>
+  <div class="footnote-bar">
+    <b>¹ E15 Repository</b> also under: F02, F03, F12, F38, F49, F75, F77 &nbsp;·&nbsp;
+    <b>² E16 Branch</b> also under: F03, F07
+  </div>
+  <div class="takeaway" style="margin: 14px 24px 24px;"><b>Best for:</b> dense data where rows must stay narrow. Less interactive but very scannable.</div>
+</section>
+
+<!-- ========== E — subtle row-tint + reveal on hover ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">E · subtle row tint + reveal on hover</div>
+    <div class="mock-title">Shared rows get a faint background tint. Hover the row to reveal the IDs inline.</div>
+    <div class="mock-desc">Nothing extra in the layout — just a color cue. The names appear only on hover. Quietest of all; needs hover discovery.</div>
+  </div>
+  <div class="mock-body" style="padding: 0;">
+    <div class="header-row"><div></div><div>ID</div><div>Entity</div><div>Migration note</div></div>
+    <div class="row">
+      <div class="row-num">1</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository</div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row row-shared">
+      <div class="row-num">2</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository<span class="reveal">F02, F03, F12, F38, F49</span></div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row row-shared">
+      <div class="row-num">3</div>
+      <div class="row-id">E16</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Branch<span class="reveal">F03, F07</span></div>
+      <div class="row-meta">Direct git mapping</div>
+    </div>
+  </div>
+  <p style="padding: 0 24px 8px; color: var(--ink-faint); font-style: italic; font-size: 12px;">
+    (Hover rows 2 and 3 to see the IDs appear inline.)
+  </p>
+  <div class="takeaway" style="margin: 0 24px 24px;"><b>Best for:</b> visual minimalism. Pairs well with B for the click-to-pin behavior.</div>
+</section>
+
+<!-- ========== F — dedicated column ========== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">F · dedicated column</div>
+    <div class="mock-title">A "Shared with" column at the right.</div>
+    <div class="mock-desc">Most explicit. Makes shared status a peer of every other column. Costs horizontal space.</div>
+  </div>
+  <div class="mock-body" style="padding: 0;">
+    <div class="header-row" style="grid-template-columns: 36px 60px 1fr 180px 200px;">
+      <div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div>
+    </div>
+    <div class="row-with-shared">
+      <div class="row-num">1</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository</div>
+      <div class="shared-col">—</div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row-with-shared">
+      <div class="row-num">2</div>
+      <div class="row-id">E15</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Repository</div>
+      <div class="shared-col"><b>7:</b> F02, F03, F12, F38, F49…</div>
+      <div class="row-meta">Migrates via GEI</div>
+    </div>
+    <div class="row-with-shared">
+      <div class="row-num">3</div>
+      <div class="row-id">E16</div>
+      <div class="row-name"><span class="layer-tag layer-ent">Ent</span>Branch</div>
+      <div class="shared-col"><b>2:</b> F03, F07</div>
+      <div class="row-meta">Direct git mapping</div>
+    </div>
+  </div>
+  <div class="takeaway" style="margin: 0 24px 24px;"><b>Best for:</b> when shared status is something you scan for and filter on regularly.</div>
+</section>
+
+<section style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+  <div style="font-family: ui-monospace, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; color: var(--primary); text-transform: uppercase; margin-bottom: 8px;">Recommendation</div>
+  <div style="font-family: Georgia, serif; font-size: 18px; line-height: 1.45;">
+    Ship <b>Option B (count pill + popover)</b>. It's the only one that:
+    scales to 20+ references without crowding,
+    keeps the always-visible signal that "this is shared",
+    and matches the pattern devs already know from GitHub, Linear, Notion.
+    Pair it with <b>Option E's subtle row tint</b> as a passive visual cue if you want the row to also be scannable from a distance.
+  </div>
+</section>
+
+</body>
+</html>

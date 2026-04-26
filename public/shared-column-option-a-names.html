@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Option A — expanded with names</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #6b7280;
+    --ink-faint: #9ca3af;
+    --border: #e5e7eb;
+    --border-soft: #f1f3f5;
+    --bg: #fafaf7;
+    --bg-card: #ffffff;
+    --bg-muted: #f5f5f1;
+    --primary: #2c5fa3;
+    --primary-soft: #e7eef8;
+    --success-soft: #e6f6ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 80px;
+    background: var(--bg); color: var(--ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  h1 { font-family: Georgia, serif; font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+  .lede { color: var(--ink-muted); margin-bottom: 28px; max-width: 760px; }
+  .label-row {
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.12em; color: var(--primary);
+    text-transform: uppercase;
+    margin: 32px 0 8px;
+  }
+
+  .mock {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: visible;
+    margin-bottom: 18px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 36px 60px 1fr 320px 200px;
+    gap: 12px;
+    align-items: start;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .grid:last-child { border-bottom: 0; }
+  .head {
+    background: var(--bg-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em;
+    color: var(--ink-muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding: 9px 14px;
+    align-items: center;
+  }
+  .num { font-family: ui-monospace, monospace; color: var(--ink-faint); text-align: right; font-size: 11px; padding-top: 2px; }
+  .id { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--ink-muted); padding-top: 2px; }
+  .name { display: inline-flex; align-items: center; gap: 8px; padding-top: 1px; }
+  .meta { color: var(--ink-muted); font-size: 11.5px; text-align: right; padding-top: 2px; }
+  .layer-tag {
+    display: inline-block; min-width: 36px;
+    padding: 2px 6px; margin-right: 4px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-align: center; text-transform: uppercase;
+    background: var(--success-soft); color: #1f5a3a;
+  }
+
+  .shared {
+    font-size: 11.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .shared .more, .shared .less {
+    color: var(--primary); cursor: pointer;
+    margin-left: 6px;
+    font-weight: 500;
+    font-size: 10.5px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  .row-expanded { background: var(--primary-soft); }
+
+  /* Variant 1 — inline ID+name pairs */
+  .pair-inline { font-family: -apple-system, sans-serif; }
+  .pair-inline .id-mono {
+    font-family: ui-monospace, monospace;
+    font-weight: 600; color: var(--primary);
+  }
+  .pair-inline .nm { color: var(--ink-soft); }
+
+  /* Variant 2 — two-column grid */
+  .pair-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px 14px;
+    font-size: 11px;
+  }
+  .pair-grid .row-pair {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 8px;
+    padding: 2px 0;
+    border-bottom: 1px dotted var(--border-soft);
+  }
+  .pair-grid .row-pair:last-child { border-bottom: none; }
+  .pair-grid .id-mono {
+    font-family: ui-monospace, monospace;
+    font-weight: 600; color: var(--primary);
+  }
+  .pair-grid .nm {
+    color: var(--ink-soft);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  /* Variant 3 — chips with name on hover (compact) */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
+  .chip-name {
+    display: inline-flex; align-items: baseline; gap: 4px;
+    padding: 1px 6px; border-radius: 4px;
+    background: var(--bg-muted);
+    font-size: 10.5px;
+  }
+  .chip-name .id-mono {
+    font-family: ui-monospace, monospace;
+    font-weight: 600; color: var(--primary);
+  }
+  .chip-name .nm { color: var(--ink-soft); }
+
+  .takeaway {
+    margin-top: 16px;
+    padding: 11px 16px;
+    background: var(--primary-soft);
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+  .takeaway b { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<h1>Option A — expanded with names</h1>
+<p class="lede">Same data: <b>E15 Repository</b> shared across 32 features. Three ways to show ID + name once expanded.</p>
+
+<!-- ============== Variant 1 — inline pairs ============== -->
+<div class="label-row">Variant 1 · inline ID + name pairs</div>
+<div class="mock">
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid row-expanded">
+    <div class="num">12</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared pair-inline">
+      <span class="id-mono">F01</span> <span class="nm">Git commit &amp; push</span>,
+      <span class="id-mono">F02</span> <span class="nm">Branch management</span>,
+      <span class="id-mono">F03</span> <span class="nm">Branch policies</span>,
+      <span class="id-mono">F07</span> <span class="nm">Merge strategies</span>,
+      <span class="id-mono">F11</span> <span class="nm">Git LFS</span>,
+      <span class="id-mono">F12</span> <span class="nm">Repository forks</span>,
+      <span class="id-mono">F13</span> <span class="nm">Submodules</span>,
+      <span class="id-mono">F24</span> <span class="nm">CI pipeline (YAML)</span>,
+      <span class="id-mono">F26</span> <span class="nm">Build triggers</span>,
+      <span class="id-mono">F28</span> <span class="nm">Service connections</span>,
+      <span class="id-mono">F34</span> <span class="nm">Secret scanning</span>,
+      <span class="id-mono">F35</span> <span class="nm">Push protection for secrets</span>,
+      <span class="id-mono">F36</span> <span class="nm">Dependency scanning</span>,
+      <span class="id-mono">F37</span> <span class="nm">Code scanning (CodeQL)</span>
+      &hellip;
+      <span class="less">show less</span>
+    </div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+</div>
+
+<!-- ============== Variant 2 — two-column grid ============== -->
+<div class="label-row">Variant 2 · two-column grid (most scannable)</div>
+<div class="mock">
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid row-expanded">
+    <div class="num">12</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared">
+      <div class="pair-grid">
+        <div class="row-pair"><span class="id-mono">F01</span><span class="nm">Git commit &amp; push</span></div>
+        <div class="row-pair"><span class="id-mono">F02</span><span class="nm">Branch management</span></div>
+        <div class="row-pair"><span class="id-mono">F03</span><span class="nm">Branch policies</span></div>
+        <div class="row-pair"><span class="id-mono">F07</span><span class="nm">Merge strategies</span></div>
+        <div class="row-pair"><span class="id-mono">F11</span><span class="nm">Git LFS</span></div>
+        <div class="row-pair"><span class="id-mono">F12</span><span class="nm">Repository forks</span></div>
+        <div class="row-pair"><span class="id-mono">F13</span><span class="nm">Submodules</span></div>
+        <div class="row-pair"><span class="id-mono">F24</span><span class="nm">CI pipeline (YAML)</span></div>
+        <div class="row-pair"><span class="id-mono">F26</span><span class="nm">Build triggers</span></div>
+        <div class="row-pair"><span class="id-mono">F28</span><span class="nm">Service connections</span></div>
+        <div class="row-pair"><span class="id-mono">F34</span><span class="nm">Secret scanning</span></div>
+        <div class="row-pair"><span class="id-mono">F35</span><span class="nm">Push protection for secrets</span></div>
+        <div class="row-pair"><span class="id-mono">F36</span><span class="nm">Dependency scanning</span></div>
+        <div class="row-pair"><span class="id-mono">F37</span><span class="nm">Code scanning (CodeQL)</span></div>
+        <div class="row-pair"><span class="id-mono">F38</span><span class="nm">Security advisories</span></div>
+        <div class="row-pair"><span class="id-mono">F39</span><span class="nm">Branch protection for compliance</span></div>
+        <div class="row-pair"><span class="id-mono">F41</span><span class="nm">SBOM generation</span></div>
+        <div class="row-pair"><span class="id-mono">F42</span><span class="nm">SDL gate enforcement</span></div>
+        <div class="row-pair"><span class="id-mono">F45</span><span class="nm">Permission levels</span></div>
+        <div class="row-pair"><span class="id-mono">F46</span><span class="nm">CODEOWNERS</span></div>
+        <div class="row-pair"><span class="id-mono">F49</span><span class="nm">Webhooks</span></div>
+        <div class="row-pair"><span class="id-mono">F51</span><span class="nm">REST API consumers</span></div>
+        <div class="row-pair"><span class="id-mono">F54</span><span class="nm">Policy as code</span></div>
+        <div class="row-pair"><span class="id-mono">F56</span><span class="nm">Wiki (code wiki)</span></div>
+        <div class="row-pair"><span class="id-mono">F57</span><span class="nm">README &amp; markdown</span></div>
+        <div class="row-pair"><span class="id-mono">F62</span><span class="nm">Code coverage</span></div>
+        <div class="row-pair"><span class="id-mono">F72</span><span class="nm">Code activity metrics</span></div>
+        <div class="row-pair"><span class="id-mono">F75</span><span class="nm">Code search</span></div>
+        <div class="row-pair"><span class="id-mono">F76</span><span class="nm">Codespaces</span></div>
+        <div class="row-pair"><span class="id-mono">F77</span><span class="nm">GitHub Releases</span></div>
+        <div class="row-pair"><span class="id-mono">F78</span><span class="nm">Git history rewrite tooling</span></div>
+        <div class="row-pair"><span class="id-mono">F79</span><span class="nm">Copilot Chat in IDE</span></div>
+      </div>
+      <span class="less">show less</span>
+    </div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+</div>
+
+<!-- ============== Variant 3 — labeled chips ============== -->
+<div class="label-row">Variant 3 · labeled chips (most compact, less scannable)</div>
+<div class="mock">
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid row-expanded">
+    <div class="num">12</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared">
+      <div class="chip-row">
+        <span class="chip-name"><span class="id-mono">F01</span><span class="nm">Git commit &amp; push</span></span>
+        <span class="chip-name"><span class="id-mono">F02</span><span class="nm">Branch management</span></span>
+        <span class="chip-name"><span class="id-mono">F03</span><span class="nm">Branch policies</span></span>
+        <span class="chip-name"><span class="id-mono">F07</span><span class="nm">Merge strategies</span></span>
+        <span class="chip-name"><span class="id-mono">F11</span><span class="nm">Git LFS</span></span>
+        <span class="chip-name"><span class="id-mono">F12</span><span class="nm">Repository forks</span></span>
+        <span class="chip-name"><span class="id-mono">F13</span><span class="nm">Submodules</span></span>
+        <span class="chip-name"><span class="id-mono">F24</span><span class="nm">CI pipeline (YAML)</span></span>
+        <span class="chip-name"><span class="id-mono">F26</span><span class="nm">Build triggers</span></span>
+        <span class="chip-name"><span class="id-mono">F28</span><span class="nm">Service connections</span></span>
+        <span class="chip-name"><span class="id-mono">F34</span><span class="nm">Secret scanning</span></span>
+        <span class="chip-name"><span class="id-mono">F35</span><span class="nm">Push protection</span></span>
+        <span class="chip-name"><span class="id-mono">F36</span><span class="nm">Dependency scanning</span></span>
+        <span class="chip-name"><span class="id-mono">F37</span><span class="nm">CodeQL</span></span>
+        <span class="chip-name"><span class="id-mono">F38</span><span class="nm">Security advisories</span></span>
+        <span class="chip-name"><span class="id-mono">F39</span><span class="nm">Branch protection</span></span>
+        <span class="chip-name"><span class="id-mono">F41</span><span class="nm">SBOM</span></span>
+        <span class="chip-name"><span class="id-mono">F42</span><span class="nm">SDL gates</span></span>
+        <span class="chip-name"><span class="id-mono">F45</span><span class="nm">Permissions</span></span>
+        <span class="chip-name"><span class="id-mono">F46</span><span class="nm">CODEOWNERS</span></span>
+        <span class="chip-name"><span class="id-mono">F49</span><span class="nm">Webhooks</span></span>
+        <span class="chip-name"><span class="id-mono">F51</span><span class="nm">REST API</span></span>
+        <span class="chip-name"><span class="id-mono">F54</span><span class="nm">Policy as code</span></span>
+        <span class="chip-name"><span class="id-mono">F56</span><span class="nm">Code wiki</span></span>
+        <span class="chip-name"><span class="id-mono">F57</span><span class="nm">README</span></span>
+        <span class="chip-name"><span class="id-mono">F62</span><span class="nm">Coverage</span></span>
+        <span class="chip-name"><span class="id-mono">F72</span><span class="nm">Activity metrics</span></span>
+        <span class="chip-name"><span class="id-mono">F75</span><span class="nm">Code search</span></span>
+        <span class="chip-name"><span class="id-mono">F76</span><span class="nm">Codespaces</span></span>
+        <span class="chip-name"><span class="id-mono">F77</span><span class="nm">Releases</span></span>
+        <span class="chip-name"><span class="id-mono">F78</span><span class="nm">History rewrite</span></span>
+        <span class="chip-name"><span class="id-mono">F79</span><span class="nm">Copilot Chat</span></span>
+      </div>
+      <span class="less">show less</span>
+    </div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+</div>
+
+<div class="takeaway">
+  <b>My pick:</b> <b>Variant 2 (two-column grid)</b>. With 32 entries it stays scannable in &asymp;16 lines, IDs align in their own column for quick eye-tracking, and names truncate gracefully on narrow widths. <br><br>
+  Variant 1 is fine when lists are small (≤ 5) but becomes a wall of comma-separated text fast. Variant 3 looks busy and feels like a tag cloud at this size.
+</div>
+
+</body>
+</html>

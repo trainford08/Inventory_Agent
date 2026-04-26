@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Shared-with column — truncation mocks</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --ink-muted: #6b7280;
+    --ink-faint: #9ca3af;
+    --border: #e5e7eb;
+    --border-soft: #f1f3f5;
+    --bg: #fafaf7;
+    --bg-card: #ffffff;
+    --bg-muted: #f5f5f1;
+    --primary: #2c5fa3;
+    --primary-soft: #e7eef8;
+    --success-soft: #e6f6ee;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 32px 40px 80px;
+    background: var(--bg); color: var(--ink);
+    font-size: 13px; line-height: 1.5;
+  }
+  h1 { font-family: Georgia, serif; font-weight: 400; font-size: 28px; margin: 0 0 4px; }
+  .lede { color: var(--ink-muted); margin-bottom: 40px; max-width: 720px; }
+  .mock {
+    margin-bottom: 48px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: visible;
+  }
+  .mock-head {
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-muted);
+  }
+  .mock-tag {
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--primary); text-transform: uppercase; margin-bottom: 4px;
+  }
+  .mock-title { font-family: Georgia, serif; font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+  .mock-desc { color: var(--ink-soft); font-size: 12.5px; max-width: 640px; }
+
+  /* Table mock */
+  .grid {
+    display: grid;
+    grid-template-columns: 36px 60px 1fr 240px 200px;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .grid:last-child { border-bottom: 0; }
+  .head {
+    background: var(--bg-muted);
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.1em;
+    color: var(--ink-muted); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .num { font-family: ui-monospace, monospace; color: var(--ink-faint); text-align: right; font-size: 11px; }
+  .id { font-family: ui-monospace, monospace; font-size: 10.5px; color: var(--ink-muted); }
+  .name { display: inline-flex; align-items: center; gap: 8px; }
+  .meta { color: var(--ink-muted); font-size: 11.5px; text-align: right; }
+  .layer-tag {
+    display: inline-block; min-width: 36px;
+    padding: 2px 6px; margin-right: 4px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+    text-align: center; text-transform: uppercase;
+    background: var(--success-soft); color: #1f5a3a;
+  }
+
+  .shared {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--ink);
+    line-height: 1.5;
+    overflow: hidden;
+  }
+  .shared b { color: var(--ink-muted); font-weight: 500; }
+  .shared .more {
+    color: var(--primary); cursor: pointer;
+    margin-left: 4px; text-decoration: none;
+  }
+  .shared .more:hover { text-decoration: underline; }
+  .shared.truncated {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Option C — expandable inline (click "+N" to grow row) */
+  .grid.tall { padding-top: 12px; padding-bottom: 12px; }
+  .shared.expanded { white-space: normal; }
+
+  /* Option D — popover trigger */
+  .pop-trigger {
+    display: inline-block; padding: 0 4px;
+    color: var(--primary); cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline dotted;
+  }
+  .popover {
+    position: absolute; z-index: 5;
+    background: white;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-top: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    min-width: 200px;
+  }
+  .popover-id { display: block; padding: 2px 0; color: var(--ink); font-weight: 500; }
+  .popover-id em {
+    font-style: normal; color: var(--ink-muted);
+    font-family: -apple-system, sans-serif; font-size: 11.5px;
+    margin-left: 8px;
+  }
+
+  /* Option E — count + chips */
+  .chip-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  .chip {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-family: ui-monospace, monospace;
+    font-size: 10px; font-weight: 600;
+  }
+  .chip.more {
+    background: var(--bg-muted); color: var(--ink-muted);
+    cursor: pointer; border: 1px dashed var(--border);
+  }
+
+  /* Option B — count-first */
+  .count-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px; color: var(--ink);
+  }
+  .count-pill b {
+    background: var(--primary-soft);
+    color: var(--primary);
+    padding: 1px 7px; border-radius: 999px;
+    font-weight: 600; font-size: 10.5px;
+  }
+  .count-pill .preview { color: var(--ink-muted); font-size: 10.5px; }
+  .count-pill .show {
+    color: var(--primary); cursor: pointer; font-size: 10.5px;
+    margin-left: 4px; text-decoration: underline dotted;
+  }
+
+  .takeaway {
+    margin: 10px 22px 18px;
+    padding: 10px 14px;
+    background: var(--primary-soft);
+    border-left: 3px solid var(--primary);
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+  .takeaway b { color: var(--primary); }
+</style>
+</head>
+<body>
+
+<h1>Shared-with column — five ways to truncate</h1>
+<p class="lede">All five sit inside a dedicated <b>Shared with</b> column. The difference is how each one handles a long list (e.g. an entity used by 7 features). Pick whichever balance of compactness vs. clickiness you like best.</p>
+
+<!-- ==================== A — first N + "+N more" inline ==================== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">A · first 3 + "+N more" link (expands inline)</div>
+    <div class="mock-title">Show first 3 IDs, then a clickable "+N more" that expands the row in place.</div>
+    <div class="mock-desc">Most common web pattern. Default state is short and predictable; clicking gives full detail without leaving the row.</div>
+  </div>
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid">
+    <div class="num">1</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared truncated">F02, F03, F12<a class="more">+4 more</a></div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid tall">
+    <div class="num">2</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared expanded">F02, F03, F12, F38, F49, F75, F77<a class="more">show less</a></div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid">
+    <div class="num">3</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared">F03, F07</div>
+    <div class="meta">Direct git</div>
+  </div>
+  <div class="takeaway"><b>Best when:</b> users mostly skim; only some rows want full detail.</div>
+</section>
+
+<!-- ==================== B — count + preview, click "show all" ==================== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">B · count badge + preview, "show all" link</div>
+    <div class="mock-title">Always lead with a count. Show first 1–2 IDs as preview. "show all" link reveals the rest.</div>
+    <div class="mock-desc">Count is the strongest information ("oh, this is shared 7 times"). The IDs are secondary.</div>
+  </div>
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid">
+    <div class="num">1</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared">
+      <span class="count-pill"><b>7</b> <span class="preview">incl. F02, F03</span> <span class="show">show all</span></span>
+    </div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid">
+    <div class="num">2</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared"><span class="count-pill"><b>2</b> <span class="preview">F03, F07</span></span></div>
+    <div class="meta">Direct git</div>
+  </div>
+  <div class="takeaway"><b>Best when:</b> the count itself is meaningful (high-share = potentially risky migration).</div>
+</section>
+
+<!-- ==================== C — chip list with "+N" chip ==================== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">C · ID chips with overflow chip</div>
+    <div class="mock-title">Each ID is a small pill. Beyond N, a dashed "+4" chip absorbs the rest.</div>
+    <div class="mock-desc">Same compactness as A, but each ID is visually a peer (and clickable on its own to filter/jump).</div>
+  </div>
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid">
+    <div class="num">1</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared"><span class="chip-list">
+      <span class="chip">F02</span><span class="chip">F03</span><span class="chip">F12</span>
+      <span class="chip more">+4</span>
+    </span></div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid">
+    <div class="num">2</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared"><span class="chip-list">
+      <span class="chip">F03</span><span class="chip">F07</span>
+    </span></div>
+    <div class="meta">Direct git</div>
+  </div>
+  <div class="takeaway"><b>Best when:</b> users want to <em>do</em> something with each ID (filter, jump to feature). Heavier visually than A.</div>
+</section>
+
+<!-- ==================== D — popover trigger ==================== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">D · first 2 + count link → popover</div>
+    <div class="mock-title">Show first 2 IDs and a "+5" link. Click → popover opens with full list and names.</div>
+    <div class="mock-desc">Quietest in the row. Names are tucked away in the popover — never crowd the cell.</div>
+  </div>
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid" style="position: relative;">
+    <div class="num">1</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared">F02, F03 <span class="pop-trigger">+5</span>
+      <span class="popover" style="left: 80px; top: 24px;">
+        <span class="popover-id">F12 <em>Repository forks</em></span>
+        <span class="popover-id">F38 <em>SBOM generation</em></span>
+        <span class="popover-id">F49 <em>Webhooks</em></span>
+        <span class="popover-id">F75 <em>Code search</em></span>
+        <span class="popover-id">F77 <em>GitHub Releases</em></span>
+      </span>
+    </div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid" style="margin-top: 130px;">
+    <div class="num">2</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared">F03, F07</div>
+    <div class="meta">Direct git</div>
+  </div>
+  <div class="takeaway"><b>Best when:</b> the IDs alone aren't enough — you also want the names without leaving the row.</div>
+</section>
+
+<!-- ==================== E — fade gradient + click anywhere to expand ==================== -->
+<section class="mock">
+  <div class="mock-head">
+    <div class="mock-tag">E · fade gradient + click cell to expand</div>
+    <div class="mock-title">Long list fades out at the edge. Clicking the cell expands it.</div>
+    <div class="mock-desc">No visible link or chip — the gradient is the affordance. Cleanest visually; lowest discoverability.</div>
+  </div>
+  <div class="grid head"><div></div><div>ID</div><div>Entity</div><div>Shared with</div><div>Migration note</div></div>
+  <div class="grid">
+    <div class="num">1</div><div class="id">E15</div>
+    <div class="name"><span class="layer-tag">Ent</span>Repository</div>
+    <div class="shared truncated" style="
+      background: linear-gradient(to right, var(--ink) 70%, var(--ink-faint) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      cursor: pointer;
+    ">F02, F03, F12, F38, F49, F75, F77</div>
+    <div class="meta">Migrates via GEI</div>
+  </div>
+  <div class="grid">
+    <div class="num">2</div><div class="id">E16</div>
+    <div class="name"><span class="layer-tag">Ent</span>Branch</div>
+    <div class="shared">F03, F07</div>
+    <div class="meta">Direct git</div>
+  </div>
+  <div class="takeaway"><b>Best when:</b> visual minimalism trumps discoverability. Possibly too subtle.</div>
+</section>
+
+<section style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 22px;">
+  <div style="font-family: ui-monospace, monospace; font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em; color: var(--primary); text-transform: uppercase; margin-bottom: 8px;">Recommendation</div>
+  <div style="font-family: Georgia, serif; font-size: 17px; line-height: 1.45;">
+    Go with <b>Option A</b>. It's the most-used pattern on the web, communicates "this is a list with more behind it" instantly, and uses no popover machinery. <br><br>
+    If you want the count to be the headline information, <b>Option B</b> is a strong second.
+  </div>
+</section>
+
+</body>
+</html>

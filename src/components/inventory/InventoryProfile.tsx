@@ -57,6 +57,37 @@ export function InventoryProfile({
 }) {
   const rows = useMemo(() => buildRows(groups), [groups]);
 
+  // Cross-reference maps so shared-row markers can list the IDs they're
+  // shared with. Built in canonical iteration order (preserves stable display).
+  const sharedRefs = useMemo(() => {
+    const featureToJtbds = new Map<string, string[]>();
+    const entityToFeatures = new Map<string, string[]>();
+    const featureNameById = new Map<string, string>();
+    const jtbdNameById = new Map<string, string>();
+    for (const cat of groups) {
+      for (const j of cat.jtbds) {
+        jtbdNameById.set(j.id, j.name);
+        for (const f of j.featureNodes) {
+          featureNameById.set(f.id, f.name);
+          const arr = featureToJtbds.get(f.id) ?? [];
+          if (!arr.includes(j.id)) arr.push(j.id);
+          featureToJtbds.set(f.id, arr);
+          for (const e of f.entityNodes) {
+            const earr = entityToFeatures.get(e.id) ?? [];
+            if (!earr.includes(f.id)) earr.push(f.id);
+            entityToFeatures.set(e.id, earr);
+          }
+        }
+      }
+    }
+    return {
+      featureToJtbds,
+      entityToFeatures,
+      featureNameById,
+      jtbdNameById,
+    };
+  }, [groups]);
+
   const [patternFilter, setPatternFilter] = useState<PatternFilter>("all");
   const [fidelityFilter, setFidelityFilter] = useState<FidelityFilter>("all");
   const [capabilityFilter, setCapabilityFilter] =
@@ -539,21 +570,29 @@ export function InventoryProfile({
           rows={visibleRows}
           expanded={expanded}
           onToggle={toggle}
+          featureToJtbds={sharedRefs.featureToJtbds}
+          entityToFeatures={sharedRefs.entityToFeatures}
+          featureNameById={sharedRefs.featureNameById}
+          jtbdNameById={sharedRefs.jtbdNameById}
         />
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-[80%] border-collapse text-[12.5px]">
+          <table
+            className="border-collapse text-[12.5px]"
+            style={{ minWidth: "1258px", width: "auto" }}
+          >
             <thead>
               <tr>
                 <Th className="w-[44px] text-right">#</Th>
-                <Th className="w-[5.63%]">ID</Th>
-                <Th>Feature</Th>
-                <Th className="w-[13.75%]">Depends on</Th>
-                <Th className="w-[13.75%]">Hybrid Approach</Th>
-                <Th className="w-[10.8%]">Migration pattern</Th>
-                <Th className="w-[6.2%]">Capability preservation</Th>
-                <Th className="w-[6%]">Risk</Th>
-                <Th className="w-[22%]">Preservation strategy</Th>
+                <Th className="w-[80px]">ID</Th>
+                <Th className="min-w-[260px]">Feature</Th>
+                <Th className="w-[150px]">Depends on</Th>
+                <Th className="w-[150px]">Hybrid Approach</Th>
+                <Th className="w-[120px]">Migration pattern</Th>
+                <Th className="w-[68px]">Capability preservation</Th>
+                <Th className="w-[66px]">Risk</Th>
+                <Th className="w-[240px]">Preservation strategy</Th>
+                <Th className="w-[338px]">Shared with</Th>
               </tr>
             </thead>
             <tbody>
@@ -573,12 +612,16 @@ export function InventoryProfile({
                       rowNum={num}
                       expanded={expanded}
                       onToggle={toggle}
+                      featureToJtbds={sharedRefs.featureToJtbds}
+                      entityToFeatures={sharedRefs.entityToFeatures}
+                      featureNameById={sharedRefs.featureNameById}
+                      jtbdNameById={sharedRefs.jtbdNameById}
                     />
                   );
                 });
               })()}
               <tr>
-                <td colSpan={9} className="px-3 py-2">
+                <td colSpan={10} className="px-3 py-2">
                   <AddRowButton label={addLabelFor(layer)} />
                 </td>
               </tr>
@@ -1099,10 +1142,18 @@ function FeatureTable({
   rows,
   expanded,
   onToggle,
+  featureToJtbds,
+  entityToFeatures,
+  featureNameById,
+  jtbdNameById,
 }: {
   rows: Row[];
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  featureToJtbds: Map<string, string[]>;
+  entityToFeatures: Map<string, string[]>;
+  featureNameById: Map<string, string>;
+  jtbdNameById: Map<string, string>;
 }) {
   // Group the pre-built rows by featcat. Rows arrive in canonical order:
   // featcat, feature, entity..., feature, entity..., featadd, featcat, ...
@@ -1149,18 +1200,22 @@ function FeatureTable({
               </span>
             </button>
             {isOpen && (
-              <table className="w-full table-fixed border-collapse text-[12.5px]">
+              <table
+                className="w-full table-fixed border-collapse text-[12.5px]"
+                style={{ minWidth: "1478px" }}
+              >
                 <thead>
                   <tr>
                     <Th className="w-[44px] text-right">#</Th>
-                    <Th className="w-[5.63%]">ID</Th>
+                    <Th className="w-[80px]">ID</Th>
                     <Th>Feature</Th>
-                    <Th className="w-[13.75%]">Depends on</Th>
-                    <Th className="w-[13.75%]">Hybrid Approach</Th>
-                    <Th className="w-[10.8%]">Migration pattern</Th>
-                    <Th className="w-[6.2%]">Capability preservation</Th>
-                    <Th className="w-[6%]">Risk</Th>
-                    <Th className="w-[22%]">Preservation strategy</Th>
+                    <Th className="w-[170px]">Depends on</Th>
+                    <Th className="w-[170px]">Hybrid Approach</Th>
+                    <Th className="w-[135px]">Migration pattern</Th>
+                    <Th className="w-[80px]">Capability preservation</Th>
+                    <Th className="w-[75px]">Risk</Th>
+                    <Th className="w-[270px]">Preservation strategy</Th>
+                    <Th className="w-[338px]">Shared with</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1175,6 +1230,10 @@ function FeatureTable({
                         expanded={expanded}
                         onToggle={onToggle}
                         indentOffset={1}
+                        featureToJtbds={featureToJtbds}
+                        entityToFeatures={entityToFeatures}
+                        featureNameById={featureNameById}
+                        jtbdNameById={jtbdNameById}
                       />,
                     );
                     // Drill into entity → fields directly from entity.fields
@@ -1201,6 +1260,10 @@ function FeatureTable({
                             expanded={expanded}
                             onToggle={onToggle}
                             indentOffset={1}
+                            featureToJtbds={featureToJtbds}
+                            entityToFeatures={entityToFeatures}
+                            featureNameById={featureNameById}
+                            jtbdNameById={jtbdNameById}
                           />,
                         );
                       }
@@ -1208,7 +1271,7 @@ function FeatureTable({
                     return out;
                   })}
                   <tr>
-                    <td colSpan={9} className="px-3 py-2">
+                    <td colSpan={10} className="px-3 py-2">
                       <AddRowButton label="Add feature" />
                     </td>
                   </tr>
@@ -1342,6 +1405,10 @@ function RowView({
   expanded,
   onToggle,
   indentOffset = 0,
+  featureToJtbds,
+  entityToFeatures,
+  featureNameById,
+  jtbdNameById,
 }: {
   row: Row;
   rowNum: number | null;
@@ -1349,12 +1416,16 @@ function RowView({
   onToggle: (id: string) => void;
   /** Subtract from each row's nominal indent level (used in feature view). */
   indentOffset?: number;
+  featureToJtbds?: Map<string, string[]>;
+  entityToFeatures?: Map<string, string[]>;
+  featureNameById?: Map<string, string>;
+  jtbdNameById?: Map<string, string>;
 }) {
   if (row.kind === "cat") {
     const isOpen = expanded.has(row.id);
     return (
       <tr className="border-t-2 border-ink/60 bg-bg-muted">
-        <td colSpan={9} className="px-4 py-[9px]">
+        <td colSpan={10} className="px-4 py-[9px]">
           <button
             onClick={() => onToggle(row.id)}
             className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
@@ -1370,7 +1441,7 @@ function RowView({
   if (row.kind === "featadd") {
     return (
       <tr>
-        <td colSpan={9} className="px-3 py-2">
+        <td colSpan={10} className="px-3 py-2">
           <AddRowButton label="Add feature" />
         </td>
       </tr>
@@ -1383,10 +1454,10 @@ function RowView({
     return (
       <>
         <tr aria-hidden>
-          <td colSpan={9} className="h-3 p-0" />
+          <td colSpan={10} className="h-3 p-0" />
         </tr>
         <tr>
-          <td colSpan={9} className="p-0">
+          <td colSpan={10} className="p-0">
             <button
               type="button"
               onClick={() => onToggle(row.id)}
@@ -1435,6 +1506,7 @@ function RowView({
         <Td className="text-ink-faint">—</Td>
         <Td className="text-ink-faint">—</Td>
         <Td className="text-ink-faint">—</Td>
+        <Td className="text-ink-faint">—</Td>
       </tr>
     );
   }
@@ -1463,11 +1535,6 @@ function RowView({
             <LayerTag kind="feature" />
             <span className={muted(row.isRef, "text-ink")}>
               {row.feature.name}
-              {row.isRef ? (
-                <span className="ml-2 font-mono text-[10.5px] text-ink-faint">
-                  (shared · see first occurrence)
-                </span>
-              ) : null}
             </span>
           </IndentCell>
         </Td>
@@ -1516,6 +1583,13 @@ function RowView({
         >
           {row.isRef ? "—" : row.feature.preservationStrategy}
         </Td>
+        <Td>
+          {(() => {
+            const ids = featureToJtbds?.get(row.feature.id) ?? [];
+            const others = ids.filter((id) => id !== row.parentId);
+            return <SharedCell ids={others} nameById={jtbdNameById} />;
+          })()}
+        </Td>
       </tr>
     );
   }
@@ -1544,11 +1618,6 @@ function RowView({
             <LayerTag kind="entity" />
             <span className={muted(row.isRef, "text-ink")}>
               {row.entity.name}
-              {row.isRef ? (
-                <span className="ml-2 font-mono text-[10.5px] text-ink-faint">
-                  (shared)
-                </span>
-              ) : null}
             </span>
           </IndentCell>
         </Td>
@@ -1574,6 +1643,14 @@ function RowView({
           )}
         >
           {row.isRef ? "—" : row.entity.note}
+        </Td>
+        <Td>
+          {(() => {
+            const ids = entityToFeatures?.get(row.entity.id) ?? [];
+            const currentFeatureId = row.parentId.split(":")[2] ?? "";
+            const others = ids.filter((id) => id !== currentFeatureId);
+            return <SharedCell ids={others} nameById={featureNameById} />;
+          })()}
         </Td>
       </tr>
     );
@@ -1613,6 +1690,7 @@ function RowView({
       <Td className="text-[11.5px] italic leading-snug text-ink-soft">
         {fld.strategy ?? "—"}
       </Td>
+      <Td className="text-ink-faint">—</Td>
     </tr>
   );
 }
@@ -1805,6 +1883,69 @@ const PATTERN_DESCRIPTIONS: Record<
   P5: "Capability substitution",
   P6: "Gap (no preservation)",
 };
+
+function SharedCell({
+  ids,
+  nameById,
+}: {
+  ids: string[];
+  nameById?: Map<string, string>;
+}) {
+  const [open, setOpen] = useState(false);
+  if (ids.length === 0) {
+    return <span className="text-ink-faint">—</span>;
+  }
+  const PREVIEW = 3;
+  if (!open && ids.length > PREVIEW) {
+    return (
+      <span className="font-mono text-[10.5px] leading-snug text-ink-soft">
+        {ids.slice(0, PREVIEW).join(", ")}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="ml-1.5 font-sans text-[10.5px] font-medium text-primary hover:underline"
+        >
+          +{ids.length - PREVIEW} more
+        </button>
+      </span>
+    );
+  }
+  if (!open) {
+    // Short list — show inline, no expander needed
+    return (
+      <span className="font-mono text-[10.5px] leading-snug text-ink-soft">
+        {ids.join(", ")}
+      </span>
+    );
+  }
+  // Expanded — two-column ID + name grid
+  return (
+    <div>
+      <div className="grid grid-cols-1 gap-x-3 gap-y-[1px] sm:grid-cols-2">
+        {ids.map((id) => (
+          <div
+            key={id}
+            className="grid grid-cols-[40px_1fr] gap-2 border-b border-border-soft py-[2px] text-[11px] last:border-b-0"
+          >
+            <span className="font-mono text-[10.5px] font-semibold text-primary">
+              {id}
+            </span>
+            <span className="truncate text-ink-soft">
+              {nameById?.get(id) ?? ""}
+            </span>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        className="mt-1 font-sans text-[10.5px] font-medium text-primary hover:underline"
+      >
+        show less
+      </button>
+    </div>
+  );
+}
 
 function PatternBadge({
   value,
