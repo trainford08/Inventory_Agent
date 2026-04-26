@@ -636,7 +636,7 @@ export function InventoryProfile({
         />
         {layer === "jtbd" ? (
           <ChipGroup
-            label="Show depth"
+            label="Depth"
             value={jtbdDepth}
             onChange={(v) =>
               applyJtbdDepth(v as "jtbd" | "feature" | "entity" | "field")
@@ -651,7 +651,7 @@ export function InventoryProfile({
         ) : null}
         {layer === "feature" ? (
           <ChipGroup
-            label="Show depth"
+            label="Depth"
             value={featureDepth}
             onChange={(v) =>
               applyFeatureDepth(
@@ -668,7 +668,7 @@ export function InventoryProfile({
         ) : null}
         {layer === "entity" ? (
           <ChipGroup
-            label="Show depth"
+            label="Depth"
             value={entityDepth}
             onChange={(v) =>
               applyEntityDepth(v as "category" | "entity" | "field")
