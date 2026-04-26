@@ -241,19 +241,33 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
 
   return (
     <div className="space-y-3">
-      <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-        <table className="w-full border-collapse text-[13px]">
+      <div className="inline-block max-w-full overflow-x-auto rounded-xl border border-border bg-bg-elevated align-top">
+        <table
+          className="border-collapse text-[13px]"
+          style={{ width: "max-content" }}
+        >
+          <colgroup>
+            <col style={{ minWidth: 48 }} />
+            <col style={{ minWidth: 130 }} />
+            <col style={{ minWidth: 170 }} />
+            <col style={{ minWidth: 180 }} />
+            <col style={{ minWidth: 72 }} />
+            <col style={{ minWidth: 150 }} />
+            <col style={{ minWidth: 110 }} />
+            <col style={{ minWidth: 160 }} />
+            <col style={{ minWidth: 130 }} />
+          </colgroup>
           <thead>
             <tr>
-              <Th className="w-[56px]">ID</Th>
-              <Th className="w-[11%]">Customization</Th>
-              <Th className="w-[17%]">Jobs to be done</Th>
-              <Th className="w-[18%]">GitHub equivalent</Th>
-              <Th className="w-[5%]">GitHub parity</Th>
-              <Th className="w-[7%]">Migration strategy</Th>
-              <Th className="w-[5%]">Hybrid approach</Th>
-              <Th className="w-[14%]">Meta-strategy candidates</Th>
-              <Th className="w-[14%]">Notes</Th>
+              <Th>ID</Th>
+              <Th>Customization</Th>
+              <Th>Jobs to be done</Th>
+              <Th>GitHub equivalent</Th>
+              <Th>GitHub parity</Th>
+              <Th>Migration strategy</Th>
+              <Th>Hybrid approach</Th>
+              <Th>Meta-strategy candidates</Th>
+              <Th>Notes</Th>
             </tr>
           </thead>
           <tbody>
