@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { GlobalAda } from "@/components/ada/GlobalAda";
 import { listAllTeamProgress } from "@/server/complete-profile-sidebar";
 import { listTeams } from "@/server/teams";
 import { Sidebar } from "./Sidebar";
@@ -29,6 +30,7 @@ export async function AppShell({
         <Topbar>{breadcrumbs}</Topbar>
         <main className="min-w-0 flex-1">{children}</main>
       </div>
+      <GlobalAda />
     </div>
   );
 }

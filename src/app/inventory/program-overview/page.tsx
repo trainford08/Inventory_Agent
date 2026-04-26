@@ -1,4 +1,3 @@
-import { AdaToggleableRail } from "@/components/inventory/AdaToggleableRail";
 import { KeyInsights } from "@/components/inventory/KeyInsights";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +58,7 @@ export default async function InventoryProgramOverviewPage() {
   const approachPct = (n: number) => Math.round((n / totalCustom) * 100);
 
   return (
-    <AdaToggleableRail>
+    <>
       <div className="mx-auto w-full max-w-[1500px] px-[32px] py-[28px]">
         {/* HERO */}
         <div className="mb-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
@@ -378,7 +377,7 @@ export default async function InventoryProgramOverviewPage() {
           <KeyInsights />
         </div>
       </div>
-    </AdaToggleableRail>
+    </>
   );
 }
 
