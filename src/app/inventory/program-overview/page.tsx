@@ -1,61 +1,51 @@
 import { KeyInsights } from "@/components/inventory/KeyInsights";
+import { computeProgramOverview } from "@/server/program-overview";
 
 export const dynamic = "force-dynamic";
 
-// Illustrative program-level rollups, sized for ~142 teams scanned across
-// 6 cohorts. Replace with computed values once the customization catalog and
-// feature inventory are seeded across all cohorts.
-const TEAMS_SCANNED = 142;
-const COHORTS_SCANNED = 6;
-const AVG_FEATURES_PER_TEAM = 38;
-
-const ROLLUP = {
-  // "Commonly performed" = ≥ 5% of teams (≈ 7 of 142). Long-tail jobs are
-  // surfaced in the Coverage panel breakdown, not counted here.
-  jobsCovered: 101,
-  jobsTotal: 118,
-  featuresInScope: 115,
-  customizations: 2788,
-  customizationTypes: 78,
-  customizationsNeedingDecisionTypes: 14,
-  vendors: 58,
-  vendorsNoEquivalent: 9,
-  hybrid: { gh: 62, ado: 34, both: 12, na: 7 },
-  friction: {
-    // Counts are # of unique customization types (decision surface),
-    // with instance counts in the detail strings.
-    customizationTypesNoEquivalent: 8,
-    customizationTypesNoEquivalentInstances: 142,
-    integrationsResetup: 18,
-    integrationsResetupVendors: "Jira, Datadog, Snyk, Okta SCIM",
-    highCustomizationTeams: 27,
-  },
-  parity: { match: 71, better: 19, partial: 17, gap: 8 },
-  // Customization types categorized by strategy (sums to 78 unique types).
-  // Instance distribution lives in the panel sub-line.
-  approach: { s01: 12, s02: 26, s03: 8, s04: 10, s05: 12, s06: 5, s07: 5 },
-};
-
 export default async function InventoryProgramOverviewPage() {
+  const overview = await computeProgramOverview();
+  const TEAMS_SCANNED = overview.teamsScanned;
+  const COHORTS_SCANNED = overview.cohortsScanned;
+  const AVG_FEATURES_PER_TEAM = overview.avgFeaturesPerTeam;
+  const ROLLUP = {
+    jobsCovered: overview.jobsCovered,
+    jobsTotal: overview.jobsTotal,
+    featuresInScope: overview.featuresInScope,
+    customizations: overview.customizations.totalInstances,
+    customizationTypes: overview.customizations.uniqueTypes,
+    customizationsNeedingDecisionTypes:
+      overview.customizations.typesNeedingDecision,
+    vendors: overview.vendors.total,
+    vendorsNoEquivalent: overview.vendors.withoutGitHubEquivalent,
+    hybrid: overview.hybridSplit,
+    friction: overview.friction,
+    parity: overview.parityBreakdown,
+    approach: deriveApproachShape(overview.migrationApproach),
+  };
+
   const totalFeatures =
     ROLLUP.hybrid.gh +
     ROLLUP.hybrid.ado +
     ROLLUP.hybrid.both +
     ROLLUP.hybrid.na;
-  const pct = (n: number) => Math.round((n / totalFeatures) * 100);
+  const pct = (n: number) =>
+    totalFeatures ? Math.round((n / totalFeatures) * 100) : 0;
   const totalParity =
     ROLLUP.parity.match +
     ROLLUP.parity.better +
     ROLLUP.parity.partial +
     ROLLUP.parity.gap;
-  const parityPct = (n: number) => Math.round((n / totalParity) * 100);
+  const parityPct = (n: number) =>
+    totalParity ? Math.round((n / totalParity) * 100) : 0;
   const totalCustom =
     ROLLUP.approach.s01 +
     ROLLUP.approach.s02 +
     ROLLUP.approach.s03 +
     ROLLUP.approach.s04 +
     ROLLUP.approach.s05;
-  const approachPct = (n: number) => Math.round((n / totalCustom) * 100);
+  const approachPct = (n: number) =>
+    totalCustom ? Math.round((n / totalCustom) * 100) : 0;
 
   return (
     <>
@@ -585,4 +575,28 @@ function ApproachCard({
       <div className="text-[11.5px] leading-tight text-ink-muted">{desc}</div>
     </div>
   );
+}
+
+function deriveApproachShape(byLabel: Record<string, number>): {
+  s01: number;
+  s02: number;
+  s03: number;
+  s04: number;
+  s05: number;
+  s06: number;
+  s07: number;
+} {
+  const get = (prefix: string) => {
+    const entry = Object.entries(byLabel).find(([k]) => k.startsWith(prefix));
+    return entry ? entry[1] : 0;
+  };
+  return {
+    s01: get("S01"),
+    s02: get("S02"),
+    s03: get("S03"),
+    s04: get("S04"),
+    s05: get("S05"),
+    s06: get("S06"),
+    s07: get("S07"),
+  };
 }

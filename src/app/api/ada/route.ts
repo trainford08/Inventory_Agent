@@ -9,6 +9,10 @@ import {
 import { z } from "zod";
 import { FIELDS_BY_ENTITY } from "@/lib/inventory-fields";
 import {
+  computeProgramOverview,
+  computeTeamFriction,
+} from "@/server/program-overview";
+import {
   ENTITY_BY_ID,
   FEATURE_BY_ID,
   FEATURES,
@@ -41,7 +45,7 @@ Migration patterns:
 
 Hybrid model: some ADO services move to GitHub (Repos, Pipelines), some stay in ADO (Boards, Test Plans). Hybrid friction lives at the boundary (e.g. linking PRs to work items via AB#123 syntax).
 
-You have tools available to query the framework and the active team's inventory. Use them whenever the user asks anything specific — never guess numbers or names. If you can answer from general knowledge of the framework alone, you can skip the tools.
+You have tools available to query the framework, the active team's inventory, and program-wide rollups across ALL teams. Use them whenever the user asks anything specific — never guess numbers or names. For program/portfolio questions ("how many teams scanned?", "what % of features stay in ADO across the program?", "what migration approaches are most common?"), call getProgramOverview. For cross-team comparisons or rankings ("which team has the most friction?", "rank teams by complexity"), call listTeamsByFriction. For team-specific questions, use the team-scoped tools. If you can answer from general knowledge of the framework alone, you can skip the tools.
 
 Response style:
 - Default to 2–4 sentences. Only go longer when the user asks "explain", "walk me through", or follows up.
@@ -241,6 +245,29 @@ export async function POST(req: Request) {
         }
         return { error: `Unknown ID prefix: ${id}` };
       },
+    }),
+    listTeamsByFriction: tool({
+      description:
+        "Get every team ranked by migration friction (composite score: gap-parity customizations weighted 5x, customizations needing decisions 3x, plus high-risk entities, ADO-staying features, integrations, total customizations). Use this for ANY question that compares teams ('which team has the most friction?', 'which teams have the most gap customizations?', 'rank teams by complexity'). Returns the full sorted list — you can pick the top N from the result.",
+      inputSchema: z.object({
+        limit: z
+          .number()
+          .int()
+          .positive()
+          .max(50)
+          .optional()
+          .describe("Optional cap on how many top teams to return."),
+      }),
+      execute: async ({ limit }) => {
+        const all = await computeTeamFriction();
+        return { count: all.length, teams: limit ? all.slice(0, limit) : all };
+      },
+    }),
+    getProgramOverview: tool({
+      description:
+        "Get program-wide rollup numbers across ALL teams scanned (not scoped to a single team). Use this when the user asks about the program/portfolio overview, totals across teams, hybrid split, parity breakdown, migration approach distribution, vendors, or customization decision counts. This is the source of truth for the /inventory/program-overview page.",
+      inputSchema: z.object({}),
+      execute: async () => computeProgramOverview(),
     }),
     proposeAnswer: tool({
       description:
