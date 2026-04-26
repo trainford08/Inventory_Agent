@@ -241,10 +241,6 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
 
   return (
     <div className="space-y-3">
-      <div className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-ink-muted">
-        {block.total} customizations
-      </div>
-
       <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
         <table className="w-full border-collapse text-[13px]">
           <thead>
