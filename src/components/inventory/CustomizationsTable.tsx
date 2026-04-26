@@ -355,10 +355,8 @@ function Row({ row }: { row: CustomizationRow }) {
           <span className="text-ink-faint">—</span>
         )}
       </Td>
-      <Td className="font-mono text-[11px] text-ink-soft">
-        {row.hybridPlacement
-          ? (PLACEMENT_LABEL[row.hybridPlacement] ?? row.hybridPlacement)
-          : "—"}
+      <Td>
+        <PlacementChip placement={row.hybridPlacement} />
       </Td>
       <Td>
         {row.catalogCode && META_CANDIDATES[row.catalogCode] ? (
@@ -419,6 +417,24 @@ function Td({
   className?: string;
 }) {
   return <td className={`px-3 py-2 align-top ${className}`}>{children}</td>;
+}
+
+function PlacementChip({ placement }: { placement: string | null }) {
+  if (!placement) return <span className="text-ink-faint">—</span>;
+  const tone: Record<string, string> = {
+    STAYS: "border-orange-500/40 bg-orange-500/10 text-orange-700",
+    MOVES: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700",
+    BOTH: "border-primary/40 bg-primary/10 text-primary",
+    MIXED: "border-border bg-bg-muted text-ink-muted",
+  };
+  const cls = tone[placement] ?? "border-border bg-bg-muted text-ink-muted";
+  return (
+    <span
+      className={`inline-block rounded border px-2 py-[2px] text-[11px] font-semibold ${cls}`}
+    >
+      {PLACEMENT_LABEL[placement] ?? placement}
+    </span>
+  );
 }
 
 function Legend() {
