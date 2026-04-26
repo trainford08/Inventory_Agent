@@ -247,8 +247,8 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
             <tr>
               <Th className="w-[56px]">ID</Th>
               <Th className="w-[11%]">Customization</Th>
-              <Th className="w-[22%]">Jobs to be done</Th>
-              <Th>GitHub equivalent</Th>
+              <Th className="w-[17%]">Jobs to be done</Th>
+              <Th className="w-[18%]">GitHub equivalent</Th>
               <Th className="w-[5%]">GitHub parity</Th>
               <Th className="w-[7%]">Migration strategy</Th>
               <Th className="w-[5%]">Hybrid approach</Th>
