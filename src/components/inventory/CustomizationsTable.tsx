@@ -224,8 +224,8 @@ const META_CANDIDATES: Record<string, MetaCandidate[]> = {
 };
 
 const PLACEMENT_LABEL: Record<string, string> = {
-  STAYS: "ADO",
-  MOVES: "GH",
+  STAYS: "Stays in ADO",
+  MOVES: "Moves to GitHub",
   BOTH: "Both",
   MIXED: "N/A",
 };
@@ -255,7 +255,7 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
               <Th>GitHub equivalent</Th>
               <Th className="w-[7%]">GitHub parity</Th>
               <Th className="w-[7%]">Migration strategy</Th>
-              <Th className="w-[6%]">Hybrid</Th>
+              <Th className="w-[7%]">Hybrid approach</Th>
               <Th className="w-[14%]">Meta-strategy candidates</Th>
               <Th className="w-[14%]">Notes</Th>
             </tr>
