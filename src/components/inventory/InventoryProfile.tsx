@@ -43,6 +43,7 @@ type Row =
     };
 
 type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
+type FidelityFilter = "all" | "high" | "medium" | "low" | "gap" | "na";
 type LayerFilter = "jtbd" | "feature" | "entity" | "field" | "customization";
 
 export function InventoryProfile({
@@ -55,6 +56,7 @@ export function InventoryProfile({
   const rows = useMemo(() => buildRows(groups), [groups]);
 
   const [patternFilter, setPatternFilter] = useState<PatternFilter>("all");
+  const [fidelityFilter, setFidelityFilter] = useState<FidelityFilter>("all");
   const [layer, setLayer] = useState<LayerFilter>("jtbd");
 
   const initialExpanded = useMemo(() => {
@@ -112,6 +114,11 @@ export function InventoryProfile({
     if (r.kind === "field") {
       if (patternFilter !== "all" && r.field.pattern !== patternFilter)
         return false;
+      if (
+        fidelityFilter !== "all" &&
+        r.field.dataPreservation !== fidelityFilter
+      )
+        return false;
       return true;
     }
     if (patternFilter !== "all") {
@@ -126,6 +133,24 @@ export function InventoryProfile({
       } else {
         const p = r.kind === "feature" ? r.feature.pattern : r.entity.pattern;
         if (p !== patternFilter) return false;
+      }
+    }
+    if (fidelityFilter !== "all") {
+      // Features have no dataPreservation; JTBDs have no dataPreservation.
+      // Entities have it directly. For non-entity rows, keep if any
+      // entity descendant matches.
+      if (r.kind === "entity") {
+        if (r.entity.dataPreservation !== fidelityFilter) return false;
+      } else if (r.kind === "feature") {
+        const has = r.feature.entityNodes.some(
+          (e) => e.dataPreservation === fidelityFilter,
+        );
+        if (!has) return false;
+      } else if (r.kind === "jtbd") {
+        const has = r.jtbd.featureNodes.some((f) =>
+          f.entityNodes.some((e) => e.dataPreservation === fidelityFilter),
+        );
+        if (!has) return false;
       }
     }
     return true;
@@ -195,16 +220,18 @@ export function InventoryProfile({
       }
       return out;
     }
-    // layer === "field" → flat view; filter by pattern at field level
+    // layer === "field" → flat view; filter at field level
     // (an entity is kept if it has any matching field).
     const seenEnt = new Set<string>();
     const flat: Row[] = [];
     for (const r of rows) {
       if (r.kind !== "entity" || r.isRef) continue;
       if (seenEnt.has(r.entity.id)) continue;
-      const hasFieldMatch =
-        patternFilter === "all" ||
-        r.entity.fields.some((f) => f.pattern === patternFilter);
+      const hasFieldMatch = r.entity.fields.some(
+        (f) =>
+          (patternFilter === "all" || f.pattern === patternFilter) &&
+          (fidelityFilter === "all" || f.dataPreservation === fidelityFilter),
+      );
       if (!hasFieldMatch) continue;
       seenEnt.add(r.entity.id);
       flat.push(r);
@@ -253,6 +280,21 @@ export function InventoryProfile({
             ]}
           />
         ) : null}
+        {layer !== "customization" ? (
+          <ChipGroup
+            label="Data preservation"
+            value={fidelityFilter}
+            onChange={(v) => setFidelityFilter(v as FidelityFilter)}
+            options={[
+              { value: "all", label: "All" },
+              { value: "high", label: "High" },
+              { value: "medium", label: "Medium" },
+              { value: "low", label: "Low" },
+              { value: "gap", label: "Gap" },
+              { value: "na", label: "N/A" },
+            ]}
+          />
+        ) : null}
       </div>
 
       {(() => {
@@ -295,7 +337,11 @@ export function InventoryProfile({
       {layer === "customization" ? (
         <CustomizationsTable block={customizations} />
       ) : layer === "field" ? (
-        <FieldTable rows={visibleRows} patternFilter={patternFilter} />
+        <FieldTable
+          rows={visibleRows}
+          patternFilter={patternFilter}
+          fidelityFilter={fidelityFilter}
+        />
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
           <table className="w-full border-collapse text-[13px]">
@@ -405,15 +451,19 @@ function renderGithubTarget(s: string): ReactNode[] {
 function FieldTable({
   rows,
   patternFilter,
+  fidelityFilter,
 }: {
   rows: Row[];
   patternFilter: PatternFilter;
+  fidelityFilter: FidelityFilter;
 }) {
   let rowNum = 0;
   const fieldsForEntity = (e: Row & { kind: "entity" }) =>
-    patternFilter === "all"
-      ? e.entity.fields
-      : e.entity.fields.filter((f) => f.pattern === patternFilter);
+    e.entity.fields.filter(
+      (f) =>
+        (patternFilter === "all" || f.pattern === patternFilter) &&
+        (fidelityFilter === "all" || f.dataPreservation === fidelityFilter),
+    );
   const entityRows = rows.filter(
     (r): r is Row & { kind: "entity" } => r.kind === "entity",
   );
