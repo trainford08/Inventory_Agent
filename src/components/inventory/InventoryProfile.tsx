@@ -46,6 +46,43 @@ type Row =
 
 type PatternFilter = "all" | "P1" | "P2" | "P3" | "P4" | "P5" | "P6";
 type FidelityFilter = "all" | "high" | "medium" | "low" | "gap" | "na";
+type HybridFilter = "all" | "ado" | "gh" | "both" | "na";
+
+const PATTERN_OPTIONS: { value: PatternFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "P1", label: "P1 — Exact 1:1" },
+  { value: "P2", label: "P2 — Lossy 1:1" },
+  { value: "P3", label: "P3 — Compositional" },
+  { value: "P4", label: "P4 — Decompositional" },
+  { value: "P5", label: "P5 — Substitution" },
+  { value: "P6", label: "P6 — Gap" },
+];
+const FIDELITY_OPTIONS: { value: FidelityFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "high", label: "High" },
+  { value: "medium", label: "Medium" },
+  { value: "low", label: "Low" },
+  { value: "gap", label: "Gap" },
+  { value: "na", label: "N/A" },
+];
+const HYBRID_OPTIONS: { value: HybridFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "ado", label: "Stays in ADO" },
+  { value: "gh", label: "Moves to GitHub" },
+  { value: "both", label: "Both" },
+  { value: "na", label: "N/A" },
+];
+
+type FilterControls = {
+  patternFilter: PatternFilter;
+  setPatternFilter: (v: PatternFilter) => void;
+  fidelityFilter: FidelityFilter;
+  setFidelityFilter: (v: FidelityFilter) => void;
+  capabilityFilter: FidelityFilter;
+  setCapabilityFilter: (v: FidelityFilter) => void;
+  hybridFilter: HybridFilter;
+  setHybridFilter: (v: HybridFilter) => void;
+};
 type LayerFilter =
   | "jtbd"
   | "feature"
@@ -98,6 +135,17 @@ export function InventoryProfile({
   const [fidelityFilter, setFidelityFilter] = useState<FidelityFilter>("all");
   const [capabilityFilter, setCapabilityFilter] =
     useState<FidelityFilter>("all");
+  const [hybridFilter, setHybridFilter] = useState<HybridFilter>("all");
+  const filterControls: FilterControls = {
+    patternFilter,
+    setPatternFilter,
+    fidelityFilter,
+    setFidelityFilter,
+    capabilityFilter,
+    setCapabilityFilter,
+    hybridFilter,
+    setHybridFilter,
+  };
   const [layer, setLayer] = useState<LayerFilter>("jtbd");
   const [jtbdDepth, setJtbdDepth] = useState<
     "jtbd" | "feature" | "entity" | "field"
@@ -416,6 +464,15 @@ export function InventoryProfile({
         if (!has) return false;
       }
     }
+    if (hybridFilter !== "all") {
+      if (r.kind === "jtbd") {
+        if (r.jtbd.staysInAdo !== hybridFilter) return false;
+      } else if (r.kind === "feature") {
+        if (r.feature.staysInAdo !== hybridFilter) return false;
+      } else if (r.kind === "entity") {
+        if (r.entity.staysInAdo !== hybridFilter) return false;
+      }
+    }
     if (capabilityFilter !== "all") {
       // Capability preservation lives on entities only.
       if (r.kind === "entity") {
@@ -623,54 +680,6 @@ export function InventoryProfile({
             ]}
           />
         ) : null}
-        {layer !== "customization" && layer !== "integration" ? (
-          <ChipGroup
-            label="Pattern"
-            value={patternFilter}
-            onChange={(v) => setPatternFilter(v as PatternFilter)}
-            options={[
-              { value: "all", label: "All" },
-              { value: "P1", label: "P1" },
-              { value: "P2", label: "P2" },
-              { value: "P3", label: "P3" },
-              { value: "P4", label: "P4" },
-              { value: "P5", label: "P5" },
-              { value: "P6", label: "P6" },
-            ]}
-          />
-        ) : null}
-        {layer !== "customization" && layer !== "integration" ? (
-          <ChipGroup
-            label="Data preservation"
-            value={fidelityFilter}
-            onChange={(v) => setFidelityFilter(v as FidelityFilter)}
-            options={[
-              { value: "all", label: "All" },
-              { value: "high", label: "High" },
-              { value: "medium", label: "Medium" },
-              { value: "low", label: "Low" },
-              { value: "gap", label: "Gap" },
-              { value: "na", label: "N/A" },
-            ]}
-          />
-        ) : null}
-        {layer !== "customization" &&
-        layer !== "integration" &&
-        layer !== "field" ? (
-          <ChipGroup
-            label="Capability preservation"
-            value={capabilityFilter}
-            onChange={(v) => setCapabilityFilter(v as FidelityFilter)}
-            options={[
-              { value: "all", label: "All" },
-              { value: "high", label: "High" },
-              { value: "medium", label: "Medium" },
-              { value: "low", label: "Low" },
-              { value: "gap", label: "Gap" },
-              { value: "na", label: "N/A" },
-            ]}
-          />
-        ) : null}
       </div>
 
       {(() => {
@@ -746,9 +755,15 @@ export function InventoryProfile({
           fidelityFilter={fidelityFilter}
           expanded={expanded}
           onToggle={toggle}
+          filters={filterControls}
         />
       ) : layer === "entity" ? (
-        <EntityTable rows={visibleRows} expanded={expanded} onToggle={toggle} />
+        <EntityTable
+          rows={visibleRows}
+          expanded={expanded}
+          onToggle={toggle}
+          filters={filterControls}
+        />
       ) : layer === "feature" ? (
         <FeatureTable
           rows={visibleRows}
@@ -758,10 +773,11 @@ export function InventoryProfile({
           entityToFeatures={sharedRefs.entityToFeatures}
           featureNameById={sharedRefs.featureNameById}
           jtbdNameById={sharedRefs.jtbdNameById}
+          filters={filterControls}
         />
       ) : (
         <div
-          className="overflow-hidden"
+          className=""
           style={{
             width: jtbdDepth === "jtbd" ? "1388px" : "2111px",
             maxWidth: jtbdDepth === "jtbd" ? "1388px" : "2111px",
@@ -822,12 +838,33 @@ export function InventoryProfile({
                     <Th>Persona</Th>
                     <Th>Frequency</Th>
                     <Th>Depends on</Th>
-                    <Th>Hybrid Approach</Th>
+                    <Th>
+                      <ColumnFilterHeader
+                        label="Hybrid Approach"
+                        value={hybridFilter}
+                        options={HYBRID_OPTIONS}
+                        onChange={setHybridFilter}
+                      />
+                    </Th>
                     <Th>Migration impact</Th>
                     {jtbdDepth !== "jtbd" ? (
                       <>
-                        <Th>Migration pattern</Th>
-                        <Th>Capability preservation</Th>
+                        <Th>
+                          <ColumnFilterHeader
+                            label="Migration pattern"
+                            value={patternFilter}
+                            options={PATTERN_OPTIONS}
+                            onChange={setPatternFilter}
+                          />
+                        </Th>
+                        <Th>
+                          <ColumnFilterHeader
+                            label="Capability preservation"
+                            value={capabilityFilter}
+                            options={FIDELITY_OPTIONS}
+                            onChange={setCapabilityFilter}
+                          />
+                        </Th>
                         <Th>Risk</Th>
                         <Th>Preservation strategy</Th>
                         <Th>Shared with</Th>
@@ -924,12 +961,14 @@ function FieldTable({
   fidelityFilter,
   expanded,
   onToggle,
+  filters,
 }: {
   rows: Row[];
   patternFilter: PatternFilter;
   fidelityFilter: FidelityFilter;
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  filters: FilterControls;
 }) {
   let rowNum = 0;
   const fieldsForEntity = (e: Row & { kind: "entity" }) =>
@@ -978,8 +1017,22 @@ function FieldTable({
                     <Th className="w-[12.5%]">ADO Field</Th>
                     <Th className="w-[8.03%]">Data type</Th>
                     <Th className="w-[15.96%]">GitHub target</Th>
-                    <Th className="w-[17.74%]">Migration pattern</Th>
-                    <Th className="w-[7.1%]">Data preservation</Th>
+                    <Th className="w-[17.74%]">
+                      <ColumnFilterHeader
+                        label="Migration pattern"
+                        value={filters.patternFilter}
+                        options={PATTERN_OPTIONS}
+                        onChange={filters.setPatternFilter}
+                      />
+                    </Th>
+                    <Th className="w-[7.1%]">
+                      <ColumnFilterHeader
+                        label="Data preservation"
+                        value={filters.fidelityFilter}
+                        options={FIDELITY_OPTIONS}
+                        onChange={filters.setFidelityFilter}
+                      />
+                    </Th>
                     <Th className="w-[14.47%]">Preservation strategy</Th>
                     <Th className="w-[17.09%]">Notes</Th>
                   </tr>
@@ -1094,10 +1147,12 @@ function EntityTable({
   rows,
   expanded,
   onToggle,
+  filters,
 }: {
   rows: Row[];
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  filters: FilterControls;
 }) {
   // Collect entity rows in order; dedupe by entity.id (visibleRows already
   // dedupes for the entity layer, but be defensive). Group by service.
@@ -1158,11 +1213,39 @@ function EntityTable({
                     <Th className="w-[4.56%]">ID</Th>
                     <Th className="w-[11.34%]">Entity</Th>
                     <Th className="w-[11.34%]">GitHub Target</Th>
-                    <Th className="w-[6.48%]">Data Preservation</Th>
-                    <Th className="w-[6.48%]">Capability Preservation</Th>
-                    <Th className="w-[16.2%]">Migration pattern</Th>
+                    <Th className="w-[6.48%]">
+                      <ColumnFilterHeader
+                        label="Data Preservation"
+                        value={filters.fidelityFilter}
+                        options={FIDELITY_OPTIONS}
+                        onChange={filters.setFidelityFilter}
+                      />
+                    </Th>
+                    <Th className="w-[6.48%]">
+                      <ColumnFilterHeader
+                        label="Capability Preservation"
+                        value={filters.capabilityFilter}
+                        options={FIDELITY_OPTIONS}
+                        onChange={filters.setCapabilityFilter}
+                      />
+                    </Th>
+                    <Th className="w-[16.2%]">
+                      <ColumnFilterHeader
+                        label="Migration pattern"
+                        value={filters.patternFilter}
+                        options={PATTERN_OPTIONS}
+                        onChange={filters.setPatternFilter}
+                      />
+                    </Th>
                     <Th className="w-[80px]">Risk</Th>
-                    <Th className="w-[10.63%]">Hybrid Approach</Th>
+                    <Th className="w-[10.63%]">
+                      <ColumnFilterHeader
+                        label="Hybrid Approach"
+                        value={filters.hybridFilter}
+                        options={HYBRID_OPTIONS}
+                        onChange={filters.setHybridFilter}
+                      />
+                    </Th>
                     <Th>Migration Note</Th>
                   </tr>
                 </thead>
@@ -1391,6 +1474,7 @@ function FeatureTable({
   entityToFeatures,
   featureNameById,
   jtbdNameById,
+  filters,
 }: {
   rows: Row[];
   expanded: Set<string>;
@@ -1399,6 +1483,7 @@ function FeatureTable({
   entityToFeatures: Map<string, string[]>;
   featureNameById: Map<string, string>;
   jtbdNameById: Map<string, string>;
+  filters: FilterControls;
 }) {
   // Group the pre-built rows by featcat. Rows arrive in canonical order:
   // featcat, feature, entity..., feature, entity..., featadd, featcat, ...
@@ -1455,9 +1540,30 @@ function FeatureTable({
                     <Th className="w-[94px]">ID</Th>
                     <Th className="w-[276px]">Feature</Th>
                     <Th className="w-[246px]">Depends on</Th>
-                    <Th className="w-[238px]">Hybrid Approach</Th>
-                    <Th className="w-[201px]">Migration pattern</Th>
-                    <Th className="w-[113px]">Capability preservation</Th>
+                    <Th className="w-[238px]">
+                      <ColumnFilterHeader
+                        label="Hybrid Approach"
+                        value={filters.hybridFilter}
+                        options={HYBRID_OPTIONS}
+                        onChange={filters.setHybridFilter}
+                      />
+                    </Th>
+                    <Th className="w-[201px]">
+                      <ColumnFilterHeader
+                        label="Migration pattern"
+                        value={filters.patternFilter}
+                        options={PATTERN_OPTIONS}
+                        onChange={filters.setPatternFilter}
+                      />
+                    </Th>
+                    <Th className="w-[113px]">
+                      <ColumnFilterHeader
+                        label="Capability preservation"
+                        value={filters.capabilityFilter}
+                        options={FIDELITY_OPTIONS}
+                        onChange={filters.setCapabilityFilter}
+                      />
+                    </Th>
                     <Th className="w-[87px]">Risk</Th>
                     <Th className="w-[314px]">Preservation strategy</Th>
                     <Th className="w-[392px]">Shared with</Th>
@@ -2132,6 +2238,75 @@ function Th({
     >
       {children}
     </th>
+  );
+}
+
+function ColumnFilterHeader<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  allValue = "all" as T,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+  allValue?: T;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+  const isActive = value !== allValue;
+  return (
+    <div ref={ref} className="relative inline-flex items-center gap-1.5">
+      <span>{label}</span>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`inline-flex h-4 w-4 items-center justify-center rounded text-[9px] transition-colors ${
+          isActive
+            ? "bg-primary/15 text-primary"
+            : "text-ink-faint hover:bg-bg-hover hover:text-ink"
+        }`}
+        aria-label={`Filter ${label}`}
+        aria-expanded={open}
+      >
+        ▾
+      </button>
+      {isActive ? (
+        <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+      ) : null}
+      {open ? (
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-[160px] rounded-md border border-border bg-bg-elevated p-1 shadow-lg">
+          {options.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => {
+                onChange(o.value);
+                setOpen(false);
+              }}
+              className={`block w-full rounded px-2 py-1 text-left font-sans text-[11.5px] normal-case tracking-normal ${
+                o.value === value
+                  ? "bg-primary/10 font-semibold text-primary"
+                  : "text-ink-soft hover:bg-bg-muted"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
