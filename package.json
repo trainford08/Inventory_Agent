@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
     "db:seed": "tsx prisma/seed.ts",
+    "eval:ada": "tsx scripts/ada-evals/run.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "schema:check": "echo 'See /docs/schema-health.md for the 10-smell checklist. Automation: Phase 1 manual.'",
