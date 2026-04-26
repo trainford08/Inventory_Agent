@@ -105,22 +105,20 @@ export function InventoryProfile({
 
   const initialExpanded = useMemo(() => {
     const set = new Set<string>();
-    // Expand cats + JTBDs + non-ref features + non-ref entities by default
-    // so the full nested structure is visible from the start in any layer.
+    // Initial defaults that match the per-layer depth defaults: JTBD view
+    // shows only category headers + JTBD rows (no features/entities below).
+    // Feature view default = "feature" (categories open, features visible,
+    // entities/fields collapsed). Entity view default = "entity"
+    // (categories open, entities visible, fields collapsed).
     for (const r of rows) {
-      if (r.kind === "cat" || r.kind === "jtbd") set.add(r.id);
-      else if (r.kind === "feature" && !r.isRef) set.add(r.rowKey);
-      else if (r.kind === "entity") {
-        // Expand all entity instances (including refs) so fields show
-        // under entities listed in the feature view as well.
-        set.add(r.rowKey);
-        if (!r.isRef) {
-          set.add(`entcat:${r.entity.service}`);
-          set.add(`fldent:${r.entity.id}`);
-        }
-      }
+      if (r.kind === "cat") set.add(r.id);
+      // featcats open so feature-view feature rows are visible by default
       if (r.kind === "feature" && !r.isRef) {
         set.add(`featcat:${r.feature.category}`);
+      }
+      // entcats open so entity-view entity rows are visible by default
+      if (r.kind === "entity" && !r.isRef) {
+        set.add(`entcat:${r.entity.service}`);
       }
     }
     return set;
@@ -135,28 +133,35 @@ export function InventoryProfile({
   // on layer change (and not on subsequent re-renders). Inlining the
   // expansion logic here keeps the effect self-contained — no references to
   // the apply* helpers declared further down the component.
-  const prevLayerRef = useRef<LayerFilter>(layer);
+  // Null on first render so the effect runs on initial mount too.
+  const prevLayerRef = useRef<LayerFilter | null>(null);
   useEffect(() => {
     if (prevLayerRef.current === layer) return;
     prevLayerRef.current = layer;
     setExpanded((prev) => {
       const next = new Set(prev);
       if (layer === "jtbd") {
+        // Strip jtbd-view-controlled ids: jtbd own expansion (gates
+        // features), feature rowKey (gates entities), entity rowKey
+        // (gates fields, though fields aren't in jtbd view).
         for (const r of rows) {
+          if (r.kind === "jtbd") next.delete(r.id);
           if (r.kind === "feature" && !r.isRef) next.delete(r.rowKey);
           if (r.kind === "entity") next.delete(r.rowKey);
         }
+        // Categories always open so JTBDs show.
         for (const r of rows) {
           if (r.kind === "cat") next.add(r.id);
-          if (r.kind === "jtbd") next.add(r.id);
         }
         if (jtbdDepth === "jtbd") return next;
+        // depth >= feature: open each JTBD to reveal its features.
         for (const r of rows) {
-          if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+          if (r.kind === "jtbd") next.add(r.id);
         }
         if (jtbdDepth === "feature") return next;
+        // depth === entity: open features to reveal their entities.
         for (const r of rows) {
-          if (r.kind === "entity") next.add(r.rowKey);
+          if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
         }
         return next;
       }
