@@ -12,6 +12,7 @@ import { CustomizationsTable } from "./CustomizationsTable";
 
 type Row =
   | { kind: "cat"; id: string; label: string; count: number }
+  | { kind: "featcat"; id: string; label: string; count: number }
   | {
       kind: "jtbd";
       id: string;
@@ -73,6 +74,9 @@ export function InventoryProfile({
         set.add(`entcat:${r.entity.service}`);
         set.add(`fldent:${r.entity.id}`);
       }
+      if (r.kind === "feature" && !r.isRef) {
+        set.add(`featcat:${r.feature.category}`);
+      }
     }
     return set;
   }, [rows]);
@@ -112,6 +116,9 @@ export function InventoryProfile({
         next.add(`entcat:${r.entity.service}`);
         next.add(`fldent:${r.entity.id}`);
       }
+      if (r.kind === "feature" && !r.isRef) {
+        next.add(`featcat:${r.feature.category}`);
+      }
     }
     setExpanded(next);
   };
@@ -123,7 +130,7 @@ export function InventoryProfile({
   };
 
   const matchesFilters = (r: Row): boolean => {
-    if (r.kind === "cat") return true;
+    if (r.kind === "cat" || r.kind === "featcat") return true;
     if (r.kind === "field") {
       if (patternFilter !== "all" && r.field.pattern !== patternFilter)
         return false;
@@ -204,26 +211,53 @@ export function InventoryProfile({
       });
     }
     if (layer === "feature") {
-      // Features as top-level (deduped) with nested entities. Skip cats/JTBDs.
+      // Features as top-level (deduped) with nested entities, grouped by
+      // canonical category. Skip cats/JTBDs.
       const seen = new Set<string>();
       const allowedFeatureKey = new Set<string>();
-      const out: Row[] = [];
+      const featureRowsByCat = new Map<string, Row[]>();
+      const catOrder: string[] = [];
+      // Track entities under each feature (in canonical row order)
+      const entitiesByParent = new Map<string, Row[]>();
       for (const r of rows) {
         if (r.kind === "feature" && !r.isRef && matchesFilters(r)) {
           if (seen.has(r.feature.id)) continue;
           seen.add(r.feature.id);
           allowedFeatureKey.add(r.rowKey);
-          out.push(r);
-          continue;
-        }
-        if (
+          const cat = r.feature.category;
+          if (!featureRowsByCat.has(cat)) {
+            featureRowsByCat.set(cat, []);
+            catOrder.push(cat);
+          }
+          featureRowsByCat.get(cat)!.push(r);
+        } else if (
           r.kind === "entity" &&
           !r.isRef &&
           matchesFilters(r) &&
-          allowedFeatureKey.has(r.parentId) &&
           expanded.has(r.parentId)
         ) {
-          out.push(r);
+          if (!entitiesByParent.has(r.parentId))
+            entitiesByParent.set(r.parentId, []);
+          entitiesByParent.get(r.parentId)!.push(r);
+        }
+      }
+      const out: Row[] = [];
+      for (const cat of catOrder) {
+        const featRows = featureRowsByCat.get(cat)!;
+        const catId = `featcat:${cat}`;
+        out.push({
+          kind: "featcat",
+          id: catId,
+          label: cat,
+          count: featRows.length,
+        });
+        if (!expanded.has(catId)) continue;
+        for (const fr of featRows) {
+          out.push(fr);
+          if (fr.kind === "feature" && allowedFeatureKey.has(fr.rowKey)) {
+            const ents = entitiesByParent.get(fr.rowKey);
+            if (ents) out.push(...ents);
+          }
         }
       }
       return out;
@@ -393,23 +427,27 @@ export function InventoryProfile({
       ) : layer === "entity" ? (
         <EntityTable rows={visibleRows} expanded={expanded} onToggle={toggle} />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
-          <table className="w-full border-collapse text-[13px]">
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-[12.5px]">
             <thead>
               <tr>
                 <Th className="w-[44px] text-right">#</Th>
-                <Th>Item</Th>
-                <Th className="w-[13%]">Layer</Th>
-                <Th className="w-[13%]">Stays in ADO?</Th>
-                <Th className="w-[30%]">Pattern</Th>
-                <Th className="w-[11%] text-right">Detail</Th>
+                <Th className="w-[5%]">ID</Th>
+                <Th>Feature</Th>
+                <Th className="w-[11%]">Depends on</Th>
+                <Th className="w-[11%]">Stays in ADO?</Th>
+                <Th className="w-[9%]">Pattern</Th>
+                <Th className="w-[8%]">Preservation</Th>
+                <Th className="w-[6%]">Risk</Th>
+                <Th className="w-[22%]">Preservation strategy</Th>
               </tr>
             </thead>
             <tbody>
               {(() => {
                 let rowNum = 0;
                 return visibleRows.map((r) => {
-                  const num = r.kind === "cat" ? null : ++rowNum;
+                  const num =
+                    r.kind === "cat" || r.kind === "featcat" ? null : ++rowNum;
                   return (
                     <RowView
                       key={rowKey(r)}
@@ -422,7 +460,7 @@ export function InventoryProfile({
                 });
               })()}
               <tr>
-                <td colSpan={6} className="px-3 py-2">
+                <td colSpan={9} className="px-3 py-2">
                   <AddRowButton label={addLabelFor(layer)} />
                 </td>
               </tr>
@@ -600,7 +638,7 @@ function FieldTable({
                         <Td className="text-[11.5px] italic leading-snug text-ink-soft">
                           {fld.strategy}
                         </Td>
-                        <Td className="text-[11.5px] leading-snug text-ink-soft">
+                        <Td className="text-[11.5px] italic leading-snug text-ink-soft">
                           {fld.notes}
                         </Td>
                       </tr>
@@ -792,7 +830,7 @@ function EntityTable({
                         <Td>
                           <HybridApproachChip value={e.staysInAdo} />
                         </Td>
-                        <Td className="text-[11.5px] leading-snug text-ink-soft">
+                        <Td className="text-[11.5px] italic leading-snug text-ink-soft">
                           {e.note}
                         </Td>
                       </tr>
@@ -891,8 +929,31 @@ function FidelityBadge({
   );
 }
 
+function RiskBadge({
+  value,
+}: {
+  value: "trivial" | "low" | "medium" | "high" | "na";
+}) {
+  const map = {
+    trivial: { label: "Trivial", cls: "bg-emerald-100 text-emerald-800" },
+    low: { label: "Low", cls: "bg-emerald-50 text-emerald-700" },
+    medium: { label: "Medium", cls: "bg-amber-100 text-amber-800" },
+    high: { label: "High", cls: "bg-rose-100 text-rose-800" },
+    na: { label: "N/A", cls: "bg-bg-muted text-ink-muted" },
+  };
+  const m = map[value] ?? map.na;
+  return (
+    <span
+      className={`inline-block rounded-[3px] px-1.5 py-[1px] font-mono text-[10px] font-semibold uppercase tracking-[0.04em] ${m.cls}`}
+    >
+      {m.label}
+    </span>
+  );
+}
+
 function rowKey(r: Row): string {
   if (r.kind === "cat") return r.id;
+  if (r.kind === "featcat") return r.id;
   if (r.kind === "jtbd") return r.id;
   return r.rowKey;
 }
@@ -974,7 +1035,7 @@ function RowView({
     const isOpen = expanded.has(row.id);
     return (
       <tr className="border-t-2 border-ink/60 bg-bg-muted">
-        <td colSpan={6} className="px-4 py-[9px]">
+        <td colSpan={9} className="px-4 py-[9px]">
           <button
             onClick={() => onToggle(row.id)}
             className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
@@ -987,12 +1048,42 @@ function RowView({
     );
   }
 
+  if (row.kind === "featcat") {
+    const isOpen = expanded.has(row.id);
+    const radius = isOpen ? "rounded-t-xl" : "rounded-xl";
+    return (
+      <>
+        <tr aria-hidden>
+          <td colSpan={9} className="h-3 p-0" />
+        </tr>
+        <tr>
+          <td colSpan={9} className="p-0">
+            <button
+              type="button"
+              onClick={() => onToggle(row.id)}
+              className={`flex w-full items-baseline gap-2 border border-border bg-bg-muted px-4 py-2 text-left font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink hover:bg-bg-hover ${radius}`}
+            >
+              <span className="inline-block w-3 text-ink-muted">
+                {isOpen ? "▼" : "▸"}
+              </span>
+              <span>{row.label}</span>
+              <span className="ml-auto font-normal text-ink-muted">
+                {row.count} {row.count === 1 ? "feature" : "features"}
+              </span>
+            </button>
+          </td>
+        </tr>
+      </>
+    );
+  }
+
   if (row.kind === "jtbd") {
     const isOpen = expanded.has(`jtbd:${row.jtbd.id}`);
     const featCount = row.jtbd.featureNodes.length;
     return (
-      <tr className="bg-primary/[0.05]">
+      <tr className="bg-white">
         <NumTd>{rowNum}</NumTd>
+        <Td className="font-mono text-[10px] text-ink-muted">{row.jtbd.id}</Td>
         <Td>
           <IndentCell level={1}>
             <ToggleButton
@@ -1002,19 +1093,17 @@ function RowView({
               tone="primary"
             />
             <LayerTag kind="jtbd" />
-            <span className="font-semibold text-ink">
-              {row.jtbd.id} · {row.jtbd.name}
-            </span>
+            <span className="font-semibold text-ink">{row.jtbd.name}</span>
           </IndentCell>
         </Td>
-        <Td>Job-to-be-done</Td>
+        <Td className="text-ink-faint">—</Td>
         <Td>
           <StaysBadge value={row.jtbd.staysInAdo} />
         </Td>
-        <Td>—</Td>
-        <Td className="text-right font-mono text-[11.5px] text-ink-muted">
-          {featCount} {featCount === 1 ? "feature" : "features"}
-        </Td>
+        <Td className="text-ink-faint">—</Td>
+        <Td className="text-ink-faint">—</Td>
+        <Td className="text-ink-faint">—</Td>
+        <Td className="text-ink-faint">—</Td>
       </tr>
     );
   }
@@ -1023,8 +1112,13 @@ function RowView({
     const isOpen = expanded.has(row.rowKey);
     const entityCount = row.feature.entityNodes.length;
     return (
-      <tr className={row.isRef ? "bg-warn/[0.02]" : "bg-warn/[0.04]"}>
+      <tr className="bg-white">
         <NumTd>{rowNum}</NumTd>
+        <Td
+          className={muted(row.isRef, "font-mono text-[10px] text-ink-muted")}
+        >
+          {row.feature.id}
+        </Td>
         <Td>
           <IndentCell level={2}>
             <ToggleButton
@@ -1035,7 +1129,7 @@ function RowView({
             />
             <LayerTag kind="feature" />
             <span className={muted(row.isRef, "text-ink")}>
-              {row.feature.id} · {row.feature.name}
+              {row.feature.name}
               {row.isRef ? (
                 <span className="ml-2 font-mono text-[10.5px] text-ink-faint">
                   (shared · see first occurrence)
@@ -1044,23 +1138,50 @@ function RowView({
             </span>
           </IndentCell>
         </Td>
-        <Td className={muted(row.isRef)}>
-          {row.isRef ? "Feature (ref)" : "Feature"}
+        <Td
+          className={muted(
+            row.isRef,
+            "font-mono text-[10.5px] text-ink-soft leading-snug",
+          )}
+        >
+          {!row.isRef && row.feature.dependsOn ? row.feature.dependsOn : "—"}
         </Td>
         <Td>
           <StaysBadge value={row.feature.staysInAdo} faded={row.isRef} />
+          {!row.isRef && row.feature.staysReason ? (
+            <div className="mt-0.5 text-[10.5px] italic leading-snug text-ink-soft">
+              {row.feature.staysReason}
+            </div>
+          ) : null}
         </Td>
         <Td>
-          <PatternBadge
-            value={row.feature.pattern}
-            faded={row.isRef}
-            withDescription
-          />
+          {row.feature.pattern === "na" ? (
+            <span
+              className={`inline-block rounded-[3px] border border-ink-faint px-[5px] py-[1px] font-mono text-[10px] font-semibold text-ink-faint ${row.isRef ? "opacity-50" : ""}`}
+            >
+              N/A
+            </span>
+          ) : (
+            <PatternBadge
+              value={row.feature.pattern}
+              faded={row.isRef}
+              withDescription
+            />
+          )}
         </Td>
-        <Td className="text-right font-mono text-[11.5px] text-ink-muted">
-          {row.isRef
-            ? "—"
-            : `${entityCount} ${entityCount === 1 ? "entity" : "entities"}`}
+        <Td>
+          <FidelityBadge value={row.feature.preservation} />
+        </Td>
+        <Td>
+          <RiskBadge value={row.feature.risk} />
+        </Td>
+        <Td
+          className={muted(
+            row.isRef,
+            "text-[11.5px] italic leading-snug text-ink-soft",
+          )}
+        >
+          {row.isRef ? "—" : row.feature.preservationStrategy}
         </Td>
       </tr>
     );
@@ -1070,8 +1191,13 @@ function RowView({
     const isOpen = expanded.has(row.rowKey);
     const hasFields = !row.isRef && row.entity.fields.length > 0;
     return (
-      <tr className={row.isRef ? "bg-success/[0.02]" : "bg-success/[0.04]"}>
+      <tr className="bg-white">
         <NumTd>{rowNum}</NumTd>
+        <Td
+          className={muted(row.isRef, "font-mono text-[10px] text-ink-muted")}
+        >
+          {row.entity.id}
+        </Td>
         <Td>
           <IndentCell level={3}>
             <ToggleButton
@@ -1082,21 +1208,16 @@ function RowView({
             />
             <LayerTag kind="entity" />
             <span className={muted(row.isRef, "text-ink")}>
-              {row.entity.id} · {row.entity.name}
+              {row.entity.name}
               {row.isRef ? (
                 <span className="ml-2 font-mono text-[10.5px] text-ink-faint">
                   (shared)
                 </span>
               ) : null}
-              <span className="ml-2 rounded-full bg-bg-elevated px-1.5 py-[1px] font-mono text-[10px] text-ink-muted ring-1 ring-inset ring-border">
-                {row.entity.serviceLabel}
-              </span>
             </span>
           </IndentCell>
         </Td>
-        <Td className={muted(row.isRef)}>
-          {row.isRef ? "Entity (ref)" : "Entity"}
-        </Td>
+        <Td className="text-ink-faint">—</Td>
         <Td>
           <StaysBadge value={row.entity.staysInAdo} faded={row.isRef} />
         </Td>
@@ -1107,8 +1228,17 @@ function RowView({
             withDescription
           />
         </Td>
-        <Td className="text-right font-mono text-[11.5px] text-ink-muted">
-          {row.isRef ? "—" : `${row.entity.fieldCount} fields`}
+        <Td>
+          <FidelityBadge value={row.entity.dataPreservation} />
+        </Td>
+        <Td className="text-ink-faint">—</Td>
+        <Td
+          className={muted(
+            row.isRef,
+            "text-[11.5px] italic leading-snug text-ink-soft",
+          )}
+        >
+          {row.isRef ? "—" : row.entity.note}
         </Td>
       </tr>
     );
@@ -1117,8 +1247,9 @@ function RowView({
   // field
   const fld = row.field;
   return (
-    <tr className="bg-slate-50">
+    <tr className="bg-white">
       <NumTd>{rowNum}</NumTd>
+      <Td className="font-mono text-[10px] text-ink-muted">{fld.id}</Td>
       <Td>
         <IndentCell level={4}>
           <span className="inline-block w-[18px]" aria-hidden />
@@ -1131,8 +1262,8 @@ function RowView({
           </span>
         </IndentCell>
       </Td>
-      <Td>Field</Td>
-      <Td>—</Td>
+      <Td className="text-ink-faint">—</Td>
+      <Td className="text-ink-faint">—</Td>
       <Td>
         {fld.pattern === "na" ? (
           <span className="font-mono text-[10px] text-ink-faint">N/A</span>
@@ -1140,8 +1271,12 @@ function RowView({
           <PatternBadge value={fld.pattern} withDescription />
         )}
       </Td>
-      <Td className="text-right text-[11px] italic text-ink-soft">
-        → {fld.githubTarget}
+      <Td>
+        <FidelityBadge value={fld.dataPreservation} />
+      </Td>
+      <Td className="text-ink-faint">—</Td>
+      <Td className="text-[11.5px] italic leading-snug text-ink-soft">
+        {fld.strategy ?? "—"}
       </Td>
     </tr>
   );
@@ -1197,20 +1332,10 @@ function IndentCell({
   children: React.ReactNode;
 }) {
   const pad = { 1: 0, 2: 40, 3: 80, 4: 120 }[level];
-  const guideColor =
-    level === 2
-      ? "border-amber-300"
-      : level === 3
-        ? "border-emerald-300"
-        : level === 4
-          ? "border-slate-300"
-          : "";
   return (
     <div
-      className={`relative flex items-center gap-1.5 ${
-        level > 1 ? `border-l-2 ${guideColor}` : ""
-      }`}
-      style={{ paddingLeft: pad, marginLeft: level > 1 ? 8 : 0 }}
+      className="relative flex items-center gap-1.5"
+      style={{ paddingLeft: pad }}
     >
       {children}
     </div>
@@ -1249,16 +1374,6 @@ function ToggleButton({
   );
 }
 
-function Caret({ open, tone }: { open: boolean; tone: "ink" }) {
-  return (
-    <span
-      className={`font-mono text-[11px] ${tone === "ink" ? "text-ink" : ""}`}
-    >
-      {open ? "▼" : "▶"}
-    </span>
-  );
-}
-
 function LayerTag({ kind }: { kind: "jtbd" | "feature" | "entity" | "field" }) {
   const map = {
     jtbd: { label: "JTBD", cls: "bg-primary/10 text-primary" },
@@ -1271,6 +1386,16 @@ function LayerTag({ kind }: { kind: "jtbd" | "feature" | "entity" | "field" }) {
       className={`mr-1 inline-block min-w-[38px] rounded-[3px] px-1.5 py-[2px] text-center font-mono text-[9.5px] font-semibold uppercase tracking-[0.06em] ${map.cls}`}
     >
       {map.label}
+    </span>
+  );
+}
+
+function Caret({ open, tone }: { open: boolean; tone: "ink" }) {
+  return (
+    <span
+      className={`font-mono text-[11px] ${tone === "ink" ? "text-ink" : ""}`}
+    >
+      {open ? "▼" : "▶"}
     </span>
   );
 }
