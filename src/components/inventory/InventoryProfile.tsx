@@ -51,8 +51,8 @@ type LayerFilter =
   | "feature"
   | "entity"
   | "field"
-  | "field"
-  | "customization";
+  | "customization"
+  | "integration";
 
 export function InventoryProfile({
   groups,
@@ -554,7 +554,7 @@ export function InventoryProfile({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-bg-elevated p-3">
-        {layer !== "customization" ? (
+        {layer !== "customization" && layer !== "integration" ? (
           <ExpandToggle
             isExpanded={isMostlyExpanded(rows, expanded, layer)}
             onClick={() =>
@@ -574,6 +574,7 @@ export function InventoryProfile({
             { value: "entity", label: "Entities" },
             { value: "field", label: "Fields" },
             { value: "customization", label: "Customizations" },
+            { value: "integration", label: "Integrations" },
           ]}
         />
         {layer === "jtbd" ? (
@@ -622,7 +623,7 @@ export function InventoryProfile({
             ]}
           />
         ) : null}
-        {layer !== "customization" ? (
+        {layer !== "customization" && layer !== "integration" ? (
           <ChipGroup
             label="Pattern"
             value={patternFilter}
@@ -638,7 +639,7 @@ export function InventoryProfile({
             ]}
           />
         ) : null}
-        {layer !== "customization" ? (
+        {layer !== "customization" && layer !== "integration" ? (
           <ChipGroup
             label="Data preservation"
             value={fidelityFilter}
@@ -653,7 +654,9 @@ export function InventoryProfile({
             ]}
           />
         ) : null}
-        {layer !== "customization" && layer !== "field" ? (
+        {layer !== "customization" &&
+        layer !== "integration" &&
+        layer !== "field" ? (
           <ChipGroup
             label="Capability preservation"
             value={capabilityFilter}
@@ -674,6 +677,8 @@ export function InventoryProfile({
         let summary = "";
         if (layer === "customization") {
           summary = `${customizations.total} customizations`;
+        } else if (layer === "integration") {
+          summary = "Integrations";
         } else if (layer === "jtbd") {
           summary = `${rows.filter((r) => r.kind === "jtbd").length} JTBDs`;
         } else if (layer === "feature") {
@@ -709,6 +714,31 @@ export function InventoryProfile({
 
       {layer === "customization" ? (
         <CustomizationsTable block={customizations} />
+      ) : layer === "integration" ? (
+        <div className="rounded-xl border border-border bg-bg-elevated">
+          <table className="w-full table-fixed border-collapse text-[12.5px]">
+            <thead>
+              <tr>
+                <Th className="w-[44px] text-right">#</Th>
+                <Th className="w-[80px]">ID</Th>
+                <Th>Integration</Th>
+                <Th className="w-[160px]">Type</Th>
+                <Th className="w-[160px]">Hybrid Approach</Th>
+                <Th className="w-[260px]">Migration impact</Th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td
+                  colSpan={6}
+                  className="px-4 py-16 text-center text-[13px] text-ink-muted"
+                >
+                  Coming soon...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       ) : layer === "field" ? (
         <FieldTable
           rows={visibleRows}
@@ -730,100 +760,125 @@ export function InventoryProfile({
           jtbdNameById={sharedRefs.jtbdNameById}
         />
       ) : (
-        <div className="rounded-xl border border-border bg-bg-elevated">
-          <table
-            className="w-full table-fixed border-collapse text-[12.5px]"
-            style={{ minWidth: "1620px" }}
-          >
-            <thead>
-              <tr>
-                <Th className="w-[44px] text-right">#</Th>
-                <Th className="w-[80px]">ID</Th>
-                <Th className="min-w-[260px]">Jobs To Be Done (user task)</Th>
-                <Th className="w-[110px]">Persona</Th>
-                <Th className="w-[90px]">Frequency</Th>
-                <Th className="w-[150px]">Depends on</Th>
-                <Th className="w-[150px]">Hybrid Approach</Th>
-                <Th className="w-[260px]">Migration impact</Th>
-                {jtbdDepth !== "jtbd" ? (
-                  <>
-                    <Th className="w-[120px]">Migration pattern</Th>
-                    <Th className="w-[68px]">Capability preservation</Th>
-                    <Th className="w-[66px]">Risk</Th>
-                    <Th className="w-[240px]">Preservation strategy</Th>
-                    <Th className="w-[338px]">Shared with</Th>
-                  </>
-                ) : null}
-              </tr>
-            </thead>
+        <div
+          className="overflow-hidden"
+          style={{
+            width: jtbdDepth === "jtbd" ? "1413px" : "2129px",
+            maxWidth: jtbdDepth === "jtbd" ? "1413px" : "2129px",
+          }}
+        >
+          <table className="w-full table-fixed border-collapse text-[12.5px]">
+            <colgroup>
+              <col style={{ width: jtbdDepth === "jtbd" ? "55px" : "47px" }} />
+              <col style={{ width: jtbdDepth === "jtbd" ? "99px" : "84px" }} />
+              <col
+                style={{ width: jtbdDepth === "jtbd" ? "320px" : "272px" }}
+              />
+              <col style={{ width: jtbdDepth === "jtbd" ? "136px" : "99px" }} />
+              <col style={{ width: jtbdDepth === "jtbd" ? "111px" : "80px" }} />
+              <col
+                style={{ width: jtbdDepth === "jtbd" ? "186px" : "158px" }}
+              />
+              <col
+                style={{ width: jtbdDepth === "jtbd" ? "186px" : "158px" }}
+              />
+              <col
+                style={{ width: jtbdDepth === "jtbd" ? "320px" : "272px" }}
+              />
+              {jtbdDepth !== "jtbd" ? (
+                <>
+                  <col style={{ width: "191px" }} />
+                  <col style={{ width: "91px" }} />
+                  <col style={{ width: "71px" }} />
+                  <col style={{ width: "251px" }} />
+                  <col style={{ width: "355px" }} />
+                </>
+              ) : null}
+            </colgroup>
             <tbody>
               {(() => {
+                const out: ReactNode[] = [];
+                const totalCols = jtbdDepth === "jtbd" ? 8 : 13;
+                const renderRow = (r: Row, num: number | null) => (
+                  <RowView
+                    key={rowKey(r)}
+                    row={r}
+                    rowNum={num}
+                    expanded={expanded}
+                    onToggle={toggle}
+                    extraCols={3}
+                    hideTrailingCols={jtbdDepth === "jtbd"}
+                    featureToJtbds={sharedRefs.featureToJtbds}
+                    entityToFeatures={sharedRefs.entityToFeatures}
+                    featureNameById={sharedRefs.featureNameById}
+                    jtbdNameById={sharedRefs.jtbdNameById}
+                  />
+                );
+                const headerRow = (catId: string) => (
+                  <tr key={`jtbdhead:${catId}`}>
+                    <Th className="text-right">#</Th>
+                    <Th>ID</Th>
+                    <Th>Jobs To Be Done (user task)</Th>
+                    <Th>Persona</Th>
+                    <Th>Frequency</Th>
+                    <Th>Depends on</Th>
+                    <Th>Hybrid Approach</Th>
+                    <Th>Migration impact</Th>
+                    {jtbdDepth !== "jtbd" ? (
+                      <>
+                        <Th>Migration pattern</Th>
+                        <Th>Capability preservation</Th>
+                        <Th>Risk</Th>
+                        <Th>Preservation strategy</Th>
+                        <Th>Shared with</Th>
+                      </>
+                    ) : null}
+                  </tr>
+                );
+                const addRow = (catId: string) => (
+                  <tr key={`jtbdadd:${catId}`}>
+                    <td
+                      colSpan={totalCols}
+                      className="rounded-b-xl border-x border-b border-border bg-bg-elevated px-3 py-2"
+                    >
+                      <AddRowButton label="Add JTBD" />
+                    </td>
+                  </tr>
+                );
+                type Group = { cat: Row; children: Row[] };
+                const groups: Group[] = [];
+                for (const r of visibleRows) {
+                  if (r.kind === "cat") {
+                    groups.push({ cat: r, children: [] });
+                  } else if (groups.length > 0) {
+                    groups[groups.length - 1].children.push(r);
+                  }
+                }
                 let rowNum = 0;
-                return visibleRows.map((r) => {
-                  const num =
-                    r.kind === "cat" ||
-                    r.kind === "featcat" ||
-                    r.kind === "featadd"
-                      ? null
-                      : ++rowNum;
-                  return (
-                    <RowView
-                      key={rowKey(r)}
-                      row={r}
-                      rowNum={num}
-                      expanded={expanded}
-                      onToggle={toggle}
-                      extraCols={3}
-                      hideTrailingCols={jtbdDepth === "jtbd"}
-                      featureToJtbds={sharedRefs.featureToJtbds}
-                      entityToFeatures={sharedRefs.entityToFeatures}
-                      featureNameById={sharedRefs.featureNameById}
-                      jtbdNameById={sharedRefs.jtbdNameById}
-                    />
-                  );
-                });
+                for (const g of groups) {
+                  if (g.cat.kind !== "cat") continue;
+                  out.push(renderRow(g.cat, null));
+                  const isOpen = expanded.has(g.cat.id);
+                  if (isOpen) {
+                    out.push(headerRow(g.cat.id));
+                    for (const c of g.children) {
+                      const num =
+                        c.kind === "featcat" || c.kind === "featadd"
+                          ? null
+                          : ++rowNum;
+                      out.push(renderRow(c, num));
+                    }
+                    out.push(addRow(g.cat.id));
+                  }
+                }
+                return out;
               })()}
-              <tr>
-                <td
-                  colSpan={jtbdDepth === "jtbd" ? 8 : 13}
-                  className="px-3 py-2"
-                >
-                  <AddRowButton label={addLabelFor(layer)} />
-                </td>
-              </tr>
             </tbody>
           </table>
         </div>
       )}
 
       {layer === "jtbd" && jtbdDepth !== "jtbd" ? <BadgeLegend /> : null}
-
-      {layer === "jtbd" && customizations.total > 0 ? (
-        <div className="rounded-xl border border-border bg-bg-elevated">
-          <button
-            type="button"
-            onClick={() => setCustomExpanded((v) => !v)}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-bg-hover"
-          >
-            <span className="font-mono text-[10px] text-ink-muted">
-              {customExpanded ? "▼" : "▸"}
-            </span>
-            <span className="font-medium text-ink">Customizations</span>
-            <span className="font-mono text-[11px] text-ink-muted">
-              {customizations.total} · {customizations.cataloged} cataloged ·{" "}
-              {customizations.teamSpecific} team-specific
-            </span>
-            <span className="ml-auto text-[11px] text-ink-faint">
-              Sibling category — does not nest under JTBDs/Features
-            </span>
-          </button>
-          {customExpanded ? (
-            <div className="border-t border-border p-3">
-              <CustomizationsTable block={customizations} />
-            </div>
-          ) : null}
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -990,30 +1045,17 @@ function FieldTable({
             Migration pattern
           </div>
           <ul className="space-y-1 text-ink-soft">
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P1" />
-              <span>Exact 1:1 mapping</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P2" />
-              <span>Lossy 1:1 mapping</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P3" />
-              <span>Compositional (many fields → one capability)</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P4" />
-              <span>Decompositional (one field → many)</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P5" />
-              <span>Capability substitution</span>
-            </li>
-            <li className="flex items-baseline gap-2">
-              <PatternBadge value="P6" />
-              <span>Gap (no preservation)</span>
-            </li>
+            {(["P1", "P2", "P3", "P4", "P5", "P6"] as const).map((p) => (
+              <li key={p} className="flex items-baseline gap-2">
+                <PatternBadge value={p} />
+                <span>
+                  {PATTERN_DESCRIPTIONS[p]}
+                  <span className="block text-[10.5px] italic text-ink-muted">
+                    {PATTERN_LEDES[p]}
+                  </span>
+                </span>
+              </li>
+            ))}
           </ul>
         </div>
         <div>
@@ -1734,17 +1776,28 @@ function RowView({
   if (row.kind === "cat") {
     const isOpen = expanded.has(row.id);
     return (
-      <tr className="border-t-2 border-ink/60 bg-bg-muted">
-        <td colSpan={totalCols} className="px-4 py-[9px]">
-          <button
-            onClick={() => onToggle(row.id)}
-            className="flex items-center gap-2 font-mono text-[10.5px] font-bold uppercase tracking-[0.1em] text-ink"
-          >
-            <Caret open={isOpen} tone="ink" />
-            {row.label} · {row.count} JTBDs
-          </button>
-        </td>
-      </tr>
+      <>
+        <tr aria-hidden>
+          <td colSpan={totalCols} className="h-3 p-0" />
+        </tr>
+        <tr>
+          <td colSpan={totalCols} className="p-0">
+            <button
+              type="button"
+              onClick={() => onToggle(row.id)}
+              className={`flex w-full items-baseline gap-2 rounded-xl border border-border bg-bg-muted px-4 py-2 text-left font-mono text-[10.5px] font-semibold uppercase tracking-[0.06em] text-ink hover:bg-bg-hover ${isOpen ? "rounded-b-none" : ""}`}
+            >
+              <span className="inline-block w-3 text-ink-muted">
+                {isOpen ? "▼" : "▸"}
+              </span>
+              <span>{row.label}</span>
+              <span className="ml-auto font-normal text-ink-muted">
+                {row.count} {row.count === 1 ? "JTBD" : "JTBDs"}
+              </span>
+            </button>
+          </td>
+        </tr>
+      </>
     );
   }
 
