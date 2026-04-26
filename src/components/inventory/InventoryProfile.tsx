@@ -265,17 +265,21 @@ export function InventoryProfile({
             { value: "P6", label: "P6" },
           ]}
         />
+        {layer !== "customization" && layer !== "field" ? (
+          <div className="ml-auto">
+            <ExpandToggle
+              isExpanded={isMostlyExpanded(rows, expanded, layer)}
+              onClick={() =>
+                isMostlyExpanded(rows, expanded, layer)
+                  ? collapseAll()
+                  : expandAll()
+              }
+            />
+          </div>
+        ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
-        <ExpandToggle
-          isExpanded={isMostlyExpanded(rows, expanded, layer)}
-          onClick={() =>
-            isMostlyExpanded(rows, expanded, layer)
-              ? collapseAll()
-              : expandAll()
-          }
-        />
+      <div className="flex items-center">
         <span className="ml-auto font-mono text-[11px] text-ink-muted">
           {rows.filter((r) => r.kind === "jtbd").length} JTBDs ·{" "}
           {rows.filter((r) => r.kind === "feature").length} features ·{" "}
