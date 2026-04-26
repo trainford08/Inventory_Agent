@@ -245,13 +245,13 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <Th className="w-[60px]">ID</Th>
-              <Th className="w-[15%]">Customization</Th>
+              <Th className="w-[56px]">ID</Th>
+              <Th className="w-[11%]">Customization</Th>
               <Th className="w-[22%]">Jobs to be done</Th>
               <Th>GitHub equivalent</Th>
-              <Th className="w-[7%]">GitHub parity</Th>
+              <Th className="w-[5%]">GitHub parity</Th>
               <Th className="w-[7%]">Migration strategy</Th>
-              <Th className="w-[7%]">Hybrid approach</Th>
+              <Th className="w-[5%]">Hybrid approach</Th>
               <Th className="w-[14%]">Meta-strategy candidates</Th>
               <Th className="w-[14%]">Notes</Th>
             </tr>

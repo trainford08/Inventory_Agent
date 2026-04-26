@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1600,initial-scale=1" />
+    <title>Customizations table — column widths</title>
+    <style>
+      :root {
+        --bg: #f7f7f5;
+        --bg-elevated: #fff;
+        --bg-muted: #f1f1ee;
+        --bg-subtle: #ebebe6;
+        --border: #e3e3df;
+        --ink: #1f1f1d;
+        --ink-soft: #3b3b37;
+        --ink-muted: #6b6b65;
+        --ink-faint: #999992;
+        --primary: #5b5fcf;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family:
+          -apple-system, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.45;
+        padding: 28px;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+      .sub {
+        color: var(--ink-muted);
+        margin-bottom: 24px;
+      }
+      h2 {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        margin: 28px 0 8px;
+      }
+      .legend-row {
+        font-size: 11px;
+        color: var(--ink-muted);
+        margin-bottom: 6px;
+      }
+      .wrap {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--bg-elevated);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        table-layout: fixed;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        background: var(--bg-muted);
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--ink-muted);
+        font-weight: 600;
+        border-bottom: 1.5px solid var(--border);
+      }
+      td {
+        border-bottom: 1px solid var(--border);
+        color: var(--ink-soft);
+      }
+      .id {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 11px;
+        color: var(--ink-muted);
+      }
+      .name {
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .perf {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 9px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6d28d9;
+        margin-bottom: 3px;
+      }
+      .jtbd {
+        font-style: italic;
+        font-size: 12px;
+        color: var(--ink-soft);
+      }
+      .ghe {
+        font-size: 12px;
+      }
+      .chip {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        white-space: nowrap;
+      }
+      .ch-gap {
+        background: rgba(244, 63, 94, 0.1);
+        color: #be123c;
+        border-color: rgba(244, 63, 94, 0.4);
+      }
+      .ch-match {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.4);
+      }
+      .ch-partial {
+        background: rgba(245, 158, 11, 0.1);
+        color: #b45309;
+        border-color: rgba(245, 158, 11, 0.4);
+      }
+      .ch-stays {
+        background: rgba(249, 115, 22, 0.1);
+        color: #c2410c;
+        border-color: rgba(249, 115, 22, 0.4);
+      }
+      .ch-moves {
+        background: rgba(16, 185, 129, 0.1);
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.4);
+      }
+      .ch-strat {
+        background: var(--bg-muted);
+        color: var(--ink);
+        border-color: var(--border);
+      }
+      .ch-meta-s07 {
+        background: rgba(20, 184, 166, 0.1);
+        color: #0f766e;
+        border-color: rgba(20, 184, 166, 0.4);
+      }
+      .ch-meta-s06 {
+        background: rgba(59, 130, 246, 0.1);
+        color: #1d4ed8;
+        border-color: rgba(59, 130, 246, 0.4);
+      }
+      .strat-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .strat-row {
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+      }
+      .strat-name {
+        font-size: 11.5px;
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .strat-desc {
+        font-size: 11px;
+        color: var(--ink-muted);
+        line-height: 1.4;
+      }
+      .meta-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .meta-trigger {
+        font-size: 11px;
+        font-style: italic;
+        color: var(--ink-muted);
+        line-height: 1.4;
+      }
+      .notes {
+        font-style: italic;
+        font-size: 11.5px;
+        color: var(--ink-soft);
+        line-height: 1.4;
+      }
+      .dash {
+        color: var(--ink-faint);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Customizations table — column-width options</h1>
+    <div class="sub">
+      Same rows in three width recipes. Pick one, or mix-and-match.
+    </div>
+
+    <h2>Current widths (for reference)</h2>
+    <div class="legend-row">
+      ID 60px · Customization 15% · JTBD 22% · GH equiv ~25.5% · Parity 7% ·
+      Strategy 7% · Hybrid 7% · Meta 14% · Notes 14%
+    </div>
+    <div class="wrap">
+      <table>
+        <colgroup>
+          <col style="width: 60px" />
+          <col style="width: 15%" />
+          <col style="width: 22%" />
+          <col />
+          <col style="width: 7%" />
+          <col style="width: 7%" />
+          <col style="width: 7%" />
+          <col style="width: 14%" />
+          <col style="width: 14%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customization</th>
+            <th>Jobs to be done</th>
+            <th>GitHub equivalent</th>
+            <th>Parity</th>
+            <th>Strategy</th>
+            <th>Hybrid</th>
+            <th>Meta-strategy candidates</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows-current"></tbody>
+      </table>
+    </div>
+
+    <h2>Option A — content-fit (recommended)</h2>
+    <div class="legend-row">
+      ID 56px · Customization 12% · JTBD 17% · GH equiv 14% · Parity 6% ·
+      Strategy 16% · Hybrid 8% · Meta 14% · Notes 13% — gives Strategy room for
+      its chip + title + description; trims oversized JTBD column
+    </div>
+    <div class="wrap">
+      <table>
+        <colgroup>
+          <col style="width: 56px" />
+          <col style="width: 12%" />
+          <col style="width: 17%" />
+          <col style="width: 14%" />
+          <col style="width: 6%" />
+          <col style="width: 16%" />
+          <col style="width: 8%" />
+          <col style="width: 14%" />
+          <col style="width: 13%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customization</th>
+            <th>Jobs to be done</th>
+            <th>GitHub equivalent</th>
+            <th>Parity</th>
+            <th>Strategy</th>
+            <th>Hybrid</th>
+            <th>Meta-strategy candidates</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows-a"></tbody>
+      </table>
+    </div>
+
+    <h2>Option B — narrative-heavy (gives long-text columns more room)</h2>
+    <div class="legend-row">
+      ID 56px · Customization 11% · JTBD 18% · GH equiv 14% · Parity 6% ·
+      Strategy 14% · Hybrid 8% · Meta 14% · Notes 15%
+    </div>
+    <div class="wrap">
+      <table>
+        <colgroup>
+          <col style="width: 56px" />
+          <col style="width: 11%" />
+          <col style="width: 18%" />
+          <col style="width: 14%" />
+          <col style="width: 6%" />
+          <col style="width: 14%" />
+          <col style="width: 8%" />
+          <col style="width: 14%" />
+          <col style="width: 15%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customization</th>
+            <th>Jobs to be done</th>
+            <th>GitHub equivalent</th>
+            <th>Parity</th>
+            <th>Strategy</th>
+            <th>Hybrid</th>
+            <th>Meta-strategy candidates</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows-b"></tbody>
+      </table>
+    </div>
+
+    <h2>
+      Option D — framework recipe (table sized to content, not viewport)
+    </h2>
+    <div class="legend-row">
+      Per-column min-widths from the framework HTML's <code>.custom-table</code>:
+      ID 45 · Customization 130 · JTBD 160 · GH equiv 180 · Parity 80 · Strategy 150 ·
+      Hybrid 150 · Meta 160 · Notes 110 (px). Table uses
+      <code>width: max-content</code> so it stops at its natural width (~1165px)
+      instead of stretching across the viewport.
+    </div>
+    <div class="wrap" style="display: inline-block; max-width: 100%; overflow-x: auto">
+      <table style="width: max-content; table-layout: auto">
+        <colgroup>
+          <col style="min-width: 45px" />
+          <col style="min-width: 130px" />
+          <col style="min-width: 160px" />
+          <col style="min-width: 180px" />
+          <col style="min-width: 80px" />
+          <col style="min-width: 150px" />
+          <col style="min-width: 150px" />
+          <col style="min-width: 160px" />
+          <col style="min-width: 110px" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customization</th>
+            <th>Jobs to be done</th>
+            <th>GitHub equivalent</th>
+            <th>Parity</th>
+            <th>Strategy</th>
+            <th>Hybrid</th>
+            <th>Meta-strategy candidates</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows-d"></tbody>
+      </table>
+    </div>
+
+    <h2>
+      Option E — tightened (framework recipe trimmed for less white space)
+    </h2>
+    <div class="legend-row">
+      ID 40 · Customization 130 · JTBD 160 · GH equiv 170 · Parity 64 ·
+      Strategy 150 · Hybrid 110 · Meta 160 · Notes 110 (px). Cell padding
+      reduced from 10×12 to 7×10. Table caps at ~1100px and sits flush left.
+    </div>
+    <div
+      class="wrap"
+      style="display: inline-block; max-width: 100%; overflow-x: auto"
+    >
+      <table style="width: max-content; table-layout: auto" class="tight">
+        <colgroup>
+          <col style="min-width: 40px" />
+          <col style="min-width: 130px" />
+          <col style="min-width: 160px" />
+          <col style="min-width: 170px" />
+          <col style="min-width: 64px" />
+          <col style="min-width: 150px" />
+          <col style="min-width: 110px" />
+          <col style="min-width: 160px" />
+          <col style="min-width: 110px" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customization</th>
+            <th>Jobs to be done</th>
+            <th>GitHub equivalent</th>
+            <th>Parity</th>
+            <th>Strategy</th>
+            <th>Hybrid</th>
+            <th>Meta-strategy candidates</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows-e"></tbody>
+      </table>
+    </div>
+    <style>
+      .tight th,
+      .tight td {
+        padding: 7px 10px;
+      }
+    </style>
+
+    <h2>Option C — chip-tight (minimum-viable widths for chip columns)</h2>
+    <div class="legend-row">
+      ID 50px · Customization 12% · JTBD 18% · GH equiv 16% · Parity 5% ·
+      Strategy 17% · Hybrid 7.5% · Meta 13% · Notes 13%
+    </div>
+    <div class="wrap">
+      <table>
+        <colgroup>
+          <col style="width: 50px" />
+          <col style="width: 12%" />
+          <col style="width: 18%" />
+          <col style="width: 16%" />
+          <col style="width: 5%" />
+          <col style="width: 17%" />
+          <col style="width: 7.5%" />
+          <col style="width: 13%" />
+          <col style="width: 13%" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customization</th>
+            <th>Jobs to be done</th>
+            <th>GitHub equivalent</th>
+            <th>Parity</th>
+            <th>Strategy</th>
+            <th>Hybrid</th>
+            <th>Meta-strategy candidates</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="rows-c"></tbody>
+      </table>
+    </div>
+
+    <script>
+      const ROWS = [
+        {
+          id: "C01",
+          name: "Process template",
+          performer: "Custom code",
+          jtbd: "Enforce a Microsoft-specific work item lifecycle that maps to compliance and reporting needs.",
+          ghe: "Issue Forms + custom Issue Types — composable but doesn't replicate ADO's process inheritance.",
+          parity: { cls: "ch-gap", text: "Gap" },
+          strat: {
+            chip: "S01",
+            name: "Protect in Place (hybrid)",
+            desc: "Too expensive or risky to migrate. Hybrid keeps it on ADO; zero migration engineering.",
+          },
+          hybrid: { cls: "ch-stays", text: "Stays in ADO" },
+          meta: [
+            {
+              code: "S07 · Third-party",
+              cls: "ch-meta-s07",
+              trigger:
+                "team is already syncing Boards to Jira, commit to Jira as source of truth.",
+            },
+          ],
+          notes:
+            "Process template is why Boards stays in the hybrid — not because GitHub has nothing, but because what it has doesn't compose.",
+        },
+        {
+          id: "C13",
+          name: "Pipeline source wiring",
+          performer: "Custom code",
+          jtbd: "Re-point pipelines from ADO Repos to GitHub repos and update event triggers.",
+          ghe: "Native — `uses:` with a GitHub repo reference; webhook events fire from GitHub directly.",
+          parity: { cls: "ch-match", text: "Match" },
+          strat: {
+            chip: "S02",
+            name: "Translate to GitHub",
+            desc: "Clean GitHub equivalent. Mechanical rebuild once per org, then forget.",
+          },
+          hybrid: { cls: "ch-moves", text: "Moves to GitHub" },
+          meta: [],
+          notes: "Pipeline source wiring does change (ADO Repos → GitHub).",
+        },
+        {
+          id: "C30",
+          name: "Built-in task translation gaps",
+          performer: "Custom code",
+          jtbd: "Convert ADO classic-build tasks (PublishBuildArtifacts, NuGetCommand, etc.) to GitHub Actions equivalents per pipeline.",
+          ghe: "Composite GitHub Actions exist for most patterns, but classic-only tasks have no 1:1 translation.",
+          parity: { cls: "ch-partial", text: "Partial" },
+          strat: {
+            chip: "S04",
+            name: "Rebuild with Accepted Loss",
+            desc: "GitHub equivalent is thinner. Rebuild and accept the simplification.",
+          },
+          hybrid: { cls: "ch-stays", text: "Stays in ADO" },
+          meta: [
+            {
+              code: "S06 · Upstream",
+              cls: "ch-meta-s06",
+              trigger:
+                "the same classic tasks appear across many teams (publish artefact, security scan), package as composite actions (Tier B).",
+            },
+          ],
+          notes:
+            "Per-pipeline rewrites; classic-only tasks still need conversion if Pipelines ever moves.",
+        },
+      ];
+
+      function renderRow(r) {
+        return `<tr>
+          <td class="id">${r.id}</td>
+          <td><div class="name">${r.name}</div></td>
+          <td><div class="perf">${r.performer}</div><div class="jtbd">${r.jtbd}</div></td>
+          <td class="ghe">${r.ghe}</td>
+          <td><span class="chip ${r.parity.cls}">${r.parity.text}</span></td>
+          <td>
+            <div class="strat-stack">
+              <div class="strat-row">
+                <span class="chip ch-strat">${r.strat.chip}</span>
+                <span class="strat-name">${r.strat.name}</span>
+              </div>
+              <div class="strat-desc">${r.strat.desc}</div>
+            </div>
+          </td>
+          <td><span class="chip ${r.hybrid.cls}">${r.hybrid.text}</span></td>
+          <td>${
+            r.meta.length === 0
+              ? '<span class="dash">—</span>'
+              : `<div class="meta-stack">${r.meta
+                  .map(
+                    (m) =>
+                      `<div><span class="chip ${m.cls}">${m.code}</span><div class="meta-trigger">If ${m.trigger}</div></div>`,
+                  )
+                  .join("")}</div>`
+          }</td>
+          <td><div class="notes">${r.notes}</div></td>
+        </tr>`;
+      }
+      const html = ROWS.map(renderRow).join("");
+      document.getElementById("rows-current").innerHTML = html;
+      document.getElementById("rows-a").innerHTML = html;
+      document.getElementById("rows-b").innerHTML = html;
+      document.getElementById("rows-c").innerHTML = html;
+      document.getElementById("rows-d").innerHTML = html;
+      document.getElementById("rows-e").innerHTML = html;
+    </script>
+
+    <div style="margin-top: 28px; color: var(--ink-muted); font-size: 12px">
+      <strong>Updated recommendation:</strong> Option E. Same shape as the
+      framework recipe but trims the chip columns (Parity 80→64, Hybrid
+      150→110) and reduces cell padding so rows feel less airy. Table caps at
+      ~1100px.
+    </div>
+  </body>
+</html>
