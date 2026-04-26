@@ -241,10 +241,13 @@ export function CustomizationsTable({ block }: { block: CustomizationsBlock }) {
 
   return (
     <div className="space-y-3">
-      <div className="overflow-x-auto rounded-xl border border-border bg-bg-elevated">
+      <div
+        className="overflow-x-auto rounded-xl border border-border bg-bg-elevated"
+        style={{ width: "75%" }}
+      >
         <table
           className="w-full border-collapse text-[13px]"
-          style={{ minWidth: 1300 }}
+          style={{ minWidth: 975 }}
         >
           <colgroup>
             <col style={{ width: "3%", minWidth: 45 }} />
