@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Field } from "@/lib/inventory-fields";
 import type {
@@ -179,6 +180,43 @@ export function InventoryProfile({
   }, [rows]);
 
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
+
+  const searchParams = useSearchParams();
+  const focusId = searchParams.get("focus");
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusId) return;
+    const kind = focusId[0];
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (kind === "J") setLayer("jtbd");
+    else if (kind === "F") setLayer("feature");
+    else if (kind === "E") setLayer("entity");
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // Find the row in `rows` to expand its ancestors
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      for (const r of rows) {
+        if (r.kind === "cat") next.add(r.id);
+        if (r.kind === "featcat") next.add(r.id);
+        if (kind === "F" && r.kind === "jtbd") next.add(`jtbd:${r.jtbd.id}`);
+        if (kind === "E") {
+          if (r.kind === "jtbd") next.add(`jtbd:${r.jtbd.id}`);
+          if (r.kind === "feature" && !r.isRef) next.add(r.rowKey);
+        }
+      }
+      return next;
+    });
+    setHighlightId(focusId);
+    const t = setTimeout(() => {
+      const el = document.getElementById(`row-${focusId}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 250);
+    const clear = setTimeout(() => setHighlightId(null), 3500);
+    return () => {
+      clearTimeout(t);
+      clearTimeout(clear);
+    };
+  }, [focusId, rows]);
 
   // Customizations section — collapsed by default in All-layers view.
   const [customExpanded, setCustomExpanded] = useState(false);
@@ -610,6 +648,17 @@ export function InventoryProfile({
 
   return (
     <div className="space-y-3">
+      {highlightId ? (
+        <style>{`
+          #row-${highlightId} > td {
+            animation: ada-flash 2.4s ease-out;
+          }
+          @keyframes ada-flash {
+            0% { background-color: rgb(254 240 138); }
+            100% { background-color: transparent; }
+          }
+        `}</style>
+      ) : null}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-border bg-bg-elevated p-3">
         {layer !== "customization" && layer !== "integration" ? (
           <ExpandToggle
@@ -1043,6 +1092,7 @@ function FieldTable({
                     return (
                       <tr
                         key={fld.id}
+                        id={`row-${fld.id}`}
                         className="border-b border-border/60 hover:bg-bg-hover"
                       >
                         <NumTd>{num}</NumTd>
@@ -1262,6 +1312,7 @@ function EntityTable({
                     trs.push(
                       <tr
                         key={e.id}
+                        id={`row-${e.id}`}
                         className="border-b border-border/60 hover:bg-bg-hover"
                       >
                         <NumTd>{num}</NumTd>
@@ -1950,7 +2001,7 @@ function RowView({
     const isOpen = expanded.has(`jtbd:${row.jtbd.id}`);
     const featCount = row.jtbd.featureNodes.length;
     return (
-      <tr className="bg-white">
+      <tr id={`row-${row.jtbd.id}`} className="bg-white">
         <NumTd>{rowNum}</NumTd>
         <Td className="font-mono text-[10px] text-ink-muted">{row.jtbd.id}</Td>
         <Td>
@@ -2025,7 +2076,10 @@ function RowView({
     const isOpen = expanded.has(row.rowKey);
     const entityCount = row.feature.entityNodes.length;
     return (
-      <tr className="bg-white">
+      <tr
+        id={row.isRef ? undefined : `row-${row.feature.id}`}
+        className="bg-white"
+      >
         <NumTd>{rowNum}</NumTd>
         <Td
           className={muted(row.isRef, "font-mono text-[10px] text-ink-muted")}
@@ -2114,7 +2168,10 @@ function RowView({
     const isOpen = expanded.has(row.rowKey);
     const hasFields = !row.isRef && row.entity.fields.length > 0;
     return (
-      <tr className="bg-white">
+      <tr
+        id={row.isRef ? undefined : `row-${row.entity.id}`}
+        className="bg-white"
+      >
         <NumTd>{rowNum}</NumTd>
         <Td
           className={muted(row.isRef, "font-mono text-[10px] text-ink-muted")}

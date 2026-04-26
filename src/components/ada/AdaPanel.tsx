@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -154,7 +154,9 @@ function ChatBody({
             )}
           </Turn>
         ) : (
-          messages.map((m) => <MessageTurn key={m.id} message={m} />)
+          messages.map((m) => (
+            <MessageTurn key={m.id} message={m} teamSlug={teamSlug} />
+          ))
         )}
         {status === "submitted" || status === "streaming" ? (
           <Turn speaker="Ada" kind="bot">
@@ -179,7 +181,13 @@ function ChatBody({
   );
 }
 
-function MessageTurn({ message }: { message: UIMessage }) {
+function MessageTurn({
+  message,
+  teamSlug,
+}: {
+  message: UIMessage;
+  teamSlug: string | null;
+}) {
   const text = message.parts
     .map((p) => (p.type === "text" ? p.text : ""))
     .join("");
@@ -191,12 +199,75 @@ function MessageTurn({ message }: { message: UIMessage }) {
     >
       {isBot ? (
         <div className="prose-ada">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{text}</ReactMarkdown>
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            components={{
+              p: ({ children }) => <p>{linkifyIds(children, teamSlug)}</p>,
+              li: ({ children }) => <li>{linkifyIds(children, teamSlug)}</li>,
+              strong: ({ children }) => (
+                <strong>{linkifyIds(children, teamSlug)}</strong>
+              ),
+            }}
+          >
+            {text}
+          </ReactMarkdown>
         </div>
       ) : (
         <span className="whitespace-pre-wrap">{text}</span>
       )}
     </Turn>
+  );
+}
+
+const ID_RE = /\b([JFE])(\d{2,3})\b/g;
+
+function linkifyIds(
+  children: React.ReactNode,
+  teamSlug: string | null,
+): React.ReactNode {
+  return React.Children.map(children, (child) => {
+    if (typeof child !== "string") return child;
+    const parts: React.ReactNode[] = [];
+    let last = 0;
+    let m: RegExpExecArray | null;
+    ID_RE.lastIndex = 0;
+    while ((m = ID_RE.exec(child)) !== null) {
+      if (m.index > last) parts.push(child.slice(last, m.index));
+      const id = `${m[1]}${m[2]}`;
+      parts.push(
+        <IdChip key={`${id}-${m.index}`} id={id} teamSlug={teamSlug} />,
+      );
+      last = m.index + m[0].length;
+    }
+    if (last < child.length) parts.push(child.slice(last));
+    return parts.length ? parts : child;
+  });
+}
+
+function IdChip({ id, teamSlug }: { id: string; teamSlug: string | null }) {
+  const kind = id[0] as "J" | "F" | "E";
+  const tone =
+    kind === "J"
+      ? "bg-purple-100 text-purple-800 hover:bg-purple-200"
+      : kind === "F"
+        ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
+        : "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
+  if (!teamSlug) {
+    return (
+      <span
+        className={`inline-flex items-center rounded px-[5px] py-[1px] font-mono text-[10.5px] font-semibold ${tone}`}
+      >
+        {id}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={`/teams/${teamSlug}/inventory?focus=${id}`}
+      className={`inline-flex items-center rounded px-[5px] py-[1px] font-mono text-[10.5px] font-semibold transition-colors ${tone}`}
+    >
+      {id}
+    </Link>
   );
 }
 
