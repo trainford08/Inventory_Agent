@@ -40,6 +40,19 @@ const PARITY_TONE: Record<string, string> = {
   BETTER: "border-violet-500/40 bg-violet-500/10 text-violet-700",
 };
 
+const STRATEGY_TONE: Record<string, string> = {
+  S01_PROTECT_IN_PLACE: "border-violet-500/40 bg-violet-500/10 text-violet-700",
+  S02_TRANSLATE_TO_GITHUB:
+    "border-emerald-500/40 bg-emerald-500/10 text-emerald-700",
+  S03_RETIRE: "border-amber-500/40 bg-amber-500/10 text-amber-800",
+  S04_REBUILD_WITH_LOSS:
+    "border-orange-500/40 bg-orange-500/10 text-orange-700",
+  S05_BUILD_GLUE: "border-rose-500/40 bg-rose-500/10 text-rose-700",
+  S06_UPSTREAM: "border-blue-500/40 bg-blue-500/10 text-blue-700",
+  S07_CONSOLIDATE_THIRD_PARTY:
+    "border-teal-500/40 bg-teal-500/10 text-teal-700",
+};
+
 const STRATEGY_LABEL: Record<string, string> = {
   S01_PROTECT_IN_PLACE: "S01",
   S02_TRANSLATE_TO_GITHUB: "S02",
@@ -353,7 +366,12 @@ function Row({ row }: { row: CustomizationRow }) {
         {row.strategy ? (
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline gap-1.5">
-              <span className="inline-flex items-center rounded border border-border bg-bg-muted px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-[0.04em] text-ink">
+              <span
+                className={`inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-semibold tracking-[0.04em] ${
+                  STRATEGY_TONE[row.strategy] ??
+                  "border-border bg-bg-muted text-ink"
+                }`}
+              >
                 {STRATEGY_LABEL[row.strategy] ?? row.strategy}
               </span>
               <span className="text-[11.5px] font-medium text-ink">
@@ -457,6 +475,25 @@ function Legend() {
     { value: "GAP", def: "No GitHub equivalent today" },
     { value: "BETTER", def: "GitHub native is stronger" },
   ];
+  const strategyItems: Array<{ key: string; short: string; def: string }> = [
+    {
+      key: "S01_PROTECT_IN_PLACE",
+      short: "S01",
+      def: "Protect in Place (hybrid)",
+    },
+    {
+      key: "S02_TRANSLATE_TO_GITHUB",
+      short: "S02",
+      def: "Translate to GitHub",
+    },
+    { key: "S03_RETIRE", short: "S03", def: "Retire During Discovery" },
+    {
+      key: "S04_REBUILD_WITH_LOSS",
+      short: "S04",
+      def: "Rebuild with Accepted Loss",
+    },
+    { key: "S05_BUILD_GLUE", short: "S05", def: "Build Glue" },
+  ];
   return (
     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl border border-border bg-bg-elevated px-4 py-2.5 text-[11.5px] text-ink-muted">
       <span className="inline-flex items-center gap-2">
@@ -471,6 +508,22 @@ function Legend() {
               {PARITY_LABEL[p.value]}
             </span>
             <span>{p.def}</span>
+          </span>
+        ))}
+      </span>
+      <span className="h-[18px] w-px bg-border" aria-hidden />
+      <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
+          Strategy
+        </span>
+        {strategyItems.map((s) => (
+          <span key={s.key} className="inline-flex items-center gap-1.5">
+            <span
+              className={`inline-block rounded-[3px] border px-[5px] py-[1px] font-mono text-[10px] font-semibold ${STRATEGY_TONE[s.key]}`}
+            >
+              {s.short}
+            </span>
+            <span>{s.def}</span>
           </span>
         ))}
       </span>
