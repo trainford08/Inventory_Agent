@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AdaPanel } from "./AdaPanel";
 
 type FieldMeta = {
@@ -12,6 +12,10 @@ type FieldMeta = {
 };
 
 const FIELD_STORAGE_KEY = "ada:current-field";
+const WIDTH_STORAGE_KEY = "ada:drawer-width";
+const MIN_WIDTH = 360;
+const MAX_WIDTH = 900;
+const DEFAULT_WIDTH = 420;
 
 /**
  * Floating Ada button + drawer. Always available in the app shell.
@@ -28,6 +32,55 @@ export function GlobalAda() {
 
   const [open, setOpen] = useState(false);
   const [field, setField] = useState<FieldMeta | null>(null);
+  const [width, setWidth] = useState<number>(DEFAULT_WIDTH);
+  const draggingRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(WIDTH_STORAGE_KEY);
+      const n = raw ? parseInt(raw, 10) : NaN;
+      if (!Number.isNaN(n))
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setWidth(Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, n)));
+    } catch {
+      /* noop */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(WIDTH_STORAGE_KEY, String(width));
+    } catch {
+      /* noop */
+    }
+  }, [width]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!draggingRef.current) return;
+      const next = window.innerWidth - e.clientX;
+      setWidth(Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, next)));
+    };
+    const onUp = () => {
+      if (!draggingRef.current) return;
+      draggingRef.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const startDrag = () => {
+    draggingRef.current = true;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
 
   // Auto-open when a review page sets ?ada=<fieldId>
   useEffect(() => {
@@ -62,7 +115,8 @@ export function GlobalAda() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? "Close Ada" : "Open Ada"}
-        className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-600 text-white shadow-[0_4px_18px_rgba(99,102,241,0.45)] transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-cyan-600 text-white shadow-[0_4px_18px_rgba(99,102,241,0.45)] transition-all hover:scale-105 active:scale-95"
+        style={{ right: open ? width + 16 : 24 }}
       >
         {open ? (
           <svg
@@ -93,7 +147,20 @@ export function GlobalAda() {
       </button>
 
       {open ? (
-        <div className="fixed inset-y-0 right-0 z-30 flex w-[420px] max-w-[92vw] flex-col border-l border-border bg-bg-elevated shadow-[-12px_0_32px_rgba(0,0,0,0.08)]">
+        <div
+          className="fixed inset-y-0 right-0 z-30 flex max-w-[92vw] flex-col border-l border-border bg-bg-elevated shadow-[-12px_0_32px_rgba(0,0,0,0.08)]"
+          style={{ width }}
+        >
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize Ada drawer"
+            onMouseDown={startDrag}
+            onDoubleClick={() => setWidth(DEFAULT_WIDTH)}
+            className="group absolute inset-y-0 left-0 z-10 w-1.5 -translate-x-1/2 cursor-col-resize select-none"
+          >
+            <div className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent transition-colors group-hover:bg-accent-mid" />
+          </div>
           <AdaPanel
             fieldId={field?.fieldId ?? null}
             fieldLabel={field?.fieldLabel ?? null}

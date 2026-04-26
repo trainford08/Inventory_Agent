@@ -557,6 +557,25 @@ export async function getCodeReposChunk(
     { key: "classic-releases", name: "Classic releases", fields: releaseItems },
   ];
 
+  // Demo override for /teams/alpha/review/code-and-repos: across all fields
+  // in render order, 1st/2nd/3rd/5th show as accepted, 4th + 6th onward as
+  // pending. Stable so the screenshot story is consistent.
+  if (slug === "alpha") {
+    const accepted = new Set([0, 1, 2, 4]);
+    let i = 0;
+    for (const def of subsectionDefs) {
+      def.fields = def.fields.map((f) => {
+        const next = { ...f };
+        next.state = accepted.has(i) ? "accepted" : "pending";
+        next.reviewedAgoLabel = accepted.has(i)
+          ? (next.reviewedAgoLabel ?? "just now")
+          : null;
+        i++;
+        return next;
+      });
+    }
+  }
+
   const subsections: ReviewSubsection[] = subsectionDefs.map((def) => ({
     key: def.key,
     name: def.name,
