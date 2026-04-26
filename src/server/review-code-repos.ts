@@ -242,8 +242,12 @@ export async function getCodeReposChunk(
     "comment resolution",
     "no protections set",
   ];
+  const preacceptedCount = Math.min(
+    DEMO_PREACCEPTED_REPO_COUNT,
+    Math.max(0, repos.length - 1),
+  );
   const preacceptedRepoIds = new Set(
-    repos.slice(0, DEMO_PREACCEPTED_REPO_COUNT).map((r) => r.id),
+    repos.slice(0, preacceptedCount).map((r) => r.id),
   );
   // Attributes that the reviewer has already confirmed on the currently-
   // in-progress repo. Four of the eight attrs start accepted; the other
@@ -253,7 +257,7 @@ export async function getCodeReposChunk(
     "name",
     "primaryOwner",
     "defaultBranch",
-    "visibility",
+    "hasLfs",
   ]);
   const currentRepo =
     (requestedRepoId && repos.find((r) => r.id === requestedRepoId)) ||
@@ -435,10 +439,9 @@ export async function getCodeReposChunk(
     if (r.id === currentRepoId) {
       for (const it of items) {
         const attr = it.fieldPath.split(".").pop() ?? "";
-        if (
-          DEMO_CURRENT_REPO_PREACCEPTED_ATTRS.has(attr) &&
-          it.state === "agent_accepted"
-        ) {
+        if (!DEMO_CURRENT_REPO_PREACCEPTED_ATTRS.has(attr)) continue;
+        // Override unless the user has actually touched this item.
+        if (it.state === "agent_accepted" || it.state === "pending") {
           it.state = "accepted";
           it.reviewedAgoLabel =
             attr === "name" || attr === "primaryOwner"
@@ -557,13 +560,15 @@ export async function getCodeReposChunk(
     { key: "classic-releases", name: "Classic releases", fields: releaseItems },
   ];
 
-  // Demo override for /teams/alpha/review/code-and-repos: across all fields
-  // in render order, 1st/2nd/3rd/5th show as accepted, 4th + 6th onward as
-  // pending. Stable so the screenshot story is consistent.
+  // Demo override for /teams/alpha/review/code-and-repos: across the
+  // non-repo subsections (Organization, Projects, Pipelines, Releases),
+  // 1st/2nd/3rd/5th render as accepted, 4th + 6th onward as pending.
+  // Repositories use their own per-attribute pre-accept logic above.
   if (slug === "alpha") {
     const accepted = new Set([0, 1, 2, 4]);
     let i = 0;
     for (const def of subsectionDefs) {
+      if (def.key === "repositories") continue;
       def.fields = def.fields.map((f) => {
         const next = { ...f };
         next.state = accepted.has(i) ? "accepted" : "pending";
