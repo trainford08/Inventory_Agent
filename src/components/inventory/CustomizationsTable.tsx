@@ -516,7 +516,7 @@ function Legend() {
       </div>
       <div className="flex flex-col gap-1.5">
         <div className="font-mono text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-faint">
-          Strategy
+          Migration Strategy
         </div>
         {strategyItems.map((s) => (
           <div key={s.key} className="flex items-baseline gap-2">
