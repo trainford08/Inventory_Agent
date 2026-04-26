@@ -35,6 +35,7 @@ export default async function TeamReviewSectionPage({
       : null;
     const adaProps = adaMatch
       ? {
+          fieldId: adaMatch.field.id,
           fieldLabel: adaMatch.field.question ?? adaMatch.field.label,
           fieldSubject: adaMatch.subsection.currentSubjectName ?? null,
           fieldValue: adaMatch.field.value,

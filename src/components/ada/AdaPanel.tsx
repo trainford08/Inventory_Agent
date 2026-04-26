@@ -3,12 +3,14 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
+import { editFinding } from "@/server/actions/finding-actions";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 type AdaPanelProps = {
+  fieldId?: string | null;
   fieldLabel: string | null;
   fieldSubject?: string | null;
   fieldValue?: string | null;
@@ -20,6 +22,7 @@ type AdaPanelProps = {
  * Visible when the URL has `?ada=<fieldId>`. Close clears the param.
  */
 export function AdaPanel({
+  fieldId,
   fieldLabel,
   fieldSubject,
   fieldValue,
@@ -44,6 +47,7 @@ export function AdaPanel({
         showClose={isActive}
       />
       <ChatBody
+        fieldId={fieldId ?? null}
         fieldLabel={fieldLabel}
         fieldValue={fieldValue ?? null}
         teamSlug={teamSlug ?? null}
@@ -123,41 +127,119 @@ function Header({
 }
 
 function ChatBody({
+  fieldId,
   fieldLabel,
   fieldValue,
   teamSlug,
 }: {
+  fieldId: string | null;
   fieldLabel: string | null;
   fieldValue: string | null;
   teamSlug: string | null;
 }) {
-  const { messages, sendMessage, status } = useChat({
+  const storageKey = `ada:conv:${teamSlug ?? "no-team"}`;
+  const initialMessages = useMemo<UIMessage[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      return raw ? (JSON.parse(raw) as UIMessage[]) : [];
+    } catch {
+      return [];
+    }
+  }, [storageKey]);
+
+  const { messages, sendMessage, setMessages, status } = useChat({
+    messages: initialMessages,
     transport: new DefaultChatTransport({
       api: "/api/ada",
-      body: { teamSlug, fieldLabel, fieldValue },
+      body: { teamSlug, fieldId, fieldLabel, fieldValue },
     }),
   });
+
+  // Track each "field open" event so we can show a divider in the chat
+  // thread at the message-index where the user clicked "Not sure".
+  const [fieldEvents, setFieldEvents] = useState<
+    { index: number; label: string }[]
+  >([]);
+  const lastFieldIdRef = React.useRef<string | null>(null);
+  useEffect(() => {
+    if (!fieldId || !fieldLabel) return;
+    if (lastFieldIdRef.current === fieldId) return;
+    lastFieldIdRef.current = fieldId;
+    setFieldEvents((prev) => [
+      ...prev,
+      { index: messages.length, label: fieldLabel },
+    ]);
+  }, [fieldId, fieldLabel, messages.length]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (status === "submitted" || status === "streaming") return;
+    try {
+      if (messages.length === 0) {
+        window.localStorage.removeItem(storageKey);
+      } else {
+        window.localStorage.setItem(storageKey, JSON.stringify(messages));
+      }
+    } catch {
+      /* quota / privacy mode — silently skip */
+    }
+  }, [messages, status, storageKey]);
+
+  const clear = () => {
+    setMessages([]);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(storageKey);
+      } catch {
+        /* noop */
+      }
+    }
+  };
 
   return (
     <>
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-[22px] py-[22px]">
         {messages.length === 0 ? (
-          <Turn speaker="Ada" kind="bot">
-            {fieldLabel ? (
-              <>
-                I can help you think through <strong>{fieldLabel}</strong>. Ask
-                me what it means, what the evidence says, or how teams usually
-                answer it.
-              </>
-            ) : (
-              <>Hi — what would you like to know about your migration?</>
-            )}
-          </Turn>
+          <>
+            {fieldLabel ? <FieldOpenedBanner label={fieldLabel} /> : null}
+            <Turn speaker="Ada" kind="bot">
+              {fieldLabel ? (
+                <>
+                  I can help you think through <strong>{fieldLabel}</strong>.
+                  Ask me what it means, what the evidence says, or how teams
+                  usually answer it.
+                </>
+              ) : (
+                <>Hi — what would you like to know about your migration?</>
+              )}
+            </Turn>
+          </>
         ) : (
-          messages.map((m) => (
-            <MessageTurn key={m.id} message={m} teamSlug={teamSlug} />
+          messages.map((m, i) => (
+            <React.Fragment key={m.id}>
+              {fieldEvents
+                .filter((e) => e.index === i)
+                .map((e, j) => (
+                  <FieldOpenedBanner key={`evt-${i}-${j}`} label={e.label} />
+                ))}
+              <MessageTurn
+                message={m}
+                teamSlug={teamSlug}
+                fieldId={fieldId}
+                sendMessage={sendMessage}
+              />
+            </React.Fragment>
           ))
         )}
+        {/* trailing events that landed at the end of the list */}
+        {messages.length > 0
+          ? fieldEvents
+              .filter((e) => e.index >= messages.length)
+              .map((e, j) => (
+                <FieldOpenedBanner key={`evt-end-${j}`} label={e.label} />
+              ))
+          : null}
         {status === "submitted" || status === "streaming" ? (
           <Turn speaker="Ada" kind="bot">
             <span className="inline-flex gap-1">
@@ -176,6 +258,17 @@ function ChatBody({
           onSubmit={(text) => sendMessage({ text })}
           disabled={status === "submitted" || status === "streaming"}
         />
+        {messages.length > 0 ? (
+          <div className="mt-2 text-right">
+            <button
+              type="button"
+              onClick={clear}
+              className="text-[11px] text-ink-muted hover:text-ink"
+            >
+              Clear conversation
+            </button>
+          </div>
+        ) : null}
       </div>
     </>
   );
@@ -184,39 +277,80 @@ function ChatBody({
 function MessageTurn({
   message,
   teamSlug,
+  fieldId,
+  sendMessage,
 }: {
   message: UIMessage;
   teamSlug: string | null;
+  fieldId: string | null;
+  sendMessage: (msg: { text: string }) => void;
 }) {
   const text = message.parts
-    .map((p) => (p.type === "text" ? p.text : ""))
+    .filter((p) => p.type === "text")
+    .map((p) => (p as { type: "text"; text: string }).text)
     .join("");
+  const proposal = extractProposal(message);
   const isBot = message.role !== "user";
   return (
-    <Turn
-      speaker={message.role === "user" ? "You" : "Ada"}
-      kind={isBot ? "bot" : "user"}
-    >
-      {isBot ? (
-        <div className="prose-ada">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            components={{
-              p: ({ children }) => <p>{linkifyIds(children, teamSlug)}</p>,
-              li: ({ children }) => <li>{linkifyIds(children, teamSlug)}</li>,
-              strong: ({ children }) => (
-                <strong>{linkifyIds(children, teamSlug)}</strong>
-              ),
-            }}
-          >
-            {text}
-          </ReactMarkdown>
-        </div>
-      ) : (
-        <span className="whitespace-pre-wrap">{text}</span>
-      )}
-    </Turn>
+    <>
+      <Turn
+        speaker={message.role === "user" ? "You" : "Ada"}
+        kind={isBot ? "bot" : "user"}
+      >
+        {isBot ? (
+          <div className="prose-ada">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => <p>{linkifyIds(children, teamSlug)}</p>,
+                li: ({ children }) => <li>{linkifyIds(children, teamSlug)}</li>,
+                strong: ({ children }) => (
+                  <strong>{linkifyIds(children, teamSlug)}</strong>
+                ),
+              }}
+            >
+              {text}
+            </ReactMarkdown>
+          </div>
+        ) : (
+          <span className="whitespace-pre-wrap">{text}</span>
+        )}
+      </Turn>
+      {proposal ? (
+        <ProposalCard
+          proposal={proposal}
+          fieldId={fieldId}
+          onTellMore={() =>
+            sendMessage({
+              text: "Walk me through your reasoning in more detail.",
+            })
+          }
+          onStillUnsure={() =>
+            sendMessage({
+              text: "I'm still not sure. What evidence would help?",
+            })
+          }
+        />
+      ) : null}
+    </>
   );
+}
+
+type Proposal = {
+  value: string;
+  confidence: "high" | "medium" | "low";
+  reasoning: string;
+};
+
+function extractProposal(message: UIMessage): Proposal | null {
+  for (const part of message.parts) {
+    const p = part as { type: string; output?: unknown; result?: unknown };
+    if (p.type === "tool-proposeAnswer") {
+      const out = (p.output ?? p.result) as Proposal | undefined;
+      if (out && typeof out.value === "string") return out;
+    }
+  }
+  return null;
 }
 
 const ID_RE = /\b([JFE])(\d{2,3})\b/g;
@@ -297,6 +431,106 @@ function Turn({
       >
         {children}
       </div>
+    </div>
+  );
+}
+
+function FieldOpenedBanner({ label }: { label: string }) {
+  return (
+    <div className="my-1 flex items-center gap-2 self-stretch">
+      <div className="h-px flex-1 bg-border" />
+      <div className="rounded-full border border-accent-mid bg-accent-soft px-2.5 py-[3px] font-mono text-[10px] font-semibold uppercase tracking-[0.06em] text-accent-ink">
+        Now helping with: {label}
+      </div>
+      <div className="h-px flex-1 bg-border" />
+    </div>
+  );
+}
+
+function ProposalCard({
+  proposal,
+  fieldId,
+  onTellMore,
+  onStillUnsure,
+}: {
+  proposal: Proposal;
+  fieldId: string | null;
+  onTellMore: () => void;
+  onStillUnsure: () => void;
+}) {
+  const router = useRouter();
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">(
+    "idle",
+  );
+  const accept = async () => {
+    if (!fieldId || state === "saving") return;
+    setState("saving");
+    const res = await editFinding({
+      findingId: fieldId,
+      value: proposal.value,
+    });
+    if (res.ok) {
+      setState("saved");
+      router.refresh();
+    } else {
+      setState("error");
+    }
+  };
+  const tone =
+    proposal.confidence === "high"
+      ? "border-emerald-300 bg-emerald-50/60"
+      : proposal.confidence === "medium"
+        ? "border-amber-300 bg-amber-50/60"
+        : "border-rose-300 bg-rose-50/60";
+  return (
+    <div
+      className={`mt-1 self-start rounded-lg border ${tone} p-3 max-w-[88%]`}
+    >
+      <div className="mb-1.5 flex items-center justify-between font-mono text-[9.5px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
+        <span>Proposed answer</span>
+        <span>Confidence: {proposal.confidence}</span>
+      </div>
+      <div className="mb-2 inline-block rounded-[5px] border border-border bg-bg-elevated px-[11px] py-[7px] font-mono text-[12.5px]">
+        {proposal.value}
+      </div>
+      <div className="mb-2.5 text-[11.5px] italic leading-snug text-ink-soft">
+        {proposal.reasoning}
+      </div>
+      <div className="flex flex-wrap gap-[7px]">
+        <button
+          type="button"
+          onClick={accept}
+          disabled={!fieldId || state === "saving" || state === "saved"}
+          className="inline-flex items-center gap-[5px] rounded-md border border-emerald-600 bg-emerald-600 px-[13px] py-[7px] text-[12px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+        >
+          {state === "saved"
+            ? "✓ Accepted"
+            : state === "saving"
+              ? "Saving…"
+              : state === "error"
+                ? "Retry"
+                : "Accept this answer"}
+        </button>
+        <button
+          type="button"
+          onClick={onTellMore}
+          className="rounded-md border border-border bg-bg-elevated px-[13px] py-[7px] text-[12px] font-semibold text-ink hover:bg-bg-subtle"
+        >
+          Tell me more
+        </button>
+        <button
+          type="button"
+          onClick={onStillUnsure}
+          className="rounded-md border border-border bg-bg-elevated px-[13px] py-[7px] text-[12px] font-semibold text-ink hover:bg-bg-subtle"
+        >
+          Still not sure
+        </button>
+      </div>
+      {!fieldId ? (
+        <div className="mt-2 text-[10.5px] italic text-ink-muted">
+          Open a field via &quot;Not sure&quot; to enable Accept.
+        </div>
+      ) : null}
     </div>
   );
 }

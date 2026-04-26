@@ -52,18 +52,19 @@ Response style:
 type Body = {
   messages: UIMessage[];
   teamSlug?: string | null;
+  fieldId?: string | null;
   fieldLabel?: string | null;
   fieldValue?: string | null;
 };
 
 export async function POST(req: Request) {
-  const { messages, teamSlug, fieldLabel, fieldValue } =
+  const { messages, teamSlug, fieldId, fieldLabel, fieldValue } =
     (await req.json()) as Body;
 
   const fieldContext = fieldLabel
     ? `\n\nThe champion is currently reviewing the field "${fieldLabel}"${
         fieldValue ? ` (current value: ${fieldValue})` : ""
-      }. Tailor your first response to that field.`
+      }${fieldId ? ` (id: ${fieldId})` : ""}. Tailor your first response to that field. When you have a confident, specific answer for this field, call the proposeAnswer tool so the champion can accept it with one click.`
     : "";
 
   const teamHint = teamSlug
@@ -240,6 +241,26 @@ export async function POST(req: Request) {
         }
         return { error: `Unknown ID prefix: ${id}` };
       },
+    }),
+    proposeAnswer: tool({
+      description:
+        "Propose a final answer for the field the champion is currently reviewing. Only call this when you have a specific, defensible value for that field. The UI will render Accept / Tell me more / Still not sure buttons; the champion clicks Accept to fill the field.",
+      inputSchema: z.object({
+        value: z
+          .string()
+          .describe(
+            "The proposed value to fill into the field. Concise, no markdown.",
+          ),
+        confidence: z
+          .enum(["high", "medium", "low"])
+          .describe("Your confidence in this answer."),
+        reasoning: z
+          .string()
+          .describe(
+            "One short sentence on why this answer is right (cited evidence, framework rule, etc).",
+          ),
+      }),
+      execute: async (args) => args,
     }),
     getCustomizations: tool({
       description:

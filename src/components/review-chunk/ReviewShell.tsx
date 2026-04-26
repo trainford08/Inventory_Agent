@@ -14,6 +14,7 @@ type ShellProps = {
   chunk: ReviewChunk | null;
   /** When set, Ada panel renders as a 3rd column, scoped to this field. */
   ada?: {
+    fieldId: string;
     fieldLabel: string;
     fieldSubject?: string | null;
     fieldValue?: string | null;
@@ -36,6 +37,7 @@ export function ReviewShell({
       <ReviewRail section={section} teamSlug={teamSlug} chunk={chunk} />
       <div className="min-w-0 overflow-x-hidden">{children}</div>
       <AdaPanel
+        fieldId={ada?.fieldId ?? null}
         fieldLabel={ada?.fieldLabel ?? null}
         fieldSubject={ada?.fieldSubject ?? null}
         fieldValue={ada?.fieldValue ?? null}
