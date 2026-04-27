@@ -314,6 +314,7 @@ export async function POST(req: Request) {
                 teamId: true,
                 name: true,
                 type: true,
+                targetService: true,
               },
             }),
             prisma.customization.findMany({
@@ -349,6 +350,7 @@ export async function POST(req: Request) {
               slug: string;
               name: string;
               type: string;
+              targetService: string | null;
             }
           | {
               kind: "customization";
@@ -391,7 +393,8 @@ export async function POST(req: Request) {
           if (!t) continue;
           if (
             s.name.toLowerCase().includes(q) ||
-            s.type.toLowerCase().includes(q)
+            s.type.toLowerCase().includes(q) ||
+            (s.targetService ?? "").toLowerCase().includes(q)
           ) {
             matches.push({
               kind: "service_connection",
@@ -399,6 +402,7 @@ export async function POST(req: Request) {
               slug: t.slug,
               name: s.name,
               type: s.type,
+              targetService: s.targetService ?? null,
             });
           }
         }

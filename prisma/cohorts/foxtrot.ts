@@ -144,6 +144,13 @@ export function foxtrotConfig(orgId: string): CohortShape {
         usedByCount: 1,
         lastRotatedAt: daysAgo(248),
       }),
+      serviceConnection("foxtrot-jira-legacy", "GENERIC", {
+        targetService:
+          "Jira Server · contoso-legacy (on-prem) · backlog tracker the maintenance team has used since before ADO Boards",
+        authMethod: "service-account",
+        usedByCount: 1,
+        lastRotatedAt: daysAgo(420),
+      }),
     ],
     releaseDefinitions: [
       releaseDefinition("foxtrot-legacy-maint-release", {

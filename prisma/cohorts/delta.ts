@@ -15,6 +15,7 @@ import {
   releaseDefinition,
   repo,
   serviceConnection,
+  teamCustomization,
   workflow,
   type CohortShape,
 } from "./_helpers";
@@ -633,6 +634,38 @@ export function deltaConfig(orgId: string): CohortShape {
         description:
           "Schema compatibility gate — blocks canary if proto changes break consumer.",
         status: "NEEDS_HUMAN",
+      }),
+      teamCustomization({
+        name: "Pipeline secret rotation hooks",
+        category: "PIPELINES",
+        description:
+          "Pre-deploy task rotates short-lived Key Vault secrets on every prod release. Used by 6 of Delta's pipelines. Needs a glue Action + scheduled rotation in GitHub.",
+        parity: "GAP",
+        strategy: "S05_BUILD_GLUE",
+        hybridPlacement: "MOVES",
+        status: "NEEDS_HUMAN",
+      }),
+      teamCustomization({
+        name: "Custom dashboards & widgets",
+        category: "DASHBOARDS",
+        description:
+          "Cross-region deploy health dashboards (custom widget) — show canary progress + failure rates. No GitHub equivalent; either rebuild in Datadog or accept loss.",
+        parity: "PARTIAL",
+        strategy: "S04_REBUILD_WITH_LOSS",
+        hybridPlacement: "STAYS",
+        status: "NEEDS_HUMAN",
+      }),
+      teamCustomization({
+        name: "Delta-fork of upstream Bazel rule",
+        category: "PIPELINES",
+        description:
+          "Delta forked an OSS Bazel rule to add custom caching. Strategy: contribute fix back upstream and drop the fork rather than re-implement on GitHub.",
+        parity: "PARTIAL",
+        strategy: "S06_UPSTREAM",
+        hybridPlacement: "MOVES",
+        status: "NEEDS_HUMAN",
+        notes:
+          "Maintainer is open to a PR. Targeted Q3 once the team has GitHub Actions running.",
       }),
     ],
     risks: [

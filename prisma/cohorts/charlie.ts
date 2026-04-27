@@ -15,6 +15,7 @@ import {
   releaseDefinition,
   repo,
   serviceConnection,
+  teamCustomization,
   workflow,
   type CohortShape,
 } from "./_helpers";
@@ -526,6 +527,25 @@ export function charlieConfig(orgId: string): CohortShape {
           "FileTransform@1 usage across 4 pipelines — maps to envsubst or a GH action replacement.",
         status: "AGENT_HANDLED",
       }),
+      customization("C05", { status: "NEEDS_HUMAN" }),
+      customization("C09", {
+        name: "Inline policy enforcement",
+        description:
+          "FedRAMP compliance enforced via inline branch policies and required PR checks. Migration target: GitHub rulesets + required status checks; the policy bundle needs auditing and re-applying repo-by-repo.",
+        parity: "PARTIAL",
+        strategy: "S04_REBUILD_WITH_LOSS",
+        status: "NEEDS_HUMAN",
+      }),
+      teamCustomization({
+        name: "Custom dashboards & widgets",
+        category: "DASHBOARDS",
+        description:
+          "Compliance team built custom ADO dashboards that aggregate audit signals across pipelines. Migrating means rebuilding in GitHub Insights or sending the data to an external dashboard.",
+        parity: "PARTIAL",
+        strategy: "S04_REBUILD_WITH_LOSS",
+        hybridPlacement: "STAYS",
+        status: "NEEDS_HUMAN",
+      }),
     ],
     risks: [
       {
@@ -645,6 +665,20 @@ export function charlieConfig(orgId: string): CohortShape {
         authMethod: "service-account",
         usedByCount: 2,
         lastRotatedAt: daysAgo(94),
+      }),
+      serviceConnection("charlie-jira", "GENERIC", {
+        targetService:
+          "Jira Cloud · contoso-fedramp · regulated work items mirrored to Jira so QA team has visibility outside ADO",
+        authMethod: "PAT",
+        usedByCount: 4,
+        lastRotatedAt: daysAgo(96),
+      }),
+      serviceConnection("charlie-okta", "GENERIC", {
+        targetService:
+          "Okta SCIM · contoso-fedramp · sync ADO group membership from Okta",
+        authMethod: "PAT",
+        usedByCount: 1,
+        lastRotatedAt: daysAgo(120),
       }),
       serviceConnection("charlie-snyk", "GENERIC", {
         targetService: "Snyk org: contoso-charlie",

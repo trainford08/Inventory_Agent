@@ -200,6 +200,13 @@ export function echoConfig(orgId: string): CohortShape {
         usedByCount: 1,
         lastRotatedAt: null,
       }),
+      serviceConnection("echo-jira", "GENERIC", {
+        targetService:
+          "Jira Cloud · contoso-mobile · used to sync ADO work items to engineering Jira project for cross-team visibility",
+        authMethod: "PAT",
+        usedByCount: 2,
+        lastRotatedAt: daysAgo(180),
+      }),
     ],
     releaseDefinitions: [
       releaseDefinition("echo-app-release", {

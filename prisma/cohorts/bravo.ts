@@ -14,6 +14,7 @@ import {
   releaseDefinition,
   repo,
   serviceConnection,
+  teamCustomization,
   workflow,
   type CohortShape,
 } from "./_helpers";
@@ -249,6 +250,38 @@ export function bravoConfig(orgId: string): CohortShape {
         description:
           "Shared variable group 'bravo-keyvault-secrets' referenced by 3 pipelines.",
         status: "AGENT_HANDLED",
+      }),
+      teamCustomization({
+        name: "Consolidate SonarQube + Codacy onto a single quality tool",
+        category: "EXTENSIONS",
+        description:
+          "Two overlapping code-quality tools today (SonarQube + Codacy). Strategy: pick one as part of the GitHub move and drop the other.",
+        parity: "BETTER",
+        strategy: "S07_CONSOLIDATE_THIRD_PARTY",
+        hybridPlacement: "MOVES",
+        status: "NEEDS_HUMAN",
+        notes:
+          "Champion is leaning Sonar (more org licenses already). Decision blocks pipeline migration.",
+      }),
+      teamCustomization({
+        name: "Inline policy enforcement",
+        category: "REPOS",
+        description:
+          "Inline policy checks baked into ADO branch policies (status checks, required reviewers, build validation). Maps to GitHub branch protection + rulesets — but the rule set needs translating per repo.",
+        parity: "PARTIAL",
+        strategy: "S04_REBUILD_WITH_LOSS",
+        hybridPlacement: "MOVES",
+        status: "NEEDS_HUMAN",
+      }),
+      teamCustomization({
+        name: "Pipeline secret rotation hooks",
+        category: "PIPELINES",
+        description:
+          "Custom pre-deploy hook that rotates Key Vault secrets when the release pipeline runs. No direct GitHub Actions equivalent — needs a glue Action plus scheduled rotation.",
+        parity: "GAP",
+        strategy: "S05_BUILD_GLUE",
+        hybridPlacement: "MOVES",
+        status: "NEEDS_HUMAN",
       }),
     ],
     risks: [
