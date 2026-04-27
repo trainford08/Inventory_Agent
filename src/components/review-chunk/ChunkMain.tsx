@@ -119,6 +119,7 @@ function SubsectionPanel({
             All clear
           </span>
         )}
+        <AddFieldHeaderButton subsectionName={subsection.name} />
       </div>
 
       {subsection.currentSubjectName ? (
@@ -160,8 +161,35 @@ function SubsectionPanel({
             <PendingCard key={f.id} field={f} />
           ),
         )}
+        <AddFieldRow subsectionName={subsection.name} />
       </div>
     </section>
+  );
+}
+
+function AddFieldHeaderButton(_props: { subsectionName: string }) {
+  return (
+    <button
+      type="button"
+      className="inline-flex items-center gap-1.5 rounded-md border border-border-strong bg-bg-elevated px-2.5 py-[5px] text-[11.5px] font-semibold text-primary hover:border-primary hover:bg-primary-soft"
+    >
+      <span className="text-[14px] leading-none">+</span>
+      Add field
+    </button>
+  );
+}
+
+function AddFieldRow({ subsectionName }: { subsectionName: string }) {
+  return (
+    <button
+      type="button"
+      className="mt-2 flex w-full items-center gap-2 rounded-lg border border-dashed border-border-strong bg-transparent px-4 py-3 text-left text-[13px] font-medium text-ink-muted transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary"
+    >
+      <span className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full border-[1.5px] border-current text-[12px] leading-none">
+        +
+      </span>
+      Add a field to {subsectionName}
+    </button>
   );
 }
 
