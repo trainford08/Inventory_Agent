@@ -44,6 +44,8 @@ model Team {
   championId String?      @unique
   members    TeamMember[] @relation("Members")
 
+  adaConversation AdaConversation?
+
   cohort         Cohort         @default(UNASSIGNED)
   wave           Int?
   migrationState MigrationState @default(NOT_STARTED)
@@ -517,4 +519,16 @@ model Extension {
   notes               String?
 
   @@index([teamId])
+}
+
+// Ada chat history. Per-team for now; once auth lands (M2) we'll add a
+// userId so each champion has their own thread. The messages column
+// stores the full UIMessage[] from the @ai-sdk/react useChat hook.
+model AdaConversation {
+  id        String   @id @default(cuid())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId    String   @unique
+  messages  Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }

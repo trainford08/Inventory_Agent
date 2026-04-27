@@ -5,6 +5,10 @@ import { DefaultChatTransport, type UIMessage } from "ai";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  loadAdaConversation,
+  saveAdaConversation,
+} from "@/server/actions/ada-conversation-actions";
 import { editFinding } from "@/server/actions/finding-actions";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -138,7 +142,11 @@ function ChatBody({
   teamSlug: string | null;
 }) {
   const storageKey = `ada:conv:${teamSlug ?? "no-team"}`;
+  // For the no-team case (e.g., dashboard, inventory landing) we keep
+  // localStorage. For team pages, we hydrate from the DB-backed
+  // AdaConversation row right after mount.
   const initialMessages = useMemo<UIMessage[]>(() => {
+    if (teamSlug) return [];
     if (typeof window === "undefined") return [];
     try {
       const raw = window.localStorage.getItem(storageKey);
@@ -146,7 +154,7 @@ function ChatBody({
     } catch {
       return [];
     }
-  }, [storageKey]);
+  }, [storageKey, teamSlug]);
 
   const { messages, sendMessage, setMessages, status } = useChat({
     messages: initialMessages,
@@ -155,6 +163,26 @@ function ChatBody({
       body: { teamSlug, fieldId, fieldLabel, fieldValue },
     }),
   });
+
+  // Hydrate from DB once when teamSlug is set.
+  const hydratedSlugRef = React.useRef<string | null>(null);
+  useEffect(() => {
+    if (!teamSlug) return;
+    if (hydratedSlugRef.current === teamSlug) return;
+    hydratedSlugRef.current = teamSlug;
+    let cancelled = false;
+    void (async () => {
+      const res = await loadAdaConversation({ slug: teamSlug });
+      if (cancelled) return;
+      if (res.ok && res.messages.length > 0) {
+         
+        setMessages(res.messages);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [teamSlug, setMessages]);
 
   // Track each "field open" event so we can show a divider in the chat
   // thread at the message-index where the user clicked "Not sure".
@@ -175,6 +203,12 @@ function ChatBody({
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (status === "submitted" || status === "streaming") return;
+    if (teamSlug) {
+      // DB-backed: persist via server action. Fire-and-forget; failures
+      // are non-fatal (the conversation just won't survive a refresh).
+      void saveAdaConversation({ slug: teamSlug, messages });
+      return;
+    }
     try {
       if (messages.length === 0) {
         window.localStorage.removeItem(storageKey);
@@ -184,7 +218,7 @@ function ChatBody({
     } catch {
       /* quota / privacy mode — silently skip */
     }
-  }, [messages, status, storageKey]);
+  }, [messages, status, storageKey, teamSlug]);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -195,6 +229,9 @@ function ChatBody({
 
   const clear = () => {
     setMessages([]);
+    if (teamSlug) {
+      void saveAdaConversation({ slug: teamSlug, messages: [] });
+    }
     if (typeof window !== "undefined") {
       try {
         window.localStorage.removeItem(storageKey);
