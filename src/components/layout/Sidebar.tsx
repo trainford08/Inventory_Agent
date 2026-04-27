@@ -62,7 +62,7 @@ export function Sidebar({
   const totalItems = sectionProgress.reduce((n, s) => n + s.totalCount, 0);
 
   return (
-    <aside className="flex flex-col border-r border-border bg-sidebar-bg px-[14px] py-[20px]">
+    <aside className="sticky top-0 flex h-screen flex-col overflow-y-auto border-r border-border bg-sidebar-bg px-[14px] py-[20px]">
       <Brand />
 
       <NavGroup label="Program">
