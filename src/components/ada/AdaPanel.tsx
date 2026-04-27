@@ -175,7 +175,6 @@ function ChatBody({
       const res = await loadAdaConversation({ slug: teamSlug });
       if (cancelled) return;
       if (res.ok && res.messages.length > 0) {
-         
         setMessages(res.messages);
       }
     })();
@@ -415,6 +414,7 @@ const TOOL_LABELS: Record<string, string> = {
   getProgramOverview: "Pulling program rollup",
   listTeamsByFriction: "Ranking teams by friction",
   searchFindings: "Searching agent findings",
+  searchIntegrations: "Searching integrations",
   getReviewProgress: "Checking review progress",
   getCohortBreakdown: "Aggregating by cohort",
   proposeAnswer: "Drafting a proposed answer",

@@ -47,7 +47,7 @@ Migration patterns:
 
 Hybrid model: some ADO services move to GitHub (Repos, Pipelines), some stay in ADO (Boards, Test Plans). Hybrid friction lives at the boundary (e.g. linking PRs to work items via AB#123 syntax).
 
-You have tools available to query the framework, the active team's inventory, and program-wide rollups across ALL teams. Use them whenever the user asks anything specific — never guess numbers or names. For program/portfolio questions ("how many teams scanned?", "what % of features stay in ADO across the program?", "what migration approaches are most common?"), call getProgramOverview. For ANY question about friction, gap counts, customization counts, or rankings across teams ("which team has the most friction?", "rank teams by complexity", "what's the friction score for X?", "how does X compare to Y?"), call listTeamsByFriction. It returns name + slug + score for every team, so you can answer team-by-name questions even if you don't know the slug. For cohort-level patterns ("which cohort has the most gaps?"), call getCohortBreakdown. For "what did the agent find?" or evidence questions, call searchFindings. For "how far along are we / what's left to review?", call getReviewProgress. For team-specific questions like cutover date, Champion, or member roster, use getTeamSummary.
+You have tools available to query the framework, the active team's inventory, and program-wide rollups across ALL teams. Use them whenever the user asks anything specific — never guess numbers or names. For program/portfolio questions ("how many teams scanned?", "what % of features stay in ADO across the program?", "what migration approaches are most common?"), call getProgramOverview. For ANY question about friction, gap counts, customization counts, or rankings across teams ("which team has the most friction?", "rank teams by complexity", "what's the friction score for X?", "how does X compare to Y?"), call listTeamsByFriction. It returns name + slug + score for every team, so you can answer team-by-name questions even if you don't know the slug. For cohort-level patterns ("which cohort has the most gaps?"), call getCohortBreakdown. For "what did the agent find?" or evidence questions, call searchFindings. For ANY question about a specific third-party vendor or tool ("which teams use Jira?", "who's on Datadog?", "what are teams doing with Snyk?"), call searchIntegrations — that scans extensions, service connections, and customizations across every team. For "how far along are we / what's left to review?", call getReviewProgress. For team-specific questions like cutover date, Champion, or member roster, use getTeamSummary.
 
 Team identification: when the user mentions a team by display name (e.g. "Foxtrot Archive", "Echo Mobile"), and you don't already know the slug, call listTeamsByFriction first to get the canonical slug → name mapping rather than guessing. Slugs are short lowercase ("foxtrot", "echo"), not slugified display names. If you can answer from general knowledge of the framework alone, you can skip the tools.
 
@@ -283,6 +283,156 @@ export async function POST(req: Request) {
           };
         }
         return { error: `Unknown ID prefix: ${id}` };
+      },
+    }),
+    searchIntegrations: tool({
+      description:
+        "Search every team's third-party integrations — Extensions (ADO Marketplace add-ons), Service Connections (Jira, Datadog, Snyk, Okta, etc.), and Customizations — for a vendor or tool name. Use this for ANY question about specific tooling: 'which teams use Jira?', 'who's on Datadog?', 'show me Snyk integrations', 'what are teams using X for?'. Returns matches grouped by team with the integration name, type, and notes.",
+      inputSchema: z.object({
+        query: z
+          .string()
+          .describe(
+            "Vendor or tool name to match (case-insensitive substring) against extension/service-connection/customization names and notes.",
+          ),
+      }),
+      execute: async ({ query }) => {
+        const q = query.toLowerCase();
+        const [extensions, serviceConnections, customizations, teams] =
+          await Promise.all([
+            prisma.extension.findMany({
+              select: {
+                teamId: true,
+                name: true,
+                publisher: true,
+                category: true,
+                hasGitHubEquivalent: true,
+                notes: true,
+              },
+            }),
+            prisma.serviceConnection.findMany({
+              select: {
+                teamId: true,
+                name: true,
+                type: true,
+              },
+            }),
+            prisma.customization.findMany({
+              select: {
+                teamId: true,
+                name: true,
+                category: true,
+                description: true,
+                parity: true,
+                strategy: true,
+                hybridPlacement: true,
+                status: true,
+                notes: true,
+              },
+            }),
+            listTeams(),
+          ]);
+
+        type Match =
+          | {
+              kind: "extension";
+              team: string;
+              slug: string;
+              name: string;
+              publisher: string;
+              category: string;
+              hasGitHubEquivalent: boolean;
+              notes: string | null;
+            }
+          | {
+              kind: "service_connection";
+              team: string;
+              slug: string;
+              name: string;
+              type: string;
+            }
+          | {
+              kind: "customization";
+              team: string;
+              slug: string;
+              name: string;
+              category: string;
+              description: string;
+              parity: string | null;
+              strategy: string | null;
+              hybridPlacement: string | null;
+              status: string;
+              notes: string | null;
+            };
+        const teamById = new Map(teams.map((t) => [t.id, t]));
+        const matches: Match[] = [];
+
+        for (const e of extensions) {
+          const t = teamById.get(e.teamId);
+          if (!t) continue;
+          if (
+            e.name.toLowerCase().includes(q) ||
+            e.publisher.toLowerCase().includes(q) ||
+            (e.notes ?? "").toLowerCase().includes(q)
+          ) {
+            matches.push({
+              kind: "extension",
+              team: t.name,
+              slug: t.slug,
+              name: e.name,
+              publisher: e.publisher,
+              category: e.category,
+              hasGitHubEquivalent: e.hasGitHubEquivalent,
+              notes: e.notes,
+            });
+          }
+        }
+        for (const s of serviceConnections) {
+          const t = teamById.get(s.teamId);
+          if (!t) continue;
+          if (
+            s.name.toLowerCase().includes(q) ||
+            s.type.toLowerCase().includes(q)
+          ) {
+            matches.push({
+              kind: "service_connection",
+              team: t.name,
+              slug: t.slug,
+              name: s.name,
+              type: s.type,
+            });
+          }
+        }
+        for (const c of customizations) {
+          const t = teamById.get(c.teamId);
+          if (!t) continue;
+          if (
+            c.name.toLowerCase().includes(q) ||
+            c.description.toLowerCase().includes(q) ||
+            (c.notes ?? "").toLowerCase().includes(q)
+          ) {
+            matches.push({
+              kind: "customization",
+              team: t.name,
+              slug: t.slug,
+              name: c.name,
+              category: c.category,
+              description: c.description,
+              parity: c.parity,
+              strategy: c.strategy,
+              hybridPlacement: c.hybridPlacement,
+              status: c.status,
+              notes: c.notes,
+            });
+          }
+        }
+
+        const teamsHit = new Set(matches.map((m) => m.slug));
+        return {
+          query,
+          matchCount: matches.length,
+          teamCount: teamsHit.size,
+          matches,
+        };
       },
     }),
     searchFindings: tool({
